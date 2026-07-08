@@ -1141,7 +1141,7 @@ public class CustomMovementHandler
                 int ShortestAngle = ShortestAngleDifference(CurrentOrientation, TargetOrientation);
 
                 // Need to rotate to our target rotation smoothly
-                double AdjustedOrientationSpeed = CurrentAnimationRequest.OrientationSpeed * ((CurrentTime - LastAnimationTickTime) / 16.6666);// Speed value centered at 60FPS
+                double AdjustedOrientationSpeed = CurrentAnimationRequest.OrientationSpeed * (CurrentFrameDelta / 16.667);// Speed value centered at 60FPS
                 if (ShortestAngle > 0)
                 {
                     CurrentOrientation += Math.min(ShortestAngle, AdjustedOrientationSpeed);
