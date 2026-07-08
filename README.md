@@ -8,11 +8,11 @@ Features
 
 * True Tile Accuracy: Visual animations now sync instantly with your server-side position.
 * Smooth Pathing: Eliminates the visual lag between where your character appears and where they actually are.
-* Enhanced PvM Precision: Makes it easier recognize your movement when dodging enemy attacks.
+* Makes movement more clear to help learn boss mechanics.
 * Auto-rotate towards target NPC/enemies for more immersion.
-* Fun jump animations when woox walking and doing tick perfect movements.
+* Fun jump animations when woox walking and doing fast movements.
 * Improved animation behavior overall
-* Lots of configuration options in the panel on the right
+* Lots of configuration options in the panel on the right.
 
 
 
