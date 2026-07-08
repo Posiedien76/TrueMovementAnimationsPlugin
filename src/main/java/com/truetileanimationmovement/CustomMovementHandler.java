@@ -762,7 +762,6 @@ public class CustomMovementHandler
                         // Handle normal walking
                         CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.GetAnimationRequestMovesetFromAnimationSet(OldAnimationSet, config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
                         CurrentAnimationRequest.bShouldTeleportToLocation = false;
-                        CurrentAnimationRequest.OrientationSpeed = 30;
                     }
                     else
                     {
@@ -1142,13 +1141,14 @@ public class CustomMovementHandler
                 int ShortestAngle = ShortestAngleDifference(CurrentOrientation, TargetOrientation);
 
                 // Need to rotate to our target rotation smoothly
+                double AdjustedOrientationSpeed = CurrentAnimationRequest.OrientationSpeed * ((CurrentTime - LastAnimationTickTime) / 16.6666);// Speed value centered at 60FPS
                 if (ShortestAngle > 0)
                 {
-                    CurrentOrientation += Math.min(ShortestAngle, CurrentAnimationRequest.OrientationSpeed);
+                    CurrentOrientation += Math.min(ShortestAngle, AdjustedOrientationSpeed);
                 }
                 else if (ShortestAngle != 0)
                 {
-                    CurrentOrientation -= Math.min(-ShortestAngle, CurrentAnimationRequest.OrientationSpeed);
+                    CurrentOrientation -= Math.min(-ShortestAngle, AdjustedOrientationSpeed);
                 }
 
                 if (CurrentOrientation < 0)
