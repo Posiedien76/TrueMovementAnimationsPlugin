@@ -23,3 +23,7 @@ Current Roadmap / TODO
 * Dynamic Overheads: Update overhead prayers to follow the new movement model.
 * Health Bar Sync: Adjust the player health bar to match the position of the new character model.
 
+
+
+!\[Demo GIF](docs/screenshots/PluginFeatureGif.gif)
+
