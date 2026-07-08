@@ -129,11 +129,6 @@ public class TrueTileMovementPlugin extends Plugin
 		{
 			OverlayRenderer.bRecentlyClickedEvent = true;
 		}
-
-		if (event.getMenuTarget().contains("Bank booth"))
-		{
-			System.out.println("Clicked bank booth");
-		}
 	}
 
 	@Subscribe
