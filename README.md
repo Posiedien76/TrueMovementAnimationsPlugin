@@ -25,5 +25,5 @@ Current Roadmap / TODO
 
 
 
-!\[Demo GIF](docs/screenshots/PluginFeatureGif.gif)
+![Demo GIF](docs/screenshots/PluginFeatureGif.gif)
 
