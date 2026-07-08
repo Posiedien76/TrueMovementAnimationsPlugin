@@ -552,7 +552,7 @@ public class CustomMovementHandler
     private void UpdateLerpDestinations()
     {
         bNewTileMovementStarted = false;
-        if (plugin.bForceEarlyOut || (currentTarget == null && ShouldOnlyEnablePluginInCombat()))
+        if (plugin.bForceEarlyOut || !plugin.bIsPluginSupportedCurrently || (currentTarget == null && ShouldOnlyEnablePluginInCombat()))
         {
             if (!bAttemptToRenderOwner)
             {

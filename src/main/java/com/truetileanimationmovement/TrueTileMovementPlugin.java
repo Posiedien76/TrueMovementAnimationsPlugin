@@ -47,11 +47,17 @@ public class TrueTileMovementPlugin extends Plugin
 	@Inject
 	private ClientThread clientThread;
 
+	public boolean bIsPluginSupportedCurrently = true;
+	public int TicksSincePluginWasSupport = 0;
 	private final RenderCallback renderCallback = new RenderCallback()
 	{
 		@Override
 		public boolean drawObject(Scene scene, TileObject object)
 		{
+			// Only supported with GPU plugin
+			TicksSincePluginWasSupport = 0;
+			bIsPluginSupportedCurrently = true;
+
 			// hide player
 			CustomMovementHandler FoundHandler = OverlayRenderer.MovementHandlerCache.get(object.getId());
 			if (FoundHandler != null && !FoundHandler.bShouldRenderOwner)
@@ -68,9 +74,24 @@ public class TrueTileMovementPlugin extends Plugin
 	private WorldView currentWorldView = null;
 	//private int LastPrintedAnimation = 0;
 	@Subscribe
+	public void onClientTick(ClientTick event)
+	{
+		// Plugin no longer supported (Need GPU plugin)
+		if (TicksSincePluginWasSupport > 5)
+		{
+			bIsPluginSupportedCurrently = false;
+		}
+		else
+		{
+			bIsPluginSupportedCurrently = true;
+		}
+		++TicksSincePluginWasSupport;
+	}
+
+	@Subscribe
 	public void onGameTick(GameTick event)
 	{
-		if (bForceEarlyOut)
+		if (bForceEarlyOut || !bIsPluginSupportedCurrently)
 		{
 			return;
 		}
@@ -127,7 +148,7 @@ public class TrueTileMovementPlugin extends Plugin
 	@Subscribe
 	public void onMenuOptionClicked(MenuOptionClicked event)
 	{
-		if (bForceEarlyOut)
+		if (bForceEarlyOut || !bIsPluginSupportedCurrently)
 		{
 			return;
 		}
@@ -146,7 +167,7 @@ public class TrueTileMovementPlugin extends Plugin
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
 	{
-		if (bForceEarlyOut)
+		if (bForceEarlyOut || !bIsPluginSupportedCurrently)
 		{
 			return;
 		}
