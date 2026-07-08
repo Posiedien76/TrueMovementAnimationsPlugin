@@ -256,7 +256,6 @@ public class CustomMovementHandler
         // Render once with should render owner back on
         bShouldRenderOwner = true;
         bAttemptToRenderOwner = true;
-        Update();
 
         if (AnimController != null)
         {
@@ -265,14 +264,62 @@ public class CustomMovementHandler
 
         if (Model != null)
         {
-            client.removeRuneLiteObject(Model);
+            Model.setModel(null);
             Model = null;
+            client.removeRuneLiteObject(Model);
+
+            if (Owner.getIdleRotateLeft() == NO_ANIMATION)
+            {
+                Owner.setIdleRotateLeft(OldAnimationSet.IdleRotateLeft);
+            }
+
+            if (Owner.getIdleRotateRight() == NO_ANIMATION)
+            {
+                Owner.setIdleRotateRight(OldAnimationSet.IdleRotateRight);
+            }
+
+            if (Owner.getWalkAnimation() == NO_ANIMATION)
+            {
+                Owner.setWalkAnimation(OldAnimationSet.WalkAnimation);
+            }
+
+            if (Owner.getWalkRotateLeft() == NO_ANIMATION)
+            {
+                Owner.setWalkRotateLeft(OldAnimationSet.WalkRotateLeft);
+            }
+
+            if (Owner.getWalkRotateRight() == NO_ANIMATION)
+            {
+                Owner.setWalkRotateRight(OldAnimationSet.WalkRotateRight);
+            }
+
+            if (Owner.getWalkRotate180() == NO_ANIMATION)
+            {
+                Owner.setWalkRotate180(OldAnimationSet.WalkRotate180);
+            }
+
+            if (Owner.getIdlePoseAnimation() == NO_ANIMATION)
+            {
+                Owner.setIdlePoseAnimation(OldAnimationSet.IdlePoseAnimation);
+            }
+
+            if (Owner.getPoseAnimation() == NO_ANIMATION)
+            {
+                Owner.setPoseAnimation(OldAnimationSet.PoseAnimation);
+            }
+
+            if (Owner.getRunAnimation() == NO_ANIMATION)
+            {
+                Owner.setRunAnimation(OldAnimationSet.RunAnimation);
+            }
+
         }
 
         if (cameraModel != null)
         {
-            client.removeRuneLiteObject(cameraModel);
+            cameraModel.setModel(null);
             cameraModel = null;
+            client.removeRuneLiteObject(cameraModel);
         }
     }
 
@@ -543,8 +590,11 @@ public class CustomMovementHandler
 
                 NextLerpPositionWorldPoint = CurrentWorldPoint;
             }
+            if (NextLerpPosition == null)
+            {
+                NextLerpPosition = RequestedLerpPoint;
+            }
 
-            assert NextLerpPosition != null;
             if (!NextLerpPosition.equals(RequestedLerpPoint))
             {
                 // Try all planes and use whichever one is the closest

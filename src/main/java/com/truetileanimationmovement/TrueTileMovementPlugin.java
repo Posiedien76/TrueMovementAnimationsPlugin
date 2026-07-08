@@ -7,6 +7,7 @@ import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.callback.Hooks;
 import net.runelite.client.callback.RenderCallback;
 import net.runelite.client.callback.RenderCallbackManager;
@@ -43,6 +44,8 @@ public class TrueTileMovementPlugin extends Plugin
 
 	@Inject
 	private RenderCallbackManager renderCallbackManager;
+	@Inject
+	private ClientThread clientThread;
 
 	private final RenderCallback renderCallback = new RenderCallback()
 	{
@@ -60,7 +63,7 @@ public class TrueTileMovementPlugin extends Plugin
         }
 	};
 
-	public boolean bForceEarlyOut = false; // Debugging purposes
+	public boolean bForceEarlyOut = false;
 
 	private WorldView currentWorldView = null;
 	//private int LastPrintedAnimation = 0;
@@ -106,14 +109,19 @@ public class TrueTileMovementPlugin extends Plugin
 	{
 		renderCallbackManager.register(renderCallback);
 		overlayManager.add(OverlayRenderer);
+		bForceEarlyOut = false;
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
-		OverlayRenderer.Cleanup();
-		renderCallbackManager.unregister(renderCallback);
-		overlayManager.remove(OverlayRenderer);
+		clientThread.invoke(() ->
+		{
+			OverlayRenderer.Cleanup();
+			renderCallbackManager.unregister(renderCallback);
+			overlayManager.remove(OverlayRenderer);
+			bForceEarlyOut = true;
+		});
 	}
 
 	@Subscribe
