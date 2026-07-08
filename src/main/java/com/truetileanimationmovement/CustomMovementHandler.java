@@ -91,8 +91,8 @@ public class CustomMovementHandler
         this.client = client;
         this.plugin = plugin;
         this.config = config;
-        this.Owner = Owner;
         this.overlay = overlay;
+        this.Owner = Owner;
 
         // Initialize all animations we do want to lerp
         UniqueAnimationExceptionList.add(829); // Eat food
@@ -500,14 +500,14 @@ public class CustomMovementHandler
     private void UpdateLerpDestinations()
     {
         bNewTileMovementStarted = false;
-        if (config.DisablePlugin() || (currentTarget == null && ShouldOnlyEnablePluginInCombat()))
+        if (plugin.bForceEarlyOut || (currentTarget == null && ShouldOnlyEnablePluginInCombat()))
         {
             if (!bAttemptToRenderOwner)
             {
                 LastLerpPosition = Model.getLocation();
                 LastLerpPositionWorldPoint = WorldPoint.fromLocal(client, LastLerpPosition);
 
-                MillisecondsSinceTileChange = -config.DebugStartDelayMs();
+                MillisecondsSinceTileChange = 0;
                 bNewTileMovementStarted = true;
                 bLastMovementDestinationPotentiallyDirty = true;
             }
@@ -612,7 +612,7 @@ public class CustomMovementHandler
 
                 NextLerpPositionWorldPoint = CurrentWorldPoint;
 
-                MillisecondsSinceTileChange = -config.DebugStartDelayMs();
+                MillisecondsSinceTileChange = 0;
                 bNewTileMovementStarted = true;
                 bLastMovementDestinationPotentiallyDirty = true;
             }
@@ -671,21 +671,25 @@ public class CustomMovementHandler
         // Quick and dirty teleport to location
         boolean bApplyQuickAndDirtyTeleport = LastLerpPosition.equals(NextLerpPosition);
 
+
         // Override all animations
-        if (config.DebugAnimation() != 0)
-        {
-            CurrentAnimationRequest = AnimationRequestMoveset.GetDefaultIdleMoveAnimationRequest(config);
-            CurrentAnimationRequest.AnimationToPlay = config.DebugAnimation();
-        }
+        //if (devConfig.DebugAnimation() != 0)
+        //{
+        //    CurrentAnimationRequest = AnimationRequestMoveset.GetDefaultIdleMoveAnimationRequest(config);
+        //    CurrentAnimationRequest.AnimationToPlay = devConfig.DebugAnimation();
+        //}
+        //else
+
         // Currently moving
-        else if (MillisecondsSinceTileChange < 600 + config.DebugEndDelayMs())
+        if (MillisecondsSinceTileChange < 600 ) // 1 tick
         {
 
             // Analyze the type of movement we're doing
             CurrentAnimationRequest = AnimationRequestMoveset.GetDefaultIdleMoveAnimationRequest(config);
 
             // Only do special moves if actually attacking an NPC
-            boolean bSpecialMoveAnimation = config.AllowSpecialMovesToTrigger() && IsPlayerOwner() && !(bTooFarToSpecialMove || (config.SpecialMovesOnlyInCombat() && currentTarget == null));
+            // TODO: Disable experimental feature for now
+            boolean bSpecialMoveAnimation = false;// IsPlayerOwner() && !(bTooFarToSpecialMove || (devConfig.SpecialMovesOnlyInCombat() && currentTarget == null));
 
             // Did not click within the last time
             if (CurrentTime - LastTimeRecentlyClicked > 1199)

@@ -7,98 +7,6 @@ import net.runelite.client.config.ConfigItem;
 @ConfigGroup("TrueTileMovement")
 public interface TrueTileMovementConfig extends Config
 {
-
-	// Developer only configs
-	@ConfigItem(
-			keyName = "DebugAnimation",
-			name = "z (DEV_ONLY) Debug Animation",
-			description = "Debug Animation ID for testing"
-	)
-	default int DebugAnimation()
-	{
-		return 0;
-	}
-
-	@ConfigItem(
-			keyName = "DebugMovementSpeedModifier",
-			name = "z (DEV_ONLY) Debug Movement Speed Modifier",
-			description = "Debug Default Movement Speed Modifier"
-	)
-	default double MovementSpeedModifier()
-	{
-		return 3;
-	}
-
-	@ConfigItem(
-			keyName = "DebugStartDelayMs",
-			name = "z (DEV_ONLY) Debug Start Delay Ms",
-			description = "Debug Start Delay on animations"
-	)
-	default int DebugStartDelayMs()
-	{
-		return 0;
-	}
-
-	@ConfigItem(
-			keyName = "DebugEndDelayMs",
-			name = "z (DEV_ONLY) Debug End Delay Ms",
-			description = "Debug End Delay on animations"
-	)
-	default int DebugEndDelayMs()
-	{
-		return 0;
-	}
-
-	@ConfigItem(
-			keyName = "DebugStartFrame",
-			name = "z (DEV_ONLY) Debug Start Frame",
-			description = "Debug Start Frame on animations"
-	)
-	default int DebugStartFrame()
-	{
-		return 0;
-	}
-
-	@ConfigItem(
-			keyName = "DebugEndFrame",
-			name = "z (DEV_ONLY) Debug End Frame",
-			description = "Debug End Frame on animations"
-	)
-	default int DebugEndFrame()
-	{
-		return 1000;
-	}
-
-	@ConfigItem(
-			keyName = "DebugAnimationSpeed",
-			name = "z (DEV_ONLY) Debug Animation Speed",
-			description = "Debug speed on animations"
-	)
-	default int DebugAnimationSpeed()
-	{
-		return 1;
-	}
-
-	@ConfigItem(
-			keyName = "DisablePlugin",
-			name = "  Disable Plugin ",
-			description = "Force disable the plugin without uninstalling"
-	)
-	default boolean DisablePlugin()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-			keyName = "SpecialMovesOnlyInCombat",
-			name = "z (DEV_ONLY) Debug Special Moves Only In Combat",
-			description = "Only enable experimental special moves in combat"
-	)
-	default boolean SpecialMovesOnlyInCombat()
-	{
-		return true;
-	}
-
 	@ConfigItem(
 			keyName = "OrientationRotationSpeed",
 			name = "Default Orientation Rotation Speed",
@@ -239,24 +147,5 @@ public interface TrueTileMovementConfig extends Config
 		return 3;
 	}
 
-	@ConfigItem(
-			keyName = "AllowSpecialMovesToTrigger",
-			name = "z (DEV_ONLY) Allow Experimental Special Moves",
-			description = "This will allow automatic 'special animations' to trigger. Very experimental, will look silly."
-	)
-	default boolean AllowSpecialMovesToTrigger()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-			keyName = "PrintRecentAnimationID",
-			name = "z (DEV_ONLY) Print Most Recent Animation ID",
-			description = "Print the most recent animation Id performed"
-	)
-	default boolean PrintRecentAnimationID()
-	{
-		return false;
-	}
 
 }

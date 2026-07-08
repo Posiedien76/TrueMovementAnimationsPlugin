@@ -59,12 +59,15 @@ public class TrueTileMovementPlugin extends Plugin
 			return true;
         }
 	};
+
+	public boolean bForceEarlyOut = false; // Debugging purposes
+
 	private WorldView currentWorldView = null;
-	private int LastPrintedAnimation = 0;
+	//private int LastPrintedAnimation = 0;
 	@Subscribe
 	public void onGameTick(GameTick event)
 	{
-		if (config.DisablePlugin())
+		if (bForceEarlyOut)
 		{
 			return;
 		}
@@ -75,11 +78,12 @@ public class TrueTileMovementPlugin extends Plugin
 			OverlayRenderer.bShouldPlayTeleportAnimation = true;
 		}
 
-		if (config.PrintRecentAnimationID() && LastPrintedAnimation != client.getLocalPlayer().getAnimation())
-		{
-			LastPrintedAnimation = client.getLocalPlayer().getAnimation();
-			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Current Animation ID " + client.getLocalPlayer().getAnimation(), null);
-		}
+		// Print recent animation for convenience
+		//if (LastPrintedAnimation != client.getLocalPlayer().getAnimation())
+		//{
+		//	LastPrintedAnimation = client.getLocalPlayer().getAnimation();
+		//	client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Current Animation ID " + client.getLocalPlayer().getAnimation(), null);
+		//}
 
 		Player player = client.getLocalPlayer();
 		if (player == null)
@@ -115,7 +119,7 @@ public class TrueTileMovementPlugin extends Plugin
 	@Subscribe
 	public void onMenuOptionClicked(MenuOptionClicked event)
 	{
-		if (config.DisablePlugin())
+		if (bForceEarlyOut)
 		{
 			return;
 		}
@@ -134,7 +138,7 @@ public class TrueTileMovementPlugin extends Plugin
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
 	{
-		if (config.DisablePlugin())
+		if (bForceEarlyOut)
 		{
 			return;
 		}

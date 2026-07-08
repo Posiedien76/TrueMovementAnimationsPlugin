@@ -51,12 +51,13 @@ public class TrueMovementOverlay extends Overlay
         this.plugin = plugin;
         this.config = config;
 
+
     }
 
     @Override
     public Dimension render(Graphics2D graphics)
     {
-        if (config.DisablePlugin())
+        if (plugin.bForceEarlyOut)
         {
             Cleanup();
             return null;
@@ -71,7 +72,7 @@ public class TrueMovementOverlay extends Overlay
         // Add player to the cache
         if (!MovementHandlerCache.containsKey(client.getLocalPlayer().getId()))
         {
-            MovementHandlerCache.put(client.getLocalPlayer().getId(), new CustomMovementHandler(client, plugin, config, this, client.getLocalPlayer()));
+            MovementHandlerCache.put(client.getLocalPlayer().getId(), new CustomMovementHandler(client, plugin, config,this, client.getLocalPlayer()));
         }
 
         var playerEntry = MovementHandlerCache.get(client.getLocalPlayer().getId());

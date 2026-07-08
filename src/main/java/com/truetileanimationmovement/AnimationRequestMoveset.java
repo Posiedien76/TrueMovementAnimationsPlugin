@@ -148,16 +148,16 @@ public class AnimationRequestMoveset
         SOUTHSOUTHWEST = MovesetArray[3][0];
 
     }
-    static public AnimationRequestDetails GetDefaultSpecialMoveAnimationRequest( TrueTileMovementConfig config)
+    static public AnimationRequestDetails GetDefaultSpecialMoveAnimationRequest()
     {
         AnimationRequestDetails NewRequest = new AnimationRequestDetails();
 
         NewRequest.bResetAnimationOnNewTile = true;
         NewRequest.AnimationToPlay = 0;
-        NewRequest.StartingFrame = config.DebugStartFrame();
-        NewRequest.EndingFrame = config.DebugEndFrame();
-        NewRequest.AnimationSpeed = config.DebugAnimationSpeed();
-        NewRequest.MovementSpeedMultiplier = config.MovementSpeedModifier();
+        NewRequest.StartingFrame = 0;
+        NewRequest.EndingFrame = 100000;
+        NewRequest.AnimationSpeed = 1;
+        NewRequest.MovementSpeedMultiplier = 0;
         NewRequest.bUseLinearTween = false;
         NewRequest.bShouldTeleportToLocation = false;
         NewRequest.bAtDestinationLocation = false;
@@ -186,7 +186,7 @@ public class AnimationRequestMoveset
         if (SpecialAnimationKey.equals("SpecialMoves")) {
             for (int i = 0; i < 5; ++i) {
                 for (int j = 0; j < 5; ++j) {
-                    MovesetArray[i][j] = GetDefaultSpecialMoveAnimationRequest(config);
+                    MovesetArray[i][j] = GetDefaultSpecialMoveAnimationRequest();
                 }
             }
             Initialize();
@@ -364,7 +364,7 @@ public class AnimationRequestMoveset
             {
                 for (int j = 0; j < 5; ++j)
                 {
-                    MovesetArray[i][j] = GetDefaultSpecialMoveAnimationRequest(config);
+                    MovesetArray[i][j] = GetDefaultSpecialMoveAnimationRequest();
 
                     // 2 Tiles
                     if (i == 0 || j == 0 || i == 4 || j == 4)
@@ -395,7 +395,7 @@ public class AnimationRequestMoveset
             {
                 for (int j = 0; j < 5; ++j)
                 {
-                    MovesetArray[i][j] = GetDefaultSpecialMoveAnimationRequest(config);
+                    MovesetArray[i][j] = GetDefaultSpecialMoveAnimationRequest();
 
                     // 2 Tiles
                     if (i == 0 || j == 0 || i == 4 || j == 4)
