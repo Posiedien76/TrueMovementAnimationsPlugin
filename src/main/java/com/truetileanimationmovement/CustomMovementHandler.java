@@ -346,13 +346,17 @@ public class CustomMovementHandler
         {
             OldAnimationSet.CacheUniqueLabel();
 
-            if (OldAnimationSet.IdlePoseAnimation == 808)
+            // Monkey or penguin
+            if (OldAnimationSet.IdlePoseAnimation == 1386 ||
+                    OldAnimationSet.IdlePoseAnimation == 222 ||
+                    OldAnimationSet.IdlePoseAnimation == 1401 ||
+                    OldAnimationSet.IdlePoseAnimation == 5668)
             {
-                bIsDefaultHumanAnimationSet = true;
+                bIsDefaultHumanAnimationSet = false;
             }
             else
             {
-                bIsDefaultHumanAnimationSet = false;
+                bIsDefaultHumanAnimationSet = true;
             }
         }
     }
