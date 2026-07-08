@@ -20,6 +20,7 @@ public class CustomMovementHandler
     private long CurrentTime;
     private int CurrentFrameDelta;
     private long LastTimeMilliseconds = 0;
+    private long LastAnimationTickTime = 0;
     private int MillisecondsSinceTileChange = 0;
 
     // Runelite object management
@@ -1171,14 +1172,15 @@ public class CustomMovementHandler
                 AnimController.setFrame(CurrentAnimationRequest.StartingFrame);
             }
 
-            int CurrentFrame = AnimController.getFrame();
-            if (CurrentFrame >= CurrentAnimationRequest.EndingFrame)
+            if (CurrentTime - LastAnimationTickTime >= 17) // 17ms per frame->60FPS
             {
-                AnimController.setFrame(CurrentAnimationRequest.EndingFrame);
-            }
-            else
-            {
-                AnimController.tick(CurrentAnimationRequest.AnimationSpeed);
+                LastAnimationTickTime = CurrentTime;
+                int CurrentFrame = AnimController.getFrame();
+                if (CurrentFrame >= CurrentAnimationRequest.EndingFrame) {
+                    AnimController.setFrame(CurrentAnimationRequest.EndingFrame);
+                } else {
+                    AnimController.tick(CurrentAnimationRequest.AnimationSpeed);
+                }
             }
 
             // Do not lerp on unique animations outside of combat
