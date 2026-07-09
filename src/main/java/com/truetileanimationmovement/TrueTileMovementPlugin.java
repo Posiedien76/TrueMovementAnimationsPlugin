@@ -77,7 +77,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener
 	private float CurrentCameraPositionX = -1;
 	private float CurrentCameraPositionZ = -1;
 
-	private int CurrentMenuEntryCount = 0;
+	private boolean bIsWalkHereOptionWithExamine = false;
 	private long LastRightClickTime = 0;
 	private boolean bIsRightClick = false;
 	private float OldFocalPointY = 0;
@@ -88,7 +88,33 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener
 	public void onClientTick(ClientTick event)
 	{
 		MenuEntry[] entries = client.getMenuEntries();
-		CurrentMenuEntryCount = entries.length;
+
+		// Option has walk here option
+		if (entries.length > 2)
+		{
+			boolean bWalkHereFound = false;
+
+			for (int i = 0; i < entries.length; ++i)
+			{
+				if (entries[i].getOption().equals("Walk here"))
+				{
+					bWalkHereFound = true;
+				}
+			}
+
+			if (bWalkHereFound)
+			{
+				bIsWalkHereOptionWithExamine = true;
+			}
+			else
+			{
+				bIsWalkHereOptionWithExamine = false;
+			}
+		}
+		else
+		{
+			bIsWalkHereOptionWithExamine = false;
+		}
 
 		// Plugin no longer supported (Need GPU plugin)
 		if (TicksSincePluginWasSupport > 5)
@@ -285,7 +311,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener
 		// If the option is not just "walk here", swap to the old camera system for just a few frames or while the right click menu is open.
 		// The plugin's camera is so close to the original camera view that the clickboxes are close enough.
 		// The user loses some accuracy, but it allows the feature to be possible.
-		if (CurrentMenuEntryCount > 2)
+		if (bIsWalkHereOptionWithExamine)
 		{
 			bIsRightClick = true;
 			client.setCameraMode(0);
