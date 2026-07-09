@@ -74,6 +74,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener
 
 	public boolean bForceEarlyOut = false;
 
+	public boolean bForceAdaptiveCameraOff = false;
 	private float CurrentCameraPositionX = -1;
 	private float CurrentCameraPositionZ = -1;
 
@@ -88,6 +89,14 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener
 	public void onClientTick(ClientTick event)
 	{
 		MenuEntry[] entries = client.getMenuEntries();
+		if (client.getWorldView(-1) != client.getLocalPlayer().getWorldView())
+		{
+			bForceAdaptiveCameraOff = true;
+		}
+		else
+		{
+			bForceAdaptiveCameraOff = false;
+		}
 
 		// Option has walk here option
 		if (entries.length > 2)
@@ -145,7 +154,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener
 			{
 				bIsRightClick = false;
 			}
-			if (config.AdaptiveCameraOn() && !bIsRightClick && !PlayerMovementHandler.bShouldRenderOwner)
+			if (!bForceAdaptiveCameraOff &&config.AdaptiveCameraOn() && !bIsRightClick && !PlayerMovementHandler.bShouldRenderOwner)
 			{
 				if (CurrentCameraPositionX == -1 || CurrentCameraPositionZ == -1)
 				{
@@ -226,7 +235,6 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener
 		}
 
 		WorldView newWorldView = player.getWorldView();
-
 		if (newWorldView != currentWorldView)
 		{
 			WorldView old = currentWorldView;
