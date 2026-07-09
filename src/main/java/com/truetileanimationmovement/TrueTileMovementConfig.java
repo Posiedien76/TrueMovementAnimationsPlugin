@@ -9,12 +9,25 @@ public interface TrueTileMovementConfig extends Config
 {
 	@ConfigItem(
 			keyName = "OrientationRotationSpeed",
-			name = "Default Orientation Rotation Speed",
+			name = "Orientation Rotation Speed",
 			description = "Speed for rotating our character"
 	)
 	default int OrientationRotationSpeed()
 	{
 		return 30;
+	}
+
+	// If the option is not just "walk here", swap to the old camera system for just a few frames or while the right click menu is open.
+	// The plugin's camera is so close to the original camera view that the clickboxes are close enough.
+	// The user loses some accuracy, but it allows the feature to be possible.
+	@ConfigItem(
+			keyName = "AdaptiveCameraOn",
+			name = "  Adaptive Camera",
+			description = "Adaptive Camera mode"
+	)
+	default boolean AdaptiveCameraOn()
+	{
+		return true;
 	}
 
 	@ConfigItem(
@@ -30,27 +43,27 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "StopEngagingInCombatTime",
 			name = "Stop Engaging In Combat Time",
-			description = "Amount of time to de-agro when over 4 tiles from the enemy (1 tick = 60 units)"
+			description = "Amount of time to de-agro when over 4 tiles from the enemy (1 tick = 60 units); 1200 is a good value, disable by default\""
 	)
 	default int StopEngagingInCombatTime()
 	{
-		return 1200;
+		return 0;
 	} // 20 ticks
 
 	@ConfigItem(
 			keyName = "StopEngagingInCombatTimeFromCloseDistance",
 			name = "Stop Engaging In Combat Time From Close Distance",
-			description = "Amount of time to de-agro when under 4 tiles from the enemy (1 tick = 60 units)"
+			description = "Amount of time to de-agro when under 4 tiles from the enemy (1 tick = 60 units); 7200 is a good value, disable by default"
 	)
 	default int StopEngagingInCombatTimeFromCloseDistance()
 	{
-		return 7200;
+		return 0;
 	} // 120 ticks
 
 	@ConfigItem(
 			keyName = "SpawnModelAtCameraTile",
-			name = " Spawn Camera Model",
-			description = "Whether or not to spawn a camera arrow model for the original location"
+			name = " Spawn Original Camera Model",
+			description = "Whether or not to spawn a camera model for the original location"
 	)
 	default boolean SpawnModelAtCameraTile()
 	{
@@ -139,12 +152,12 @@ public interface TrueTileMovementConfig extends Config
 
 	@ConfigItem(
 			keyName = "TickPerfectMovesUntilJumping",
-			name = " Tick Perfect Movement Animation Combo Start",
+			name = " Tick Perfect Movement Animation Combo Start (Disabled by default, change to a value like 3 to use)",
 			description = "Amount of perfect moves before activating tick perfect animation jumps (turn off feature by making this value really large)"
 	)
 	default int TickPerfectMovesUntilJumping()
 	{
-		return 3;
+		return 1000;
 	}
 
 
