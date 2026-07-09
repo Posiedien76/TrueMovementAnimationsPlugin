@@ -62,7 +62,7 @@ public interface TrueTileMovementConfig extends Config
 
 	@ConfigItem(
 			keyName = "SpawnModelAtCameraTile",
-			name = " Spawn Original Camera Model",
+			name = " Spawn Camera Model at Original Location",
 			description = "Whether or not to spawn a camera model for the original location"
 	)
 	default boolean SpawnModelAtCameraTile()

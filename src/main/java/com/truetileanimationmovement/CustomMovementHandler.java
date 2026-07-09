@@ -596,6 +596,10 @@ public class CustomMovementHandler
                 NextLerpPosition = RequestedLerpPoint;
             }
 
+            if (NextLerpPositionWorldPoint == null)
+            {
+                NextLerpPositionWorldPoint = CurrentWorldPoint;
+            }
             if (!NextLerpPosition.equals(RequestedLerpPoint))
             {
                 // Try all planes and use whichever one is the closest

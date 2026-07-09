@@ -113,12 +113,13 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener
 			//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "True Focal Point X" + client.getCameraFocalPointX(), null);
 			//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "True Focal Point Y" + client.getCameraFocalPointY(), null);
 			//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "True Focal Point Z" + client.getCameraFocalPointZ(), null);
-			;
+
+			// Use the old camera system while attempting to make commands. (The old camera is so close to the original, the clickboxes are close enough)
 			if (!client.isMenuOpen() && (System.currentTimeMillis() -LastRightClickTime > 60))
 			{
 				bIsRightClick = false;
 			}
-			if (config.AdaptiveCameraOn() && !bIsRightClick)
+			if (config.AdaptiveCameraOn() && !bIsRightClick && !PlayerMovementHandler.bShouldRenderOwner)
 			{
 				if (CurrentCameraPositionX == -1 || CurrentCameraPositionZ == -1)
 				{
