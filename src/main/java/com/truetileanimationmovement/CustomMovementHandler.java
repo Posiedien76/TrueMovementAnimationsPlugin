@@ -452,7 +452,8 @@ public class CustomMovementHandler
                                 && TileDistanceFromTarget <= 3)
                         ||
                         // Very far
-                        TileDistanceFromTarget > 10))
+                        TileDistanceFromTarget > 10 ||
+                        !config.CombatModeEnabled() && Owner.getInteracting() != currentTarget))
         {
             bTargetWasKilled = currentTarget.isDead();
             LastNPCCombatLevel = currentTarget.getCombatLevel();

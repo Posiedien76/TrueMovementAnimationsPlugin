@@ -43,21 +43,21 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "StopEngagingInCombatTime",
 			name = "Stop Engaging In Combat Time",
-			description = "Amount of time to de-agro when over 4 tiles from the enemy (1 tick = 60 units); 1200 is a good value, disable by default\""
+			description = "Amount of time to de-agro when over 4 tiles from the enemy (1 tick = 60 units);\""
 	)
 	default int StopEngagingInCombatTime()
 	{
-		return 0;
+		return 1200;
 	} // 20 ticks
 
 	@ConfigItem(
 			keyName = "StopEngagingInCombatTimeFromCloseDistance",
 			name = "Stop Engaging In Combat Time From Close Distance",
-			description = "Amount of time to de-agro when under 4 tiles from the enemy (1 tick = 60 units); 7200 is a good value, disable by default"
+			description = "Amount of time to de-agro when under 4 tiles from the enemy (1 tick = 60 units);"
 	)
 	default int StopEngagingInCombatTimeFromCloseDistance()
 	{
-		return 0;
+		return 7200;
 	} // 120 ticks
 
 	@ConfigItem(
@@ -66,6 +66,16 @@ public interface TrueTileMovementConfig extends Config
 			description = "Whether or not to spawn a camera model for the original location"
 	)
 	default boolean SpawnModelAtCameraTile()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+			keyName = "CombatModeEnabled",
+			name = " Enhanced Combat Mode",
+			description = "Whether or not to allow the plugin's combat mode feature."
+	)
+	default boolean CombatModeEnabled()
 	{
 		return false;
 	}
