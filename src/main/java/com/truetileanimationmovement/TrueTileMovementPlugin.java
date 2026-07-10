@@ -448,11 +448,11 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		}
 
 		// Print recent animation for convenience
-		if (LastPrintedAnimation != client.getLocalPlayer().getAnimation())
-		{
-			LastPrintedAnimation = client.getLocalPlayer().getAnimation();
-			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Current Animation ID " + client.getLocalPlayer().getAnimation(), null);
-		}
+		//if (LastPrintedAnimation != client.getLocalPlayer().getAnimation())
+		//{
+		//	LastPrintedAnimation = client.getLocalPlayer().getAnimation();
+		//	client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Current Animation ID " + client.getLocalPlayer().getAnimation(), null);
+		//}
 
 		Player player = client.getLocalPlayer();
 		if (player == null)
