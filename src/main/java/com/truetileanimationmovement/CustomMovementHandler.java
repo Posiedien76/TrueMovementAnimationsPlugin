@@ -104,6 +104,7 @@ public class CustomMovementHandler
         UniqueAnimationExceptionList.add(878); // Teleport
         UniqueAnimationExceptionList.add(1816); // Teleport
         UniqueAnimationExceptionList.add(1979); // Teleport
+        UniqueAnimationExceptionList.add(3872); // Teleport
 
         UniqueAnimationLocationAndOrientationExceptionList.add(749); // crawl pipe
         UniqueAnimationLocationAndOrientationExceptionList.add(751); // rope swing
@@ -642,16 +643,16 @@ public class CustomMovementHandler
 
                 // Fallback to quick and dirty move
                 if (NextLerpPoint != null &&
-                        !((Math.abs(NextLerpPoint.getX() - LastLerpPosition.getX()) <= 1280) &&
-                                (Math.abs(NextLerpPoint.getY() - LastLerpPosition.getY()) <= 1280)))
+                        !((Math.abs(NextLerpPoint.getX() - LastLerpPosition.getX()) <= 1024) &&
+                                (Math.abs(NextLerpPoint.getY() - LastLerpPosition.getY()) <= 1024)))
                 {
                     LastLerpPosition = NextLerpPoint;
                     LastLerpPositionWorldPoint = WorldPoint.fromLocal(client, LastLerpPosition);
                 }
 
                 else if (NextLerpPoint != null &&
-                        (Math.abs(NextLerpPoint.getX() - LastLerpPosition.getX()) <= 1280) &&
-                        (Math.abs(NextLerpPoint.getY() - LastLerpPosition.getY()) <= 1280))
+                        (Math.abs(NextLerpPoint.getX() - RequestedLerpPoint.getX()) <= 1024) &&
+                        (Math.abs(NextLerpPoint.getY() - RequestedLerpPoint.getY()) <= 1024))
                 {
                     LastLerpPosition = NextLerpPosition;
                     LastLerpPositionWorldPoint = WorldPoint.fromLocal(client, LastLerpPosition);

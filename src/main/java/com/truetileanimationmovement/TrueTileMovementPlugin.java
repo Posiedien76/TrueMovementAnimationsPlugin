@@ -435,10 +435,13 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 			return;
 		}
 
+		// Teleports
 		if (client.getLocalPlayer().getAnimation() == 714 ||
 				client.getLocalPlayer().getAnimation() == 878 ||
-				client.getLocalPlayer().getAnimation() == 1816||
-				client.getLocalPlayer().getAnimation() == 1979) // Teleport
+				client.getLocalPlayer().getAnimation() == 1816 ||
+				client.getLocalPlayer().getAnimation() == 1979 ||
+				client.getLocalPlayer().getAnimation() == 3872
+		)
 		{
 			OverlayRenderer.LastTimeTeleport = System.currentTimeMillis();
 			OverlayRenderer.bShouldPlayTeleportAnimation = true;
