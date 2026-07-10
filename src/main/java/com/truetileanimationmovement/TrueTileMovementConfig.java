@@ -165,7 +165,7 @@ public interface TrueTileMovementConfig extends Config
 	)
 	default boolean AllowNPCKilledCelebrationEmote()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
@@ -175,7 +175,7 @@ public interface TrueTileMovementConfig extends Config
 	)
 	default boolean AllowWooxWalkDetection()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(

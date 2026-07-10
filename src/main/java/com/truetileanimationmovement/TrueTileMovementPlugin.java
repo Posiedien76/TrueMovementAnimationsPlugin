@@ -348,13 +348,22 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		++TicksSincePluginWasSupport;
 
 		// Update our focal point Y (probably can calculate this somehow)
-		int FootprintHeight = Perspective.getFootprintTileHeight(client, client.getLocalPlayer().getLocalLocation(), client.getLocalPlayer().getWorldView().getPlane(), client.getLocalPlayer().getFootprintSize()) - client.getLocalPlayer().getAnimationHeightOffset();
+		CustomMovementHandler PlayerMovementHandler = OverlayRenderer.MovementHandlerCache.get(client.getLocalPlayer().getId());
+		int FootprintHeight = Perspective.getFootprintTileHeight(client, client.getLocalPlayer().getLocalLocation(), client.getLocalPlayer().getWorldView().getPlane(), client.getLocalPlayer().getFootprintSize());
+		if (client.getLocalPlayer().getAnimation() != -1)
+		{
+			FootprintHeight -= client.getLocalPlayer().getAnimationHeightOffset();
+		}
+		else
+		{
+			FootprintHeight -= PlayerMovementHandler.OldAnimationHeight;
+		}
+
 		if (client.getCameraMode() == 0 || CurrentPredictedZoomLevel == 0)
 		{
 			CurrentPredictedZoomLevel = FootprintHeight - client.getCameraFocalPointY();
 		}
 
-		CustomMovementHandler PlayerMovementHandler = OverlayRenderer.MovementHandlerCache.get(client.getLocalPlayer().getId());
 		if (PlayerMovementHandler != null)
 		{
 			// Use the old camera system while attempting to make commands. (The old camera is so close to the original, the clickboxes are close enough)

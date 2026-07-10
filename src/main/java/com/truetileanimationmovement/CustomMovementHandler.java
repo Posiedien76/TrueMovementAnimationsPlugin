@@ -58,6 +58,7 @@ public class CustomMovementHandler
     // Original true animations
     private AnimationRequestDetails CurrentAnimationRequest;
     private IdleAnimationSet OldAnimationSet = new IdleAnimationSet();
+    public int OldAnimationHeight = 0;
     private boolean bIsDefaultHumanAnimationSet = true;
 
     // Rotation
@@ -402,6 +403,7 @@ public class CustomMovementHandler
         if (bAnyChanges)
         {
             OldAnimationSet.CacheUniqueLabel();
+            OldAnimationHeight = Owner.getAnimationHeightOffset();
 
             // Monkey or penguin
             if (OldAnimationSet.IdlePoseAnimation == 1386 ||
@@ -1213,8 +1215,16 @@ public class CustomMovementHandler
             Model.getModel().setBufferOffset(Owner.getModel().getBufferOffset());
             Model.getModel().setSceneId(Owner.getModel().getSceneId());
 
+            int FootprintHeight = Perspective.getFootprintTileHeight(client, Model.getLocation(), Owner.getWorldView().getPlane(), Owner.getFootprintSize());
+            if (Owner.getAnimation() != -1)
+            {
+                FootprintHeight -= Owner.getAnimationHeightOffset();
+            }
+            else
+            {
+                FootprintHeight -= OldAnimationHeight;
+            }
 
-            int FootprintHeight = Perspective.getFootprintTileHeight(client, Model.getLocation(), Owner.getWorldView().getPlane(), Owner.getFootprintSize()) - Owner.getAnimationHeightOffset();
             Model.setZ(FootprintHeight);
             Model.setActive(true);
 
