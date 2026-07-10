@@ -10,7 +10,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "OrientationRotationSpeed",
 			name = "Orientation Rotation Speed",
-			description = "Speed for rotating our character"
+			description = "Speed for rotating our character",
+			hidden = true // Broken currently in some cases
 	)
 	default int OrientationRotationSpeed()
 	{
@@ -33,7 +34,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "CameraObjectOrientationRotationSpeed",
 			name = "Camera Object Orientation Rotation Speed",
-			description = "Speed for rotating our optional camera"
+			description = "Speed for rotating our optional camera",
+			hidden = true // Camera model stuff isn't that great right now
 	)
 	default int CameraObjectOrientationRotationSpeed()
 	{
@@ -63,7 +65,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "SpawnModelAtCameraTile",
 			name = " Spawn Camera Model at Original Location",
-			description = "Whether or not to spawn a camera model for the original location"
+			description = "Whether or not to spawn a camera model for the original location",
+			hidden = true // Camera model stuff isn't that great right now
 	)
 	default boolean SpawnModelAtCameraTile()
 	{
@@ -72,7 +75,7 @@ public interface TrueTileMovementConfig extends Config
 
 	@ConfigItem(
 			keyName = "CombatModeEnabled",
-			name = " Enhanced Combat Mode",
+			name = "  Enhanced Combat Mode (fun)",
 			description = "Whether or not to allow the plugin's combat mode feature."
 	)
 	default boolean CombatModeEnabled()
@@ -81,9 +84,20 @@ public interface TrueTileMovementConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "AlwaysHoppingMode",
+			name = "Always Hopping Mode (fun)",
+			description = "Hop Hop Hop."
+	)
+	default boolean AlwaysHoppingMode()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 			keyName = "StationaryCameraModelIndex",
 			name = "Stationary Camera Model",
-			description = "Index of what geometry to render the camera when stationary"
+			description = "Index of what geometry to render the camera when stationary",
+			hidden = true // Camera model stuff isn't that great right now
 	)
 	default int StationaryCameraModelIndex()
 	{
@@ -93,7 +107,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "MovingCameraModelIndex",
 			name = "Moving Camera Model",
-			description = "Index of what geometry to render the camera when moving"
+			description = "Index of what geometry to render the camera when moving",
+			hidden = true // Camera model stuff isn't that great right now
 	)
 	default int MovingCameraModelIndex()
 	{
@@ -103,7 +118,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "ArrowPointingAnimationSpeed",
 			name = "Camera Model Animation Speed",
-			description = "The speed the camera model moves back and forth"
+			description = "The speed the camera model moves back and forth",
+			hidden = true // Camera model stuff isn't that great right now
 	)
 	default double ArrowPointingAnimationSpeed()
 	{
@@ -113,7 +129,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "ArrowPointingAnimationStrength",
 			name = "Camera Model Animation Strength",
-			description = "The distance the camera model will move when oscillating"
+			description = "The distance the camera model will move when oscillating",
+			hidden = true // Camera model stuff isn't that great right now
 	)
 	default double ArrowPointingAnimationStrength()
 	{
@@ -123,7 +140,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "CameraModelHeight",
 			name = "Camera Model Height",
-			description = "The height to render the camera model"
+			description = "The height to render the camera model",
+			hidden = true // Camera model stuff isn't that great right now
 	)
 	default int CameraModelHeight()
 	{
@@ -132,7 +150,7 @@ public interface TrueTileMovementConfig extends Config
 
 	@ConfigItem(
 			keyName = "OnlyEnabledInCombat",
-			name = " Disable Plugin outside Combat",
+			name = "  Disable Plugin outside Combat",
 			description = "Whether or not to only enable the plugin movement in combat"
 	)
 	default boolean OnlyEnabledInCombat()

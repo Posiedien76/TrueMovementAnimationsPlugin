@@ -101,6 +101,9 @@ public class CustomMovementHandler
         UniqueAnimationExceptionList.add(2586); // Agility
         UniqueAnimationExceptionList.add(2583); // Agility
         UniqueAnimationExceptionList.add(714); // Teleport
+        UniqueAnimationExceptionList.add(878); // Teleport
+        UniqueAnimationExceptionList.add(1816); // Teleport
+        UniqueAnimationExceptionList.add(1979); // Teleport
 
         UniqueAnimationLocationAndOrientationExceptionList.add(749); // crawl pipe
         UniqueAnimationLocationAndOrientationExceptionList.add(751); // rope swing
@@ -823,7 +826,7 @@ public class CustomMovementHandler
                     CurrentAnimationRequest.OrientationSpeed /= 2;
                 }
             }
-            else if (FramesSinceIdle > config.TickPerfectMovesUntilJumping() && bIsDefaultHumanAnimationSet)
+            else if ((config.AlwaysHoppingMode() || FramesSinceIdle > config.TickPerfectMovesUntilJumping()) && bIsDefaultHumanAnimationSet)
             {
                 // Handle tick perfect moving
                 CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.GetAnimationRequestMovesetFromUniqueKey(OldAnimationSet,"TickPerfectMovement", config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
@@ -1204,6 +1207,9 @@ public class CustomMovementHandler
             Model.getModel().setBufferOffset(Owner.getModel().getBufferOffset());
             Model.getModel().setSceneId(Owner.getModel().getSceneId());
 
+
+            int FootprintHeight = Perspective.getFootprintTileHeight(client, Model.getLocation(), Owner.getWorldView().getPlane(), Owner.getFootprintSize()) - Owner.getAnimationHeightOffset();
+            Model.setZ(FootprintHeight);
             Model.setActive(true);
 
             UpdateCamera();
