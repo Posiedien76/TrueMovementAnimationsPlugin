@@ -1,5 +1,7 @@
 package com.truetileanimationmovement;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 import javax.swing.*;
@@ -10,7 +12,6 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.RuneLite;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.callback.Hooks;
@@ -28,12 +29,15 @@ import net.runelite.client.plugins.PluginDescriptor;
 import com.google.common.annotations.VisibleForTesting;
 import net.runelite.client.ui.overlay.OverlayManager;
 
+import java.awt.*;
 import java.awt.event.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
-
 import net.runelite.api.Perspective;
 
 import static com.sun.jna.platform.linux.Mman.MAP_TYPE;
@@ -71,15 +75,15 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	@Inject
 	private MouseManager mouseManager;
 
-	//@Inject
-	//private Gson gson;
+	@Inject
+	private Gson gson;
 
-	//private static final Type MAP_TYPE =
-	//		new TypeToken<Map<String, String>>() {}.getType();
+	private static final Type MAP_TYPE =
+			new TypeToken<Map<String, String>>() {}.getType();
 
-	//private final Path saveFile = RuneLite.RUNELITE_DIR.toPath()
-	//		.resolve("TrueTileMovementPlugin")
-	//		.resolve("data.json");
+	private final Path saveFile = RuneLite.RUNELITE_DIR.toPath()
+			.resolve("TrueTileMovementPlugin")
+			.resolve("data.json");
 
 	public boolean bIsPluginSupportedCurrently = true;
 	public int TicksSincePluginWasSupport = 0;
@@ -117,32 +121,32 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 
 	// Cache of target name to default action, serialize this so the user can accumulate right click options
 	private Map<String, String> MainActionCache = new HashMap<>();
-	private void saveMainActionCache()
+	private void saveMainActionCache() throws IOException
 	{
-	//	Files.createDirectories(saveFile.getParent());
-//
-	//	try (Writer writer = Files.newBufferedWriter(saveFile))
-	//	{
-	//		gson.toJson(MainActionCache, MAP_TYPE, writer);
-	//	}
+		Files.createDirectories(saveFile.getParent());
+
+		try (Writer writer = Files.newBufferedWriter(saveFile))
+		{
+			gson.toJson(MainActionCache, MAP_TYPE, writer);
+		}
 	}
 
-	void loadMainActionCache()
+	void loadMainActionCache() throws IOException
 	{
-	//	if (!Files.exists(saveFile))
-	//	{
-	//		MainActionCache = new HashMap<>();
-	//		return;
-	//	}
-//
-	//	try (Reader reader = Files.newBufferedReader(saveFile))
-	//	{
-	//		MainActionCache = gson.fromJson(reader, MAP_TYPE);
-	//		if (MainActionCache == null)
-	//		{
-	//			MainActionCache = new HashMap<>();
-	//		}
-	//	}
+		if (!Files.exists(saveFile))
+		{
+			MainActionCache = new HashMap<>();
+			return;
+		}
+
+		try (Reader reader = Files.newBufferedReader(saveFile))
+		{
+			MainActionCache = gson.fromJson(reader, MAP_TYPE);
+			if (MainActionCache == null)
+			{
+				MainActionCache = new HashMap<>();
+			}
+		}
 	}
 
 	private WorldView currentWorldView = null;
@@ -553,7 +557,11 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		if (gameStateChanged.getGameState() == GameState.HOPPING ||
 		gameStateChanged.getGameState() == GameState.LOGIN_SCREEN)
 		{
-			saveMainActionCache();
+            try {
+                saveMainActionCache();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
 		// Runelite objects are stale
