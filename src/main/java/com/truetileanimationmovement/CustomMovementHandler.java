@@ -1100,7 +1100,10 @@ public class CustomMovementHandler
 
                 cameraModel.setLocation(CameraFinalLocation, Math.min(4, Owner.getWorldView().getPlane() + config.CameraModelHeight()));
 
-                cameraModel.setActive(true); // fails most of the time
+                if (!cameraModel.isActive())
+                {
+                    cameraModel.setActive(true);
+                }
             }
             else if (cameraModel != null)
             {
@@ -1226,7 +1229,10 @@ public class CustomMovementHandler
             }
 
             Model.setZ(FootprintHeight);
-            Model.setActive(true);
+            if (!Model.isActive())
+            {
+                Model.setActive(true);
+            }
 
             UpdateCamera();
         }
