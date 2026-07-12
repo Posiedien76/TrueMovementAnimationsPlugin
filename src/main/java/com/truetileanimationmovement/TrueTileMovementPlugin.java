@@ -107,6 +107,9 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
         }
 	};
 
+	// TEMPORARY CAMERA DATA LOGGER
+	private final CameraCsvLogger cameraCsvLogger = new CameraCsvLogger();
+
 	public boolean bForceEarlyOut = false;
 
 	public boolean bForceAdaptiveCameraOff = false;
@@ -401,6 +404,10 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	@Subscribe
 	public void onBeforeRender(BeforeRender beforeRender)
 	{
+		// TEMPORARY CAMERA DATA LOGGER
+		Player localPlayer = client.getLocalPlayer();
+		cameraCsvLogger.onBeforeRender(client, localPlayer == null ? null : OverlayRenderer.MovementHandlerCache.get(localPlayer.getId()));
+
 		if (bForceEarlyOut || !bIsPluginSupportedCurrently || client.getLocalPlayer() == null)
 		{
 			return;
@@ -527,6 +534,9 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	protected void shutDown() throws Exception
 	{
 		saveMainActionCache();
+
+		// TEMPORARY CAMERA DATA LOGGER
+		cameraCsvLogger.shutDown();
 
 		clientThread.invoke(() ->
 		{
