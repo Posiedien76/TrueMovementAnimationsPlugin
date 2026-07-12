@@ -117,7 +117,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	private boolean bIsWalkHereOptionWithExamine = false;
 	private long LastInputTime = 0;
 	private boolean bIsRecentInput = false;
-	private float CurrentPredictedZoomLevel = 0; // (default to halfway) Value between 45 (zoomed out) and 112 (zoomed in)
+	private float CurrentPredictedZoomLevel = 0; // (default to halfway) Value between 37 (zoomed out) and 112 (zoomed in)
 
 	// Cache of target name to default action, serialize this so the user can accumulate right click options
 	private Map<String, String> MainActionCache = new HashMap<>();
@@ -654,7 +654,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 					float rotation = event.getWheelRotation();
 					CurrentPredictedZoomLevel -= rotation * 2.5f;
 					CurrentPredictedZoomLevel = Math.min(CurrentPredictedZoomLevel, 112);
-					CurrentPredictedZoomLevel = Math.max(CurrentPredictedZoomLevel, 45);
+					CurrentPredictedZoomLevel = Math.max(CurrentPredictedZoomLevel, 37);
 					break;
 				}
 			}
