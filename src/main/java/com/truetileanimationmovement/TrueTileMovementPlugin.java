@@ -400,7 +400,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	@Subscribe
 	public void onBeforeRender(BeforeRender beforeRender)
 	{
-		if (bForceEarlyOut || !bIsPluginSupportedCurrently)
+		if (bForceEarlyOut || !bIsPluginSupportedCurrently || client.getLocalPlayer() == null)
 		{
 			return;
 		}
@@ -647,6 +647,11 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		CurrentPredictedZoomLevel += rotation * 2;
 		CurrentPredictedZoomLevel = Math.min(CurrentPredictedZoomLevel, 120);
 		CurrentPredictedZoomLevel = Math.max(CurrentPredictedZoomLevel, 45);
+
+		//clientThread.invoke(() ->
+		//{
+		//	client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Zoom level" + CurrentPredictedZoomLevel, null);
+		//});
 
 		return event;
 	}
