@@ -117,7 +117,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	private boolean bIsWalkHereOptionWithExamine = false;
 	private long LastInputTime = 0;
 	private boolean bIsRecentInput = false;
-	private float CurrentPredictedZoomLevel = 0; // (default to halfway) Value between 45 (zoomed out) and 120 (zoomed in)
+	private float CurrentPredictedZoomLevel = 0; // (default to halfway) Value between 45 (zoomed out) and 112 (zoomed in)
 
 	// Cache of target name to default action, serialize this so the user can accumulate right click options
 	private Map<String, String> MainActionCache = new HashMap<>();
@@ -361,14 +361,23 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		int CameraDestinationX = lp.getX();
 		int CameraDestinationZ = lp.getY();
 
-		double dx = (CameraDestinationX - CurrentCameraPositionX);
-		double dz = (CameraDestinationZ - CurrentCameraPositionZ);
-
-		double VectorDistance = Math.sqrt(dx * dx + dz * dz);
-
 		client.setCameraMode(1);
 		client.setFreeCameraSpeed(0);
-		if (VectorDistance != 0)
+		client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point X" + CameraDestinationX, null);
+		client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point Y" + (FootprintHeight - CurrentPredictedZoomLevel), null);
+		client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point Z" + CameraDestinationZ, null);
+
+		// Just snap to position for now
+		client.setCameraFocalPointX(CameraDestinationX);
+		client.setCameraFocalPointY(FootprintHeight - CurrentPredictedZoomLevel);
+		client.setCameraFocalPointZ(CameraDestinationZ);
+
+		//double dx = (CameraDestinationX - CurrentCameraPositionX);
+		//double dz = (CameraDestinationZ - CurrentCameraPositionZ);
+//
+		//double VectorDistance = Math.sqrt(dx * dx + dz * dz);
+
+		//if (VectorDistance != 0)
 		{
 			// Normalize vector
 			/*double NormalizedDx = dx / VectorDistance;
@@ -386,14 +395,6 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 				CurrentCameraPositionZ -= (float) Math.min(-dz, -NormalizedDz * config.FreeCameraMovementSpeed());
 			}
 			*/
-			//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point X" + CameraDestinationX, null);
-			//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point Y" + OldFocalPointY, null);
-			//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point Z" + CameraDestinationZ, null);
-
-			// Just snap to position for now
-			client.setCameraFocalPointX(CameraDestinationX);
-			client.setCameraFocalPointY(FootprintHeight - CurrentPredictedZoomLevel);
-			client.setCameraFocalPointZ(CameraDestinationZ);
 		}
 	}
 
@@ -642,16 +643,22 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	@Override
 	public MouseWheelEvent mouseWheelMoved(MouseWheelEvent event)
 	{
-		// TODO: We need to change this to only happen when actually zooming the window in/out (avoid inventory, etc.)
-		int rotation = event.getWheelRotation();
-		CurrentPredictedZoomLevel += rotation * 2;
-		CurrentPredictedZoomLevel = Math.min(CurrentPredictedZoomLevel, 120);
-		CurrentPredictedZoomLevel = Math.max(CurrentPredictedZoomLevel, 45);
-
-		//clientThread.invoke(() ->
-		//{
-		//	client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Zoom level" + CurrentPredictedZoomLevel, null);
-		//});
+		clientThread.invoke(() ->
+		{
+			// Walk option, we are in the main client for sure
+			MenuEntry[] entries = client.getMenuEntries();
+			for (MenuEntry entry : entries)
+			{
+				if (entry.getType() == WALK)
+				{
+					float rotation = event.getWheelRotation();
+					CurrentPredictedZoomLevel -= rotation * 2.5f;
+					CurrentPredictedZoomLevel = Math.min(CurrentPredictedZoomLevel, 112);
+					CurrentPredictedZoomLevel = Math.max(CurrentPredictedZoomLevel, 45);
+					break;
+				}
+			}
+		});
 
 		return event;
 	}
