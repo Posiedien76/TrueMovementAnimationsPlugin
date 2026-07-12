@@ -346,9 +346,71 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 			bIsPluginSupportedCurrently = true;
 		}
 		++TicksSincePluginWasSupport;
+	}
 
+	private void UpdateAdaptiveCamera(CustomMovementHandler PlayerMovementHandler, int FootprintHeight)
+	{
 		// Update our focal point Y (probably can calculate this somehow)
+		if (CurrentCameraPositionX == -1 || CurrentCameraPositionZ == -1)
+		{
+			CurrentCameraPositionX = client.getCameraFocalPointX();
+			CurrentCameraPositionZ = client.getCameraFocalPointZ();
+		}
+
+		LocalPoint lp = PlayerMovementHandler.Model.getLocation();
+		int CameraDestinationX = lp.getX();
+		int CameraDestinationZ = lp.getY();
+
+		double dx = (CameraDestinationX - CurrentCameraPositionX);
+		double dz = (CameraDestinationZ - CurrentCameraPositionZ);
+
+		double VectorDistance = Math.sqrt(dx * dx + dz * dz);
+
+		client.setCameraMode(1);
+		client.setFreeCameraSpeed(0);
+		if (VectorDistance != 0)
+		{
+			// Normalize vector
+			/*double NormalizedDx = dx / VectorDistance;
+			double NormalizedDz = dz / VectorDistance;
+
+			if (dx > 0) {
+				CurrentCameraPositionX += (float) Math.min(dx, NormalizedDx * config.FreeCameraMovementSpeed());
+			} else {
+				CurrentCameraPositionX -= (float) Math.min(-dx, -NormalizedDx * config.FreeCameraMovementSpeed());
+			}
+
+			if (dz > 0) {
+				CurrentCameraPositionZ += (float) Math.min(dz, NormalizedDz * config.FreeCameraMovementSpeed());
+			} else {
+				CurrentCameraPositionZ -= (float) Math.min(-dz, -NormalizedDz * config.FreeCameraMovementSpeed());
+			}
+			*/
+			//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point X" + CameraDestinationX, null);
+			//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point Y" + OldFocalPointY, null);
+			//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point Z" + CameraDestinationZ, null);
+
+			// Just snap to position for now
+			client.setCameraFocalPointX(CameraDestinationX);
+			client.setCameraFocalPointY(FootprintHeight - CurrentPredictedZoomLevel);
+			client.setCameraFocalPointZ(CameraDestinationZ);
+		}
+	}
+
+	@Subscribe
+	public void onBeforeRender(BeforeRender beforeRender)
+	{
+		if (bForceEarlyOut || !bIsPluginSupportedCurrently)
+		{
+			return;
+		}
+
 		CustomMovementHandler PlayerMovementHandler = OverlayRenderer.MovementHandlerCache.get(client.getLocalPlayer().getId());
+		if (PlayerMovementHandler == null)
+		{
+			return;
+		}
+
 		int FootprintHeight = Perspective.getFootprintTileHeight(client, client.getLocalPlayer().getLocalLocation(), client.getLocalPlayer().getWorldView().getPlane(), client.getLocalPlayer().getFootprintSize());
 		if (client.getLocalPlayer().getAnimation() != -1)
 		{
@@ -364,86 +426,39 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 			CurrentPredictedZoomLevel = FootprintHeight - client.getCameraFocalPointY();
 		}
 
-		if (PlayerMovementHandler != null)
+		if (!client.isMenuOpen() && (System.currentTimeMillis() -LastInputTime > 60))
 		{
-			// Use the old camera system while attempting to make commands. (The old camera is so close to the original, the clickboxes are close enough)
-			if (!client.isMenuOpen() && (System.currentTimeMillis() -LastInputTime > 60))
+			bIsRecentInput = false;
+		}
+
+		if (IsAdaptiveCameraOn() && !bIsRecentInput && !PlayerMovementHandler.bShouldRenderOwner)
+		{
+			UpdateAdaptiveCamera(PlayerMovementHandler, FootprintHeight);
+		}
+		// Cache our options
+		else
+		{
+			if (client.getCameraMode() == 0)
 			{
-				bIsRecentInput = false;
-			}
-			if (IsAdaptiveCameraOn() && !bIsRecentInput && !PlayerMovementHandler.bShouldRenderOwner)
-			{
-				if (CurrentCameraPositionX == -1 || CurrentCameraPositionZ == -1)
+				// Find the target
+				MenuEntry[] BundledEntries = FindFirstEntry();
+				MenuEntry FirstMenuEntry = BundledEntries[0];
+				MenuEntry WalkHereMenuEntry = BundledEntries[1];
+
+				String TargetString = "";
+				if (FirstMenuEntry == null)
 				{
-					CurrentCameraPositionX = client.getCameraFocalPointX();
-					CurrentCameraPositionZ = client.getCameraFocalPointZ();
+					FirstMenuEntry = WalkHereMenuEntry;
 				}
+				TargetString = FirstMenuEntry.getTarget();
 
-				LocalPoint lp = PlayerMovementHandler.Model.getLocation();
-				int CameraDestinationX = lp.getX();
-				int CameraDestinationZ = lp.getY();
-
-				double dx = (CameraDestinationX - CurrentCameraPositionX);
-				double dz = (CameraDestinationZ - CurrentCameraPositionZ);
-
-				double VectorDistance = Math.sqrt(dx * dx + dz * dz);
-
-				client.setCameraMode(1);
-				client.setFreeCameraSpeed(0);
-				if (VectorDistance != 0)
+				// Update the cache of the true default option
+				if (FirstMenuEntry != null && !TargetString.isEmpty())
 				{
-					// Normalize vector
-					/*double NormalizedDx = dx / VectorDistance;
-					double NormalizedDz = dz / VectorDistance;
-
-					if (dx > 0) {
-						CurrentCameraPositionX += (float) Math.min(dx, NormalizedDx * config.FreeCameraMovementSpeed());
-					} else {
-						CurrentCameraPositionX -= (float) Math.min(-dx, -NormalizedDx * config.FreeCameraMovementSpeed());
-					}
-
-					if (dz > 0) {
-						CurrentCameraPositionZ += (float) Math.min(dz, NormalizedDz * config.FreeCameraMovementSpeed());
-					} else {
-						CurrentCameraPositionZ -= (float) Math.min(-dz, -NormalizedDz * config.FreeCameraMovementSpeed());
-					}
-					*/
-					//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point X" + CameraDestinationX, null);
-					//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point Y" + OldFocalPointY, null);
-					//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point Z" + CameraDestinationZ, null);
-
-					// Just snap to position for now
-					client.setCameraFocalPointX(CameraDestinationX);
-					client.setCameraFocalPointY(FootprintHeight - CurrentPredictedZoomLevel);
-					client.setCameraFocalPointZ(CameraDestinationZ);
+					MainActionCache.put(TargetString, FirstMenuEntry.getOption());
 				}
 			}
-			// Cache our options
-			else
-			{
-				if (client.getCameraMode() == 0)
-				{
-					// Find the target
-					MenuEntry[] BundledEntries = FindFirstEntry();
-					MenuEntry FirstMenuEntry = BundledEntries[0];
-					MenuEntry WalkHereMenuEntry = BundledEntries[1];
-
-					String TargetString = "";
-					if (FirstMenuEntry == null)
-					{
-						FirstMenuEntry = WalkHereMenuEntry;
-					}
-					TargetString = FirstMenuEntry.getTarget();
-
-					// Update the cache of the true default option
-					if (FirstMenuEntry != null && !TargetString.isEmpty())
-					{
-						MainActionCache.put(TargetString, FirstMenuEntry.getOption());
-					}
-				}
-				client.setCameraMode(0);
-
-			}
+			client.setCameraMode(0);
 		}
 	}
 
@@ -627,8 +642,11 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	@Override
 	public MouseWheelEvent mouseWheelMoved(MouseWheelEvent event)
 	{
+		// TODO: We need to change this to only happen when actually zooming the window in/out (avoid inventory, etc.)
 		int rotation = event.getWheelRotation();
 		CurrentPredictedZoomLevel += rotation * 2;
+		CurrentPredictedZoomLevel = Math.min(CurrentPredictedZoomLevel, 120);
+		CurrentPredictedZoomLevel = Math.max(CurrentPredictedZoomLevel, 45);
 
 		return event;
 	}
