@@ -24,6 +24,10 @@ Current Roadmap / TODO
 * Health Bar Sync: Adjust the player health bar to match the position of the new character model.
 
 
+CONTRIBUTOR LIST->
+- Posiedien (plugin owner)
+- MK677
+
 
 ![Demo GIF](docs/screenshots/PluginFeatureGif.gif)
 
