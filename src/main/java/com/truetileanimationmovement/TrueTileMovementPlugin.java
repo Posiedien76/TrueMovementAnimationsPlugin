@@ -116,6 +116,9 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	public boolean bNonAdaptiveCameraActionActive = false;
 	private float CurrentCameraPositionX = -1;
 	private float CurrentCameraPositionZ = -1;
+	private float CurrentCameraSpeedX = 0;
+	private float CurrentCameraSpeedZ = 0;
+
 
 	private boolean bIsWalkHereOptionWithExamine = false;
 	private long LastInputTime = 0;
@@ -364,41 +367,63 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		int CameraDestinationX = lp.getX();
 		int CameraDestinationZ = lp.getY();
 
+		// TODO: Need to use world positions probably, also need to not assume locked fps
+		// TODO 2: I THINK THIS IS ALMOST RIGHT, I think it may work if this uses true tile instead
+		if (CurrentCameraPositionX != CameraDestinationX)
+		{
+			CurrentCameraSpeedX += 0.1333333333333333f;
+			CurrentCameraSpeedX = Math.min(CurrentCameraSpeedX, 8);
+		}
+		else
+		{
+			CurrentCameraSpeedX -= 0.1333333333333333f;
+			CurrentCameraSpeedX = Math.max(CurrentCameraSpeedX, 0);
+		}
+
+		if (CurrentCameraPositionX > CameraDestinationX)
+		{
+			CurrentCameraPositionX -= CurrentCameraSpeedX;
+			CurrentCameraPositionX = Math.max(CurrentCameraPositionX, CameraDestinationX);
+		}
+		else
+		{
+			CurrentCameraPositionX += CurrentCameraSpeedX;
+			CurrentCameraPositionX = Math.min(CurrentCameraPositionX, CameraDestinationX);
+		}
+
+		// Do same for Z
+		if (CurrentCameraPositionZ != CameraDestinationZ)
+		{
+			CurrentCameraSpeedZ += 0.1333333333333333f;
+			CurrentCameraSpeedZ = Math.min(CurrentCameraSpeedZ, 8);
+		}
+		else
+		{
+			CurrentCameraSpeedZ -= 0.1333333333333333f;
+			CurrentCameraSpeedZ = Math.max(CurrentCameraSpeedZ, 0);
+		}
+
+		if (CurrentCameraPositionZ > CameraDestinationZ)
+		{
+			CurrentCameraPositionZ -= CurrentCameraSpeedZ;
+			CurrentCameraPositionZ = Math.max(CurrentCameraPositionZ, CameraDestinationZ);
+		}
+		else
+		{
+			CurrentCameraPositionZ += CurrentCameraSpeedZ;
+			CurrentCameraPositionZ = Math.min(CurrentCameraPositionZ, CameraDestinationZ);
+		}
+
+		// TODO: Probably do to Y too
+
+
 		client.setCameraMode(1);
 		client.setFreeCameraSpeed(0);
-		//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point X" + CameraDestinationX, null);
-		//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point Y" + (FootprintHeight - CurrentPredictedZoomLevel), null);
-		//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point Z" + CameraDestinationZ, null);
 
 		// Just snap to position for now
-		client.setCameraFocalPointX(CameraDestinationX);
+		client.setCameraFocalPointX(CurrentCameraPositionX);
 		client.setCameraFocalPointY(FootprintHeight - CurrentPredictedZoomLevel);
-		client.setCameraFocalPointZ(CameraDestinationZ);
-
-		//double dx = (CameraDestinationX - CurrentCameraPositionX);
-		//double dz = (CameraDestinationZ - CurrentCameraPositionZ);
-//
-		//double VectorDistance = Math.sqrt(dx * dx + dz * dz);
-
-		//if (VectorDistance != 0)
-		{
-			// Normalize vector
-			/*double NormalizedDx = dx / VectorDistance;
-			double NormalizedDz = dz / VectorDistance;
-
-			if (dx > 0) {
-				CurrentCameraPositionX += (float) Math.min(dx, NormalizedDx * config.FreeCameraMovementSpeed());
-			} else {
-				CurrentCameraPositionX -= (float) Math.min(-dx, -NormalizedDx * config.FreeCameraMovementSpeed());
-			}
-
-			if (dz > 0) {
-				CurrentCameraPositionZ += (float) Math.min(dz, NormalizedDz * config.FreeCameraMovementSpeed());
-			} else {
-				CurrentCameraPositionZ -= (float) Math.min(-dz, -NormalizedDz * config.FreeCameraMovementSpeed());
-			}
-			*/
-		}
+		client.setCameraFocalPointZ(CurrentCameraPositionZ);
 	}
 
 	@Subscribe
@@ -465,6 +490,8 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 				{
 					MainActionCache.put(TargetString, FirstMenuEntry.getOption());
 				}
+				CurrentCameraPositionX = client.getCameraFocalPointX();
+				CurrentCameraPositionZ = client.getCameraFocalPointZ();
 			}
 			client.setCameraMode(0);
 		}
