@@ -363,9 +363,9 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 
 		client.setCameraMode(1);
 		client.setFreeCameraSpeed(0);
-		client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point X" + CameraDestinationX, null);
-		client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point Y" + (FootprintHeight - CurrentPredictedZoomLevel), null);
-		client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point Z" + CameraDestinationZ, null);
+		//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point X" + CameraDestinationX, null);
+		//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point Y" + (FootprintHeight - CurrentPredictedZoomLevel), null);
+		//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "My Focal Point Z" + CameraDestinationZ, null);
 
 		// Just snap to position for now
 		client.setCameraFocalPointX(CameraDestinationX);
