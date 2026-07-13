@@ -114,11 +114,9 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 
 	public boolean bForceAdaptiveCameraOff = false;
 	public boolean bNonAdaptiveCameraActionActive = false;
-	private float CurrentCameraPositionX = -1;
-	private float CurrentCameraPositionZ = -1;
-	private float CurrentCameraSpeedX = 0;
-	private float CurrentCameraSpeedZ = 0;
 
+	private float CurrentCameraPositionX = -1; // Offset from the player
+	private float CurrentCameraPositionZ = -1;
 
 	private boolean bIsWalkHereOptionWithExamine = false;
 	private long LastInputTime = 0;
@@ -356,66 +354,82 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 
 	private void UpdateAdaptiveCamera(CustomMovementHandler PlayerMovementHandler, int FootprintHeight)
 	{
+		Player player = client.getLocalPlayer();
+		WorldPoint trueWorldTile = player.getWorldLocation();
+		LocalPoint trueLocalTile = LocalPoint.fromWorld(client, trueWorldTile);
+		if (trueLocalTile == null)
+		{
+			return;
+		}
+
+		// Store in sudo world space to prevent jumps when loading new chunks
+		double CalculationOffsetVectorX = trueLocalTile.getX() - trueWorldTile.getX() * 128;
+		double CalculationOffsetVectorY = trueLocalTile.getY() - trueWorldTile.getY() * 128;
+
 		// Update our focal point Y (probably can calculate this somehow)
 		if (CurrentCameraPositionX == -1 || CurrentCameraPositionZ == -1)
 		{
 			CurrentCameraPositionX = client.getCameraFocalPointX();
 			CurrentCameraPositionZ = client.getCameraFocalPointZ();
 		}
-
-		LocalPoint lp = PlayerMovementHandler.Model.getLocation();
-		int CameraDestinationX = lp.getX();
-		int CameraDestinationZ = lp.getY();
-
-		// TODO: Need to use world positions probably, also need to not assume locked fps
-		// TODO 2: I THINK THIS IS ALMOST RIGHT, I think it may work if this uses true tile instead
-		if (CurrentCameraPositionX != CameraDestinationX)
-		{
-			CurrentCameraSpeedX += 0.1333333333333333f;
-			CurrentCameraSpeedX = Math.min(CurrentCameraSpeedX, 8);
-		}
 		else
 		{
-			CurrentCameraSpeedX -= 0.1333333333333333f;
-			CurrentCameraSpeedX = Math.max(CurrentCameraSpeedX, 0);
+			CurrentCameraPositionX += (float) CalculationOffsetVectorX;
+			CurrentCameraPositionZ += (float) CalculationOffsetVectorY;
 		}
 
-		if (CurrentCameraPositionX > CameraDestinationX)
+        LocalPoint CameraDestination = PlayerMovementHandler.Model.getLocation();
+		LocalPoint CurrentCameraPositionLp = new LocalPoint((int) CurrentCameraPositionX, (int) CurrentCameraPositionZ, CameraDestination.getWorldView());
+		float DistanceToTarget = CameraDestination.distanceTo(CurrentCameraPositionLp);
+		float TileMaxDistanceAllowed = config.AdaptiveCameraMaxDistanceAllowed(); // Edge of circle
+
+		// Slower the closer we are to the center
+		float Velocity = (float) config.AdaptiveCameraReturnVelocity() * (DistanceToTarget / TileMaxDistanceAllowed);
+
+		// So far, just teleport
+		if (DistanceToTarget > config.AdaptiveCameraSnapDistance() * 128)
 		{
-			CurrentCameraPositionX -= CurrentCameraSpeedX;
-			CurrentCameraPositionX = Math.max(CurrentCameraPositionX, CameraDestinationX);
-		}
-		else
-		{
-			CurrentCameraPositionX += CurrentCameraSpeedX;
-			CurrentCameraPositionX = Math.min(CurrentCameraPositionX, CameraDestinationX);
+			CurrentCameraPositionX = CameraDestination.getX();
+			CurrentCameraPositionZ = CameraDestination.getY();
 		}
 
-		// Do same for Z
-		if (CurrentCameraPositionZ != CameraDestinationZ)
-		{
-			CurrentCameraSpeedZ += 0.1333333333333333f;
-			CurrentCameraSpeedZ = Math.min(CurrentCameraSpeedZ, 8);
-		}
-		else
-		{
-			CurrentCameraSpeedZ -= 0.1333333333333333f;
-			CurrentCameraSpeedZ = Math.max(CurrentCameraSpeedZ, 0);
-		}
+		float DirectionX = CameraDestination.getX() - CurrentCameraPositionX;
+		float DirectionZ = CameraDestination.getY() - CurrentCameraPositionZ;
 
-		if (CurrentCameraPositionZ > CameraDestinationZ)
+		float DistanceX = Math.abs(DirectionX);
+		float DistanceZ = Math.abs(DirectionZ);
+
+		// Adjust using the current framerate (Tuned to 60FPS)
+		Velocity *= (float) (PlayerMovementHandler.CurrentFrameDelta / 16.667);// Speed value centered at 60FPS
+
+		if (DistanceToTarget != 0)
 		{
-			CurrentCameraPositionZ -= CurrentCameraSpeedZ;
-			CurrentCameraPositionZ = Math.max(CurrentCameraPositionZ, CameraDestinationZ);
-		}
-		else
-		{
-			CurrentCameraPositionZ += CurrentCameraSpeedZ;
-			CurrentCameraPositionZ = Math.min(CurrentCameraPositionZ, CameraDestinationZ);
+			DirectionX /= DistanceToTarget;
+			DirectionZ /= DistanceToTarget;
+
+			float DistanceToMoveX = DirectionX * Velocity;
+			float DistanceToMoveZ = DirectionZ * Velocity;
+
+			if (DistanceX < Math.abs(DistanceToMoveX))
+			{
+				CurrentCameraPositionX = CameraDestination.getX();
+			}
+			else
+			{
+				CurrentCameraPositionX += DistanceToMoveX;
+			}
+
+			if (DistanceZ < Math.abs(DistanceToMoveZ))
+			{
+				CurrentCameraPositionZ = CameraDestination.getY();
+			}
+			else
+			{
+				CurrentCameraPositionZ += DistanceToMoveZ;
+			}
 		}
 
 		// TODO: Probably do to Y too
-
 
 		client.setCameraMode(1);
 		client.setFreeCameraSpeed(0);
@@ -424,6 +438,10 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		client.setCameraFocalPointX(CurrentCameraPositionX);
 		client.setCameraFocalPointY(FootprintHeight - CurrentPredictedZoomLevel);
 		client.setCameraFocalPointZ(CurrentCameraPositionZ);
+
+		// Store in sudo-world space to prevent jumps
+		CurrentCameraPositionX -= (float) CalculationOffsetVectorX;
+		CurrentCameraPositionZ -= (float) CalculationOffsetVectorY;
 	}
 
 	@Subscribe
@@ -490,8 +508,19 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 				{
 					MainActionCache.put(TargetString, FirstMenuEntry.getOption());
 				}
-				CurrentCameraPositionX = client.getCameraFocalPointX();
-				CurrentCameraPositionZ = client.getCameraFocalPointZ();
+
+				// Store in sudo world space
+				WorldPoint trueWorldTile = client.getLocalPlayer().getWorldLocation();
+				LocalPoint trueLocalTile = LocalPoint.fromWorld(client, trueWorldTile);
+				if (trueLocalTile == null)
+				{
+					return;
+				}
+				double CalculationOffsetVectorX = trueLocalTile.getX() - trueWorldTile.getX() * 128;
+				double CalculationOffsetVectorY = trueLocalTile.getY() - trueWorldTile.getY() * 128;
+
+				CurrentCameraPositionX = (float) (client.getCameraFocalPointX() - CalculationOffsetVectorX);
+				CurrentCameraPositionZ = (float) (client.getCameraFocalPointZ() - CalculationOffsetVectorY);
 			}
 			client.setCameraMode(0);
 		}
