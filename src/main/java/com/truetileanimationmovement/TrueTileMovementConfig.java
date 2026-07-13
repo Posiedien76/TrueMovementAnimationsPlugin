@@ -32,6 +32,36 @@ public interface TrueTileMovementConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "AdaptiveCameraMaxDistanceAllowed",
+			name = " Adaptive Camera Following Distance",
+			description = "Ideal distance from the player for the camera to follow (1 tile = 128)"
+	)
+	default int AdaptiveCameraMaxDistanceAllowed()
+	{
+		return 64; // Half a tile
+	}
+
+	@ConfigItem(
+			keyName = "AdaptiveCameraReturnVelocity",
+			name = " Adaptive Camera Return Velocity (Velocity to follow the player at)",
+			description = ""
+	)
+	default double AdaptiveCameraReturnVelocity()
+	{
+		return 4;
+	}
+
+	@ConfigItem(
+			keyName = "AdaptiveCameraSnapDistance",
+			name = " Adaptive Camera Snap Distance",
+			description = "Distance in tiles to just snap to camera to target"
+	)
+	default double AdaptiveCameraSnapDistance()
+	{
+		return 20;
+	}
+
+	@ConfigItem(
 			keyName = "CameraObjectOrientationRotationSpeed",
 			name = "Camera Object Orientation Rotation Speed",
 			description = "Speed for rotating our optional camera",

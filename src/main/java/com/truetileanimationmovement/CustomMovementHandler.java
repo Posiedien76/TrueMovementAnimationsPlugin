@@ -18,7 +18,7 @@ public class CustomMovementHandler
 
     // Time management
     private long CurrentTime;
-    private int CurrentFrameDelta;
+    public int CurrentFrameDelta;
     private long LastTimeMilliseconds = 0;
     private long LastAnimationTickTime = 0;
     private int MillisecondsSinceTileChange = 0;
