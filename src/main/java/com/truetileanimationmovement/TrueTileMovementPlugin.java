@@ -112,7 +112,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	public boolean bForceAdaptiveCameraOff = false;
 	public boolean bNonAdaptiveCameraActionActive = false;
 
-	private float CurrentCameraPositionX = -1; // Offset from the player
+	private float CurrentCameraPositionX = -1; // Offset in "sudo world space" (see adaptive camera function)
 	private float CurrentCameraPositionZ = -1;
 
 	private boolean bIsWalkHereOptionWithExamine = false;
