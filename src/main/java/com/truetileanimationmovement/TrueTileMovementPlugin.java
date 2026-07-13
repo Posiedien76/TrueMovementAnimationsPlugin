@@ -524,6 +524,9 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	{
 		if (bForceEarlyOut || !bIsPluginSupportedCurrently)
 		{
+			CurrentCameraPositionX = -1;
+			CurrentCameraPositionZ = -1;
+			client.setCameraMode(0);
 			return;
 		}
 
@@ -577,12 +580,16 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		renderCallbackManager.register(renderCallback);
 		overlayManager.add(OverlayRenderer);
 		bForceEarlyOut = false;
+		CurrentCameraPositionX = -1;
+		CurrentCameraPositionZ = -1;
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
 		saveMainActionCache();
+		CurrentCameraPositionX = -1;
+		CurrentCameraPositionZ = -1;
 
 		clientThread.invoke(() ->
 		{
