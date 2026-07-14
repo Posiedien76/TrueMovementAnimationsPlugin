@@ -178,43 +178,43 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		{
 			ReturnValue = 5;
 		}
-		else if (Type == GAME_OBJECT_FIFTH_OPTION)
+		else if (Type == NPC_FIFTH_OPTION)
 		{
 			ReturnValue = 6;
 		}
-		else if (Type == GAME_OBJECT_FOURTH_OPTION)
+		else if (Type == NPC_FOURTH_OPTION)
 		{
 			ReturnValue = 7;
 		}
-		else if (Type == GAME_OBJECT_THIRD_OPTION)
+		else if (Type == NPC_THIRD_OPTION)
 		{
 			ReturnValue = 8;
 		}
-		else if (Type == GAME_OBJECT_SECOND_OPTION)
+		else if (Type == NPC_SECOND_OPTION)
 		{
 			ReturnValue = 9;
 		}
-		else if (Type == GAME_OBJECT_FIRST_OPTION)
+		else if (Type == NPC_FIRST_OPTION)
 		{
 			ReturnValue = 10;
 		}
-		else if (Type == NPC_FIFTH_OPTION)
+		else if (Type == GAME_OBJECT_FIFTH_OPTION)
 		{
 			ReturnValue = 11;
 		}
-		else if (Type == NPC_FOURTH_OPTION)
+		else if (Type == GAME_OBJECT_FOURTH_OPTION)
 		{
 			ReturnValue = 12;
 		}
-		else if (Type == NPC_THIRD_OPTION)
+		else if (Type == GAME_OBJECT_THIRD_OPTION)
 		{
 			ReturnValue = 13;
 		}
-		else if (Type == NPC_SECOND_OPTION)
+		else if (Type == GAME_OBJECT_SECOND_OPTION)
 		{
 			ReturnValue = 14;
 		}
-		else if (Type == NPC_FIRST_OPTION)
+		else if (Type == GAME_OBJECT_FIRST_OPTION)
 		{
 			ReturnValue = 15;
 		}
