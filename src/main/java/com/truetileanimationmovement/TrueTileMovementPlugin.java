@@ -533,7 +533,15 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 			client.setCameraMode(0);
 		}
 	}
-
+	private long LastTimeHitSplatApplied = 0;
+	@Subscribe
+	public void onHitsplatApplied(HitsplatApplied event)
+	{
+		if (event.getActor() == client.getLocalPlayer())
+		{
+			LastTimeHitSplatApplied = System.currentTimeMillis();
+		}
+	}
 	@Subscribe
 	public void onGameTick(GameTick event)
 	{
@@ -545,14 +553,15 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 			return;
 		}
 
-		// Hide bar by default
-		OverlayRenderer.bShowHPBar = false;
-
-		// If the OG Vanilla HP bar is currently being shown
-		if (client.getLocalPlayer().getHealthScale() != -1)
+		// Recently been in combat
+		if (System.currentTimeMillis() - LastTimeHitSplatApplied < 6000) // 6 seconds
 		{
 			// Show this one
 			OverlayRenderer.bShowHPBar = true;
+		}
+		else
+		{
+			OverlayRenderer.bShowHPBar = false;
 		}
 
 		// Teleports
