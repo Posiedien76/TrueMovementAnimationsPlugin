@@ -265,7 +265,13 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	@Subscribe
 	public void onClientTick(ClientTick event)
 	{
-		// Update the minimap, it doesn't update in free cam
+		// Let the normal client-tick camera update keep the minimap centered on the local player.
+		// The adaptive camera switches back to free camera during onBeforeRender.
+		if (IsAdaptiveCameraOn())
+		{
+			client.setCameraMode(0);
+		}
+
 		if (client.getMinimapZoom() != CurrentMinimapZoomLevel)
 		{
 			CurrentMinimapZoomLevel = client.getMinimapZoom();
