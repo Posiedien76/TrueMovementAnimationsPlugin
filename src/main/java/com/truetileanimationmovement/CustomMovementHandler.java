@@ -783,6 +783,8 @@ public class CustomMovementHandler
                     {
                         CurrentAnimationRequest.bShouldTeleportToLocation = true;
                         CurrentAnimationRequest.AnimationToPlay = 715; // Teleport in
+
+                        ChangeLastLerpPointForRotation();
                     }
                 }
                 else
@@ -812,6 +814,8 @@ public class CustomMovementHandler
                     }
                     bShouldUseTrueLocationOrientation = true;
                     CurrentAnimationRequest.bShouldTeleportToLocation = true;
+
+                    ChangeLastLerpPointForRotation();
                 }
                 CurrentAnimationRequest.bUseLinearTween = true;
                 CurrentAnimationRequest.MovementSpeedMultiplier = 1.0;

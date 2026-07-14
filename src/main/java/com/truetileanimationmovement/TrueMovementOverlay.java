@@ -1,15 +1,14 @@
 package com.truetileanimationmovement;
 
 import net.runelite.api.*;
+import net.runelite.api.Point;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.kit.KitType;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.ui.overlay.Overlay;
+import net.runelite.client.ui.overlay.*;
 import net.runelite.api.coords.LocalPoint;
-import net.runelite.client.ui.overlay.OverlayPanel;
-import net.runelite.client.ui.overlay.OverlayUtil;
 import net.runelite.client.ui.overlay.components.LineComponent;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -30,6 +29,12 @@ public class TrueMovementOverlay extends OverlayPanel
     public boolean bRecentlyClickedEvent = false;
     public long LastTimeTeleport = 0;
     public boolean bShouldPlayTeleportAnimation = false;
+
+    // HP Bar
+    public boolean bShowHPBar = true;
+    private static final Color BAR_FILL_COLOR = Color.green;
+    private static final Color BAR_BG_COLOR = Color.red;
+    private static final Dimension HP_BAR_SIZE = new Dimension(30, 5);
 
     public void Cleanup()
     {
@@ -53,6 +58,40 @@ public class TrueMovementOverlay extends OverlayPanel
         this.plugin = plugin;
         this.config = config;
 
+        setPosition(OverlayPosition.DYNAMIC);
+        setPriority(PRIORITY_HIGH);
+        setLayer(OverlayLayer.ABOVE_SCENE);
+    }
+
+    public void RenderHPBar(Graphics2D graphics)
+    {
+        var playerEntry = MovementHandlerCache.get(client.getLocalPlayer().getId());
+
+        if (!bShowHPBar || playerEntry == null)
+        {
+            return;
+        }
+
+        final int height = client.getLocalPlayer().getLogicalHeight() + 28;
+
+        final LocalPoint localLocation = playerEntry.Model.getLocation();
+        final Point canvasPoint = Perspective.localToCanvas(client, localLocation, client.getPlane(), height);
+
+        final float ratio = (float) client.getBoostedSkillLevel(Skill.HITPOINTS) / client.getRealSkillLevel(Skill.HITPOINTS);
+
+        // Draw bar
+        final int barX = canvasPoint.getX() - 15;
+        final int barY = canvasPoint.getY();
+        final int barWidth = HP_BAR_SIZE.width;
+        final int barHeight = HP_BAR_SIZE.height;
+
+        // Restricted by the width to prevent the bar from being too long while you are boosted above your real HP level.
+        final int progressFill = (int) Math.ceil(Math.min((barWidth * ratio), barWidth));
+
+        graphics.setColor(BAR_BG_COLOR);
+        graphics.fillRect(barX, barY, barWidth, barHeight);
+        graphics.setColor(BAR_FILL_COLOR);
+        graphics.fillRect(barX, barY, progressFill, barHeight);
 
     }
 
@@ -99,6 +138,10 @@ public class TrueMovementOverlay extends OverlayPanel
         playerEntry.Update();
 
         bRuneliteObjectsStale = false;
+
+        // Render HP bar
+        RenderHPBar(graphics);
+
         return null;
     }
 }

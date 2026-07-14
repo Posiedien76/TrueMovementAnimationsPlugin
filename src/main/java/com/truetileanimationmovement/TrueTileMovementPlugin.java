@@ -90,6 +90,22 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	private final RenderCallback renderCallback = new RenderCallback()
 	{
 		@Override
+		public boolean addEntity(Renderable renderable, boolean ui)
+		{
+			CustomMovementHandler FoundHandler = OverlayRenderer.MovementHandlerCache.get(client.getLocalPlayer().getId());
+			if (FoundHandler != null && !FoundHandler.bShouldRenderOwner)
+			{
+
+				if (ui && Objects.equals(renderable.toString(), client.getLocalPlayer().toString()))
+				{
+					return !(renderable instanceof Player);
+				}
+			}
+
+			return true;
+		}
+
+		@Override
 		public boolean drawObject(Scene scene, TileObject object)
 		{
 			// Only supported with GPU plugin
@@ -177,43 +193,43 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		{
 			ReturnValue = 5;
 		}
-		else if (Type == GAME_OBJECT_FIFTH_OPTION)
+		else if (Type == NPC_FIFTH_OPTION)
 		{
 			ReturnValue = 6;
 		}
-		else if (Type == GAME_OBJECT_FOURTH_OPTION)
+		else if (Type == NPC_FOURTH_OPTION)
 		{
 			ReturnValue = 7;
 		}
-		else if (Type == GAME_OBJECT_THIRD_OPTION)
+		else if (Type == NPC_THIRD_OPTION)
 		{
 			ReturnValue = 8;
 		}
-		else if (Type == GAME_OBJECT_SECOND_OPTION)
+		else if (Type == NPC_SECOND_OPTION)
 		{
 			ReturnValue = 9;
 		}
-		else if (Type == GAME_OBJECT_FIRST_OPTION)
+		else if (Type == NPC_FIRST_OPTION)
 		{
 			ReturnValue = 10;
 		}
-		else if (Type == NPC_FIFTH_OPTION)
+		else if (Type == GAME_OBJECT_FIFTH_OPTION)
 		{
 			ReturnValue = 11;
 		}
-		else if (Type == NPC_FOURTH_OPTION)
+		else if (Type == GAME_OBJECT_FOURTH_OPTION)
 		{
 			ReturnValue = 12;
 		}
-		else if (Type == NPC_THIRD_OPTION)
+		else if (Type == GAME_OBJECT_THIRD_OPTION)
 		{
 			ReturnValue = 13;
 		}
-		else if (Type == NPC_SECOND_OPTION)
+		else if (Type == GAME_OBJECT_SECOND_OPTION)
 		{
 			ReturnValue = 14;
 		}
-		else if (Type == NPC_FIRST_OPTION)
+		else if (Type == GAME_OBJECT_FIRST_OPTION)
 		{
 			ReturnValue = 15;
 		}
@@ -431,7 +447,6 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		client.setCameraMode(1);
 		client.setFreeCameraSpeed(0);
 
-		// Just snap to position for now
 		client.setCameraFocalPointX(CurrentCameraPositionX);
 		client.setCameraFocalPointY(FootprintHeight - CurrentPredictedZoomLevel);
 		client.setCameraFocalPointZ(CurrentCameraPositionZ);
@@ -528,6 +543,16 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 			CurrentCameraPositionZ = -1;
 			client.setCameraMode(0);
 			return;
+		}
+
+		// Hide bar by default
+		OverlayRenderer.bShowHPBar = false;
+
+		// If the OG Vanilla HP bar is currently being shown
+		if (client.getLocalPlayer().getHealthScale() != -1)
+		{
+			// Show this one
+			OverlayRenderer.bShowHPBar = true;
 		}
 
 		// Teleports
