@@ -266,13 +266,9 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	public void onClientTick(ClientTick event)
 	{
 		// Update the minimap, it doesn't update in free cam
-		if (client.getMinimapZoom() != CurrentMinimapZoomLevel)
+		if (IsAdaptiveCameraOn())
 		{
-			CurrentMinimapZoomLevel = client.getMinimapZoom();
-
-			bIsRecentInput = true;
 			client.setCameraMode(0);
-			LastInputTime = System.currentTimeMillis();
 		}
 
 		if (client.getWorldView(-1) != client.getLocalPlayer().getWorldView())
