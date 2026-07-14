@@ -44,7 +44,7 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "AdaptiveCameraReturnVelocity",
 			name = " Adaptive Camera Return Velocity (Velocity to follow the player at)",
-			description = ""
+			description = "Velocity the camera is allowed to return back to the player"
 	)
 	default double AdaptiveCameraReturnVelocity()
 	{
