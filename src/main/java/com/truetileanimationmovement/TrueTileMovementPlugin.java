@@ -460,7 +460,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 			FootprintHeight -= PlayerMovementHandler.OldAnimationHeight;
 		}
 
-		if (client.getCameraMode() == 0 || CurrentPredictedZoomLevel == 0)
+		if ( CurrentPredictedZoomLevel == 0)
 		{
 			CurrentPredictedZoomLevel = FootprintHeight - client.getCameraFocalPointY();
 		}
@@ -468,6 +468,10 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		if (!client.isMenuOpen() && (System.currentTimeMillis() -LastInputTime > 60))
 		{
 			bIsRecentInput = false;
+		}
+		else if (client.getCameraMode() == 0)
+		{
+			CurrentPredictedZoomLevel = FootprintHeight - client.getCameraFocalPointY();
 		}
 
 		if (IsAdaptiveCameraOn() && !bIsRecentInput && !PlayerMovementHandler.bShouldRenderOwner)
