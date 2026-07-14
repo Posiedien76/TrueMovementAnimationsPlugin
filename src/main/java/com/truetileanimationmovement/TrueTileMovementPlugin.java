@@ -423,11 +423,9 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		}
 
 		// TODO: Probably do to Y too
-
 		client.setCameraMode(1);
 		client.setFreeCameraSpeed(0);
 
-		// Just snap to position for now
 		client.setCameraFocalPointX(CurrentCameraPositionX);
 		client.setCameraFocalPointY(FootprintHeight - CurrentPredictedZoomLevel);
 		client.setCameraFocalPointZ(CurrentCameraPositionZ);
@@ -671,23 +669,6 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	@Override
 	public void mousePressed(MouseEvent e)
 	{
-
-		// TODO: Figure out when minimap is actually clicked to do this
-		//Point point = new Point(e.getX(), e.getY());
-		//
-		//Widget minimap = client.getWidget(WidgetInfo.FIXED_VIEWPORT_MINIMAP_DRAW_AREA);
-//
-		//boolean bMinimapClicked = false;
-		//if (minimap != null)
-		//{
-		//	Rectangle bounds = minimap.getBounds();
-//
-		//	if (bounds.contains(point.getX(), point.getY()))
-		//	{
-		//		bMinimapClicked = true;
-		//	}
-		//}
-
 		// If the option is not just "walk here", swap to the old camera system for just a few frames or while the right click menu is open.
 		// The plugin's camera is so close to the original camera view that the clickboxes are close enough.
 		// The user loses some accuracy, but it allows the feature to be possible.
