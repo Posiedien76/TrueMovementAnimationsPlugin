@@ -143,7 +143,7 @@ public class TrueMovementOverlay extends OverlayPanel
             Point point = Perspective.getCanvasTextLocation(
                     client,
                     graphics,
-                    player.getLocalLocation(),
+                    playerEntry.Model.getLocation(),
                     text,
                     player.getLogicalHeight() / 2 + offset
             );
