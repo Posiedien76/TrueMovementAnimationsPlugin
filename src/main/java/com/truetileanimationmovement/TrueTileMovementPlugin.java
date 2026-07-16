@@ -11,6 +11,7 @@ import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
+import net.runelite.api.gameval.VarClientID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.RuneLite;
 import net.runelite.client.callback.ClientThread;
@@ -152,6 +153,9 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	private boolean bIsRecentInput = false;
 	private boolean bAwaitingCompletedLeftClickCameraResume = false;
 	private float CurrentPredictedZoomLevel = 0; // (default to halfway) Value between 37 (zoomed out) and 112 (zoomed in)
+	private static final float ACCEPTED_ZOOM_TO_PREDICTED_ZOOM_SCALE = 0.098f;
+	private Integer LastAcceptedZoomLevel = null;
+	private boolean bLastAcceptedZoomWasResized = false;
 
 	// Cache of target name to default action, serialize this so the user can accumulate right click options
 	private Map<String, String> MainActionCache = new HashMap<>();
@@ -492,6 +496,8 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		{
 			FootprintHeight -= PlayerMovementHandler.OldAnimationHeight;
 		}
+
+		UpdatePredictedZoomFromAcceptedZoom();
 
 		if ( CurrentPredictedZoomLevel == 0)
 		{
@@ -849,28 +855,44 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 			LastInputTime = System.currentTimeMillis();
 		}
 	}
-
 	@Override
 	public MouseWheelEvent mouseWheelMoved(MouseWheelEvent event)
 	{
-		clientThread.invoke(() ->
-		{
-			// Walk option, we are in the main client for sure
-			MenuEntry[] entries = client.getMenuEntries();
-			for (MenuEntry entry : entries)
-			{
-				if (entry.getType() == WALK)
-				{
-					float rotation = event.getWheelRotation();
-					CurrentPredictedZoomLevel -= rotation * 2.5f;
-					CurrentPredictedZoomLevel = Math.min(CurrentPredictedZoomLevel, 112);
-					CurrentPredictedZoomLevel = Math.max(CurrentPredictedZoomLevel, 37);
-					break;
-				}
-			}
-		});
-
 		return event;
+	}
+
+	private void UpdatePredictedZoomFromAcceptedZoom()
+	{
+		boolean bIsResized = client.isResized();
+		int AcceptedZoomLevel = getAcceptedZoomLevel();
+
+		if (LastAcceptedZoomLevel == null || bLastAcceptedZoomWasResized != bIsResized ||
+				CurrentPredictedZoomLevel == 0)
+
+		{
+			LastAcceptedZoomLevel = AcceptedZoomLevel;
+			bLastAcceptedZoomWasResized = bIsResized;
+			return;
+		}
+
+		int AcceptedZoomDelta = AcceptedZoomLevel - LastAcceptedZoomLevel;
+		LastAcceptedZoomLevel = AcceptedZoomLevel;
+
+		if (AcceptedZoomDelta == 0)
+		{
+			return;
+		}
+
+		CurrentPredictedZoomLevel += AcceptedZoomDelta * ACCEPTED_ZOOM_TO_PREDICTED_ZOOM_SCALE;
+		CurrentPredictedZoomLevel = Math.min(CurrentPredictedZoomLevel, 112);
+		CurrentPredictedZoomLevel = Math.max(CurrentPredictedZoomLevel, 37);
+	}
+
+	private int getAcceptedZoomLevel()
+	{
+		return client.getVarcIntValue(client.isResized()
+				? VarClientID.CAMERA_ZOOM_BIG
+				: VarClientID.CAMERA_ZOOM_SMALL);
 	}
 
 	@Override
