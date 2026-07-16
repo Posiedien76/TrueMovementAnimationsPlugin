@@ -145,7 +145,7 @@ public class TrueMovementOverlay extends OverlayPanel
                     graphics,
                     player.getLocalLocation(),
                     text,
-                    offset
+                    player.getLogicalHeight() / 2 + offset
             );
 
             if (point != null)
