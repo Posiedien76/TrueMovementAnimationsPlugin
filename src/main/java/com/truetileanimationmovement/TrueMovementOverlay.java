@@ -71,25 +71,13 @@ public class TrueMovementOverlay extends OverlayPanel
         setLayer(OverlayLayer.ABOVE_SCENE);
     }
 
-    public void RenderHPBar(Graphics2D graphics)
+    public void RenderHPBar(Graphics2D graphics, Point HPBarPoint)
     {
-        var playerEntry = MovementHandlerCache.get(client.getLocalPlayer().getId());
-
-        if (!bShowHPBar || playerEntry == null)
-        {
-            return;
-        }
-
-        final int height = client.getLocalPlayer().getLogicalHeight() + 28;
-
-        final LocalPoint localLocation = playerEntry.Model.getLocation();
-        final Point canvasPoint = Perspective.localToCanvas(client, localLocation, client.getPlane(), height);
-
         final float ratio = (float) client.getBoostedSkillLevel(Skill.HITPOINTS) / client.getRealSkillLevel(Skill.HITPOINTS);
 
         // Draw bar
-        final int barX = canvasPoint.getX() - 15;
-        final int barY = canvasPoint.getY();
+        final int barX = HPBarPoint.getX() - 15;
+        final int barY = HPBarPoint.getY();
         final int barWidth = HP_BAR_SIZE.width;
         final int barHeight = HP_BAR_SIZE.height;
 
@@ -111,9 +99,6 @@ public class TrueMovementOverlay extends OverlayPanel
         {
             return;
         }
-
-        // Render HP bar
-        RenderHPBar(graphics);
 
         Player player = client.getLocalPlayer();
         var playerEntry = MovementHandlerCache.get(player.getId());
@@ -170,6 +155,15 @@ public class TrueMovementOverlay extends OverlayPanel
             graphics.drawString(OverheadText, drawX, drawY);
 
             yOffset = yOffset - 5;
+        }
+
+        if (bShowHPBar)
+        {
+            // Render HP bar
+            Point HPBarPoint = new Point(point.getX(), point.getY() - config.OverheadHPBarOffset() + yOffset);
+            RenderHPBar(graphics, HPBarPoint);
+
+            yOffset = yOffset - 4;
         }
 
         if (skullIcon != -1)

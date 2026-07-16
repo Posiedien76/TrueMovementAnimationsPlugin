@@ -60,6 +60,17 @@ public interface TrueTileMovementConfig extends Config
 	{
 		return 9;
 	}
+
+	@ConfigItem(
+			keyName = "OverheadHPBarOffset",
+			name = "Overhead HP Bar Offset",
+			description = "Overhead HP Bar Offset"
+	)
+	default int OverheadHPBarOffset()
+	{
+		return 10;
+	}
+
 	@ConfigItem(
 			keyName = "AdaptiveCameraMaxDistanceAllowed",
 			name = " Adaptive Camera Following Distance",
