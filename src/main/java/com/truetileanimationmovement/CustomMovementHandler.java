@@ -1208,7 +1208,7 @@ public class CustomMovementHandler
 
             // Do not lerp on unique animations outside of combat
             if (Owner.getAnimation() != -1 &&
-                    currentTarget == null &&
+                    !overlay.bShowHPBar &&
                     (!UniqueAnimationExceptionList.contains(Owner.getAnimation()) || CurrentAnimationIDPlaying == OldAnimationSet.IdlePoseAnimation))
             {
                 Model.setModel(client.mergeModels(Owner.getModel()));
