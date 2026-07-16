@@ -102,15 +102,20 @@ public class TrueMovementOverlay extends OverlayPanel
         graphics.fillRect(barX, barY, progressFill, barHeight);
 
     }
+    @Inject
+    private FontManager fontManager;
 
-    public void RenderOverheadPrayer(Graphics2D graphics)
+    public void RenderOverheadObjects(Graphics2D graphics)
     {
         Player player = client.getLocalPlayer();
         var playerEntry = MovementHandlerCache.get(player.getId());
 
         HeadIcon headIcon = player.getOverheadIcon();
         int skullIcon = client.getLocalPlayer().getSkullIcon();
-        if ((headIcon == null && skullIcon == -1) || playerEntry == null)
+        String OverheadText = player.getOverheadText();
+        boolean bIsOverheadTextActive = OverheadText != null;
+
+        if ((headIcon == null && skullIcon == -1 && !bIsOverheadTextActive) || playerEntry == null)
         {
             return;
         }
@@ -124,7 +129,7 @@ public class TrueMovementOverlay extends OverlayPanel
                 player.getFootprintSize()
         );
         // Adjust height in 3D space
-        int zOffset = player.getLogicalHeight() + config.OverheadPrayerOffset(); // tweak this
+        int zOffset = player.getLogicalHeight() + config.OverheadObjectOffset(); // tweak this
 
         Point point = Perspective.localToCanvas(
                 client,
@@ -137,13 +142,25 @@ public class TrueMovementOverlay extends OverlayPanel
         {
             return;
         }
-        boolean bIsOverheadTextActive = player.getOverheadText() != null;
-
         int yOffset = 0;
 
         // Chat text changes the overhead offset.
         if (bIsOverheadTextActive)
         {
+            graphics.setFont(FontManager.getRunescapeBoldFont());
+
+            FontMetrics metrics = graphics.getFontMetrics();
+            int drawX = point.getX() - metrics.stringWidth(OverheadText) / 2;
+            int drawY = point.getY() + yOffset + config.OverheadTextOffset();
+
+            // Shadow
+            graphics.setColor(Color.BLACK);
+            graphics.drawString(OverheadText, drawX + 1, drawY + 1);
+
+            // Foreground
+            graphics.setColor(Color.YELLOW); // Just support yellow for now
+            graphics.drawString(OverheadText, drawX, drawY);
+
             yOffset = yOffset - 5;
         }
 
@@ -221,8 +238,8 @@ public class TrueMovementOverlay extends OverlayPanel
         // Render HP bar
         RenderHPBar(graphics);
 
-        // Prayer
-        RenderOverheadPrayer(graphics);
+        // Overheads
+        RenderOverheadObjects(graphics);
 
         return null;
     }

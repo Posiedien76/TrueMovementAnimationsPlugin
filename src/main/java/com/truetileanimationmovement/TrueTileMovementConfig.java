@@ -31,15 +31,24 @@ public interface TrueTileMovementConfig extends Config
 		return true;
 	}
 	@ConfigItem(
-			keyName = "OverheadPrayerOffset",
-			name = "Overhead Prayer Height Offset",
-			description = "Overhead Prayer Height Offset"
+			keyName = "OverheadObjectOffset",
+			name = "Overhead Object Height Offset",
+			description = "Overhead Object Height Render Offset"
 	)
-	default int OverheadPrayerOffset()
+	default int OverheadObjectOffset()
 	{
 		return 18;
 	}
 
+	@ConfigItem(
+			keyName = "OverheadTextOffset",
+			name = "Overhead Text Offset",
+			description = "Overhead Text Offset"
+	)
+	default int OverheadTextOffset()
+	{
+		return 9;
+	}
 	@ConfigItem(
 			keyName = "AdaptiveCameraMaxDistanceAllowed",
 			name = " Adaptive Camera Following Distance",
