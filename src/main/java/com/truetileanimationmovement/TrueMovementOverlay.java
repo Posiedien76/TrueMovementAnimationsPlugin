@@ -107,6 +107,14 @@ public class TrueMovementOverlay extends OverlayPanel
 
     public void RenderOverheadObjects(Graphics2D graphics)
     {
+        if (!config.CustomOverheadRendering())
+        {
+            return;
+        }
+
+        // Render HP bar
+        RenderHPBar(graphics);
+
         Player player = client.getLocalPlayer();
         var playerEntry = MovementHandlerCache.get(player.getId());
 
@@ -234,9 +242,6 @@ public class TrueMovementOverlay extends OverlayPanel
         playerEntry.Update();
 
         bRuneliteObjectsStale = false;
-
-        // Render HP bar
-        RenderHPBar(graphics);
 
         // Overheads
         RenderOverheadObjects(graphics);

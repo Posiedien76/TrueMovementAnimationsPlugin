@@ -30,6 +30,17 @@ public interface TrueTileMovementConfig extends Config
 	{
 		return true;
 	}
+
+	@ConfigItem(
+			keyName = "CustomOverheadRendering",
+			name = "Custom Overhead Rendering",
+			description = "Whether or not for the plugin to handle the overhead, HP bar, and hitsplat rendering"
+	)
+	default boolean CustomOverheadRendering()
+	{
+		return true;
+	}
+
 	@ConfigItem(
 			keyName = "OverheadObjectOffset",
 			name = "Overhead Object Height Offset",
