@@ -13,15 +13,9 @@ Features
 * Fun jump animations when woox walking and doing fast movements.
 * Improved animation behavior overall
 * Lots of configuration options in the panel on the right.
-
-
-
-
-
-Current Roadmap / TODO
-
 * Dynamic Overheads: Update overhead prayers to follow the new movement model.
 * Health Bar Sync: Adjust the player health bar to match the position of the new character model.
+
 
 
 CONTRIBUTOR LIST->
