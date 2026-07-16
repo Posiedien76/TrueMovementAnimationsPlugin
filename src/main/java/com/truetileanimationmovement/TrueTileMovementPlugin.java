@@ -45,6 +45,7 @@ import net.runelite.api.Perspective;
 import net.runelite.client.util.ImageUtil;
 
 import static com.sun.jna.platform.linux.Mman.MAP_TYPE;
+import static net.runelite.api.HitsplatID.*;
 import static net.runelite.api.MenuAction.*;
 import static net.runelite.api.MenuAction.GROUND_ITEM_FIFTH_OPTION;
 import static net.runelite.api.MenuAction.GROUND_ITEM_THIRD_OPTION;
@@ -626,6 +627,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 
 	public Map<HeadIcon, BufferedImage> prayerImages;
 	public Map<Integer, BufferedImage> skullImages;
+	public Map<Integer, BufferedImage> hitsplatImages;
 	public void InitializePrayerImages()
 	{
 		prayerImages = Map.ofEntries(
@@ -660,6 +662,50 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		);
 	}
 
+	public void InitializeHitsplatImages()
+	{
+		// Use same for me/other because we only handle ourself anyway
+		hitsplatImages = Map.ofEntries(
+				Map.entry(DAMAGE_ME, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_OTHER, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(BLOCK_ME, ImageUtil.loadImageResource(getClass(), "/hitsplats/BlockMe.png")),
+				Map.entry(BLOCK_OTHER, ImageUtil.loadImageResource(getClass(), "/hitsplats/BlockMe.png")),
+				Map.entry(POISON, ImageUtil.loadImageResource(getClass(), "/hitsplats/Poison.png")),
+				Map.entry(VENOM, ImageUtil.loadImageResource(getClass(), "/hitsplats/Venom.png")),
+				Map.entry(DISEASE, ImageUtil.loadImageResource(getClass(), "/hitsplats/Disease.png")),
+				Map.entry(BLEED, ImageUtil.loadImageResource(getClass(), "/hitsplats/Bleed.png")),
+				Map.entry(CORRUPTION, ImageUtil.loadImageResource(getClass(), "/hitsplats/Corruption.png")),
+				Map.entry(BURN, ImageUtil.loadImageResource(getClass(), "/hitsplats/Burn.png")),
+				Map.entry(SANITY_DRAIN, ImageUtil.loadImageResource(getClass(), "/hitsplats/SanityDrain.png")),
+				Map.entry(HEAL, ImageUtil.loadImageResource(getClass(), "/hitsplats/Heal.png")),
+				Map.entry(DOOM, ImageUtil.loadImageResource(getClass(), "/hitsplats/Doom.png")),
+				Map.entry(SANITY_RESTORE, ImageUtil.loadImageResource(getClass(), "/hitsplats/SanityRestore.png")),
+				Map.entry(DISEASE_BLOCKED, ImageUtil.loadImageResource(getClass(), "/hitsplats/Disease.png")),
+				Map.entry(PRAYER_DRAIN, ImageUtil.loadImageResource(getClass(), "/hitsplats/PrayerDrain.png")),
+
+
+				// TODO: The rest of these images, use default hitsplat for now
+				Map.entry(DAMAGE_MAX_ME, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_MAX_ME_CYAN, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_MAX_ME_ORANGE, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_MAX_ME_YELLOW, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_MAX_ME_WHITE, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(CYAN_UP, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(CYAN_DOWN, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_ME_CYAN, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_OTHER_CYAN, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_ME_ORANGE, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_OTHER_ORANGE, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_ME_YELLOW, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_OTHER_YELLOW, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_ME_WHITE, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_OTHER_WHITE, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_ME_POISE, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_OTHER_POISE, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png")),
+				Map.entry(DAMAGE_MAX_ME_POISE, ImageUtil.loadImageResource(getClass(), "/hitsplats/DamageMe.png"))
+		);
+	}
+
 
 
 	@Override
@@ -668,6 +714,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		loadMainActionCache();
 		InitializePrayerImages();
 		InitializeSkullImages();
+		InitializeHitsplatImages();
 
 		client.getCanvas().addMouseListener(this);
 		mouseManager.registerMouseWheelListener(this);

@@ -108,12 +108,24 @@ public class TrueMovementOverlay extends OverlayPanel
 
     public void RenderHitsplats(Graphics2D graphics)
     {
+        if (!config.CustomOverheadRendering())
+        {
+            return;
+        }
+
         Player player = client.getLocalPlayer();
         var playerEntry = MovementHandlerCache.get(player.getId());
         if (playerEntry == null)
         {
             return;
         }
+
+        Point[] HitsplatPointOffsets = {
+                new Point(0, 0),
+                new Point(0, -config.MultipleHitsplatOffset() + 5),
+                new Point(-config.MultipleHitsplatOffset() / 2 - 3, -config.MultipleHitsplatOffset() / 2),
+                new Point(config.MultipleHitsplatOffset() / 2 + 3, -config.MultipleHitsplatOffset() / 2)
+        };
 
         // Render up to 4 hitsplats
         List<Hitsplat> Top4Hitsplats = getTop4Hitsplats(
@@ -129,10 +141,11 @@ public class TrueMovementOverlay extends OverlayPanel
         );
 
 
-        int offset = 0;
-
-        for (Hitsplat hitsplat : Top4Hitsplats)
+        // Reverse the array to draw most important last
+        int i = 0;
+        for (int j = Top4Hitsplats.size() - 1; j >= 0; --j)
         {
+            Hitsplat hitsplat = Top4Hitsplats.get(j);
             if (hitsplat == null)
             {
                 continue;
@@ -145,20 +158,52 @@ public class TrueMovementOverlay extends OverlayPanel
                     graphics,
                     playerEntry.Model.getLocation(),
                     text,
-                    player.getLogicalHeight() / 2 + offset
+                    player.getLogicalHeight() / 2
             );
 
             if (point != null)
             {
-                graphics.setColor(Color.RED);
+                BufferedImage HitsplatImage = plugin.hitsplatImages.get(hitsplat.getHitsplatType());
+                int x = point.getX() + HitsplatPointOffsets[i].getX();
+                int y = point.getY() + 8 + HitsplatPointOffsets[i].getY();
+
+                FontMetrics metrics = graphics.getFontMetrics();
+                int textWidth = metrics.stringWidth(text);
+                int textHeight = metrics.getHeight();
+
+                int textX = x;
+                int textY = y;
+
+                if (HitsplatImage != null)
+                {
+                    int imageX = textX + textWidth / 2 - HitsplatImage.getWidth() / 2;
+                    int imageY = textY - textHeight + (textHeight - HitsplatImage.getHeight()) / 2;
+
+                    graphics.drawImage(
+                            HitsplatImage,
+                            imageX,
+                            imageY,
+                            null
+                    );
+
+                }
+
+
+                // Shadow
+                graphics.setColor(Color.BLACK);
+                graphics.drawString(text,
+                        textX + 1,
+                        textY + 1);
+
+                graphics.setColor(Color.WHITE);
                 graphics.drawString(
                         text,
-                        point.getX(),
-                        point.getY()
+                        textX,
+                        textY
                 );
             }
 
-            offset += 15; // move next hitsplat upward
+            ++i;
         }
     }
 
@@ -306,11 +351,11 @@ public class TrueMovementOverlay extends OverlayPanel
 
         bRuneliteObjectsStale = false;
 
-        // Hitsplats
-        RenderHitsplats(graphics);
-
         // Overheads
         RenderOverheadObjects(graphics);
+
+        // Hitsplats
+        RenderHitsplats(graphics);
 
         return null;
     }

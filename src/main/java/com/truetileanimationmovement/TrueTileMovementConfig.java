@@ -33,7 +33,7 @@ public interface TrueTileMovementConfig extends Config
 
 	@ConfigItem(
 			keyName = "CustomOverheadRendering",
-			name = "Custom Overhead Rendering",
+			name = "  Custom Overhead Rendering",
 			description = "Whether or not for the plugin to handle the overhead, HP bar, and hitsplat rendering"
 	)
 	default boolean CustomOverheadRendering()
@@ -44,7 +44,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "OverheadObjectOffset",
 			name = "Overhead Object Height Offset",
-			description = "Overhead Object Height Render Offset"
+			description = "Overhead Object Height Render Offset",
+			hidden = true
 	)
 	default int OverheadObjectOffset()
 	{
@@ -54,7 +55,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "OverheadTextOffset",
 			name = "Overhead Text Offset",
-			description = "Overhead Text Offset"
+			description = "Overhead Text Offset",
+			hidden = true
 	)
 	default int OverheadTextOffset()
 	{
@@ -64,11 +66,23 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "OverheadHPBarOffset",
 			name = "Overhead HP Bar Offset",
-			description = "Overhead HP Bar Offset"
+			description = "Overhead HP Bar Offset",
+			hidden = true
 	)
 	default int OverheadHPBarOffset()
 	{
 		return 10;
+	}
+
+	@ConfigItem(
+			keyName = "MultipleHitsplatOffset",
+			name = "Overhead Multiple Hitsplat Offset",
+			description = "Overhead Multiple Hitsplat Offset",
+			hidden = true
+	)
+	default int MultipleHitsplatOffset()
+	{
+		return 25;
 	}
 
 	@ConfigItem(
