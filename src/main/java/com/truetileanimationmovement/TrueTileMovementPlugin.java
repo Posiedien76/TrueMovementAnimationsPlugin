@@ -618,6 +618,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	}
 
 	public Map<HeadIcon, BufferedImage> prayerImages;
+	public Map<Integer, BufferedImage> skullImages;
 	public void InitializePrayerImages()
 	{
 		prayerImages = Map.ofEntries(
@@ -630,12 +631,36 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		);
 	}
 
+	public void InitializeSkullImages()
+	{
+		skullImages = Map.ofEntries(
+				Map.entry(SkullIcon.SKULL, ImageUtil.loadImageResource(getClass(), "/skulls/Skull.png")),
+				Map.entry(SkullIcon.SKULL_HIGH_RISK, ImageUtil.loadImageResource(getClass(), "/skulls/SkullHighRisk.png")),
+				Map.entry(SkullIcon.SKULL_FIGHT_PIT, ImageUtil.loadImageResource(getClass(), "/skulls/SkullFightPits.png")),
+				Map.entry(SkullIcon.SKULL_DEADMAN, ImageUtil.loadImageResource(getClass(), "/skulls/SkullDeadman.png")),
+				Map.entry(SkullIcon.LOOT_KEYS_ONE, ImageUtil.loadImageResource(getClass(), "/skulls/SkullLootKey1.png")),
+				Map.entry(SkullIcon.LOOT_KEYS_TWO, ImageUtil.loadImageResource(getClass(), "/skulls/SkullLootKey2.png")),
+				Map.entry(SkullIcon.LOOT_KEYS_THREE, ImageUtil.loadImageResource(getClass(), "/skulls/SkullLootKey3.png")),
+				Map.entry(SkullIcon.LOOT_KEYS_FOUR, ImageUtil.loadImageResource(getClass(), "/skulls/SkullLootKey4.png")),
+				Map.entry(SkullIcon.LOOT_KEYS_FIVE, ImageUtil.loadImageResource(getClass(), "/skulls/SkullLootKey5.png")),
+				Map.entry(SkullIcon.FORINTHRY_SURGE, ImageUtil.loadImageResource(getClass(), "/skulls/SkullForinthrySurge.png")),
+				Map.entry(SkullIcon.FORINTHRY_SURGE_DEADMAN, ImageUtil.loadImageResource(getClass(), "/skulls/SkullForinthrySurgeDeadman.png")),
+				Map.entry(SkullIcon.FORINTHRY_SURGE_KEYS_ONE, ImageUtil.loadImageResource(getClass(), "/skulls/SkullForinthrySurgeDeadmanKey1.png")),
+				Map.entry(SkullIcon.FORINTHRY_SURGE_KEYS_TWO, ImageUtil.loadImageResource(getClass(), "/skulls/SkullForinthrySurgeDeadmanKey2.png")),
+				Map.entry(SkullIcon.FORINTHRY_SURGE_KEYS_THREE, ImageUtil.loadImageResource(getClass(), "/skulls/SkullForinthrySurgeDeadmanKey3.png")),
+				Map.entry(SkullIcon.FORINTHRY_SURGE_KEYS_FOUR, ImageUtil.loadImageResource(getClass(), "/skulls/SkullForinthrySurgeDeadmanKey4.png")),
+				Map.entry(SkullIcon.FORINTHRY_SURGE_KEYS_FIVE, ImageUtil.loadImageResource(getClass(), "/skulls/SkullForinthrySurgeDeadmanKey5.png"))
+		);
+	}
+
+
 
 	@Override
 	protected void startUp() throws Exception
 	{
 		loadMainActionCache();
 		InitializePrayerImages();
+		InitializeSkullImages();
 
 		client.getCanvas().addMouseListener(this);
 		mouseManager.registerMouseWheelListener(this);
@@ -650,6 +675,11 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	public BufferedImage GetPrayerIcon(HeadIcon currentHeadIcon)
 	{
 		return prayerImages.get(currentHeadIcon);
+	}
+
+	public BufferedImage GetSkullIcon(int skullIcon)
+	{
+		return skullImages.get(skullIcon);
 	}
 
 	@Override

@@ -109,7 +109,8 @@ public class TrueMovementOverlay extends OverlayPanel
         var playerEntry = MovementHandlerCache.get(player.getId());
 
         HeadIcon headIcon = player.getOverheadIcon();
-        if (headIcon == null || playerEntry == null)
+        int skullIcon = client.getLocalPlayer().getSkullIcon();
+        if ((headIcon == null && skullIcon == -1) || playerEntry == null)
         {
             return;
         }
@@ -123,7 +124,7 @@ public class TrueMovementOverlay extends OverlayPanel
                 player.getFootprintSize()
         );
         // Adjust height in 3D space
-        int zOffset = player.getLogicalHeight()+config.OverheadPrayerOffset(); // tweak this
+        int zOffset = player.getLogicalHeight() + config.OverheadPrayerOffset(); // tweak this
 
         Point point = Perspective.localToCanvas(
                 client,
@@ -132,33 +133,45 @@ public class TrueMovementOverlay extends OverlayPanel
                 groundHeight - zOffset
         );
 
-        boolean isSkulled = client.getLocalPlayer().getSkullIcon() != -1;
         if (point == null)
         {
             return;
         }
-        boolean isOverheadTextActive = player.getOverheadText() != null;
-
-        BufferedImage image = plugin.GetPrayerIcon(headIcon);
+        boolean bIsOverheadTextActive = player.getOverheadText() != null;
 
         int yOffset = 0;
-        if (isSkulled)
-        {
-            yOffset = -28;
-        }
 
         // Chat text changes the overhead offset.
-        if (isOverheadTextActive)
+        if (bIsOverheadTextActive)
         {
             yOffset = yOffset - 5;
         }
 
-        graphics.drawImage(
-                image,
-                point.getX() - image.getWidth() / 2,
-                point.getY() - 30 - 2 + yOffset,
-                null
-        );
+        if (skullIcon != -1)
+        {
+            BufferedImage SkullImage = plugin.GetSkullIcon(skullIcon);
+            graphics.drawImage(
+                    SkullImage,
+                    point.getX() - SkullImage.getWidth() / 2,
+                    point.getY() - 30 - 2 + yOffset,
+                    null
+            );
+
+            yOffset = yOffset - 28;
+        }
+
+        if (headIcon != null)
+        {
+
+            BufferedImage PrayerImage = plugin.GetPrayerIcon(headIcon);
+            graphics.drawImage(
+                    PrayerImage,
+                    point.getX() - PrayerImage.getWidth() / 2,
+                    point.getY() - 30 - 2 + yOffset,
+                    null
+            );
+
+        }
     }
 
     @Override
