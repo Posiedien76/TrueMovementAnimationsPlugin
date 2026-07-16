@@ -48,7 +48,7 @@ public interface TrueTileMovementConfig extends Config
 	)
 	default int OverheadObjectOffset()
 	{
-		return 18;
+		return 7;
 	}
 
 	@ConfigItem(

@@ -137,7 +137,7 @@ public class TrueMovementOverlay extends OverlayPanel
                 player.getFootprintSize()
         );
         // Adjust height in 3D space
-        int zOffset = player.getLogicalHeight() + config.OverheadObjectOffset(); // tweak this
+        int zOffset = player.getLogicalHeight() + config.OverheadObjectOffset();
 
         Point point = Perspective.localToCanvas(
                 client,
