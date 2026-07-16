@@ -23,7 +23,10 @@ import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
 import java.text.AttributedString;
 import java.util.*;
+import java.util.List;
+import java.util.function.ToIntFunction;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class TrueMovementOverlay extends OverlayPanel
 {
@@ -93,6 +96,72 @@ public class TrueMovementOverlay extends OverlayPanel
     @Inject
     private FontManager fontManager;
 
+    public List<Hitsplat> getTop4Hitsplats(
+            List<Hitsplat> hitsplats,
+            ToIntFunction<Hitsplat> priorityFunction)
+    {
+        return hitsplats.stream()
+                .sorted(Comparator.comparingInt(priorityFunction).reversed())
+                .limit(4)
+                .collect(Collectors.toList());
+    }
+
+    public void RenderHitsplats(Graphics2D graphics)
+    {
+        Player player = client.getLocalPlayer();
+        var playerEntry = MovementHandlerCache.get(player.getId());
+        if (playerEntry == null)
+        {
+            return;
+        }
+
+        // Render up to 4 hitsplats
+        List<Hitsplat> Top4Hitsplats = getTop4Hitsplats(
+                plugin.CurrentHitsplats,
+                hs ->
+                {
+                    int priority = 0;
+                    priority += 100 * (hs.getDisappearsOnGameCycle() - client.getGameCycle()); // Main priority is based on decay
+                    priority += hs.getAmount(); // Secondary priority based on amount
+
+                    return priority;
+                }
+        );
+
+
+        int offset = 0;
+
+        for (Hitsplat hitsplat : Top4Hitsplats)
+        {
+            if (hitsplat == null)
+            {
+                continue;
+            }
+
+            String text = String.valueOf(hitsplat.getAmount());
+
+            Point point = Perspective.getCanvasTextLocation(
+                    client,
+                    graphics,
+                    player.getLocalLocation(),
+                    text,
+                    offset
+            );
+
+            if (point != null)
+            {
+                graphics.setColor(Color.RED);
+                graphics.drawString(
+                        text,
+                        point.getX(),
+                        point.getY()
+                );
+            }
+
+            offset += 15; // move next hitsplat upward
+        }
+    }
+
     public void RenderOverheadObjects(Graphics2D graphics)
     {
         if (!config.CustomOverheadRendering())
@@ -108,7 +177,7 @@ public class TrueMovementOverlay extends OverlayPanel
         String OverheadText = player.getOverheadText();
         boolean bIsOverheadTextActive = OverheadText != null;
 
-        if ((headIcon == null && skullIcon == -1 && !bIsOverheadTextActive) || playerEntry == null)
+        if ((!bShowHPBar && headIcon == null && skullIcon == -1 && !bIsOverheadTextActive) || playerEntry == null)
         {
             return;
         }
@@ -236,6 +305,9 @@ public class TrueMovementOverlay extends OverlayPanel
         playerEntry.Update();
 
         bRuneliteObjectsStale = false;
+
+        // Hitsplats
+        RenderHitsplats(graphics);
 
         // Overheads
         RenderOverheadObjects(graphics);

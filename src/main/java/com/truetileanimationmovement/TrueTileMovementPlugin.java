@@ -39,6 +39,8 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.List;
+
 import net.runelite.api.Perspective;
 import net.runelite.client.util.ImageUtil;
 
@@ -87,6 +89,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 			.resolve("TrueTileMovementPlugin")
 			.resolve("data.json");
 
+	public List<Hitsplat> CurrentHitsplats = new ArrayList<>();
 	public boolean bIsPluginSupportedCurrently = true;
 	public int TicksSincePluginWasSupport = 0;
 	private final RenderCallback renderCallback = new RenderCallback()
@@ -553,6 +556,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		if (event.getActor() == client.getLocalPlayer())
 		{
 			LastTimeHitSplatApplied = System.currentTimeMillis();
+			CurrentHitsplats.add(event.getHitsplat());
 		}
 	}
 
@@ -566,6 +570,9 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 			client.setCameraMode(0);
 			return;
 		}
+
+		// Manage our current hitsplats
+        CurrentHitsplats.removeIf(hitsplat -> client.getGameCycle() >= hitsplat.getDisappearsOnGameCycle());
 
 		// Recently been in combat
 		if (System.currentTimeMillis() - LastTimeHitSplatApplied < 6000) // 6 seconds
