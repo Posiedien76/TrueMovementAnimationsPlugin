@@ -31,6 +31,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
@@ -39,6 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import net.runelite.api.Perspective;
+import net.runelite.client.util.ImageUtil;
 
 import static com.sun.jna.platform.linux.Mman.MAP_TYPE;
 import static net.runelite.api.MenuAction.*;
@@ -92,6 +94,11 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		@Override
 		public boolean addEntity(Renderable renderable, boolean ui)
 		{
+			if (bForceEarlyOut || !bIsPluginSupportedCurrently)
+			{
+				return true;
+			}
+
 			CustomMovementHandler FoundHandler = OverlayRenderer.MovementHandlerCache.get(client.getLocalPlayer().getId());
 			if (FoundHandler != null && !FoundHandler.bShouldRenderOwner)
 			{
@@ -108,6 +115,11 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		@Override
 		public boolean drawObject(Scene scene, TileObject object)
 		{
+			if (bForceEarlyOut)
+			{
+				return true;
+			}
+
 			// Only supported with GPU plugin
 			TicksSincePluginWasSupport = 0;
 			bIsPluginSupportedCurrently = true;
@@ -543,6 +555,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 			LastTimeHitSplatApplied = System.currentTimeMillis();
 		}
 	}
+
 	@Subscribe
 	public void onGameTick(GameTick event)
 	{
@@ -604,10 +617,25 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		}
 	}
 
+	public Map<HeadIcon, BufferedImage> prayerImages;
+	public void InitializePrayerImages()
+	{
+		prayerImages = Map.ofEntries(
+				Map.entry(HeadIcon.MAGIC, ImageUtil.loadImageResource(getClass(), "/Magic.png")),
+				Map.entry(HeadIcon.MELEE, ImageUtil.loadImageResource(getClass(), "/Melee.png")),
+				Map.entry(HeadIcon.RANGED, ImageUtil.loadImageResource(getClass(), "/Ranged.png")),
+				Map.entry(HeadIcon.SMITE, ImageUtil.loadImageResource(getClass(), "/Smite.png")),
+				Map.entry(HeadIcon.RETRIBUTION, ImageUtil.loadImageResource(getClass(), "/Retribution.png")),
+				Map.entry(HeadIcon.REDEMPTION, ImageUtil.loadImageResource(getClass(), "/Redemption.png"))
+		);
+	}
+
+
 	@Override
 	protected void startUp() throws Exception
 	{
 		loadMainActionCache();
+		InitializePrayerImages();
 
 		client.getCanvas().addMouseListener(this);
 		mouseManager.registerMouseWheelListener(this);
@@ -617,6 +645,11 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		bForceEarlyOut = false;
 		CurrentCameraPositionX = -1;
 		CurrentCameraPositionZ = -1;
+	}
+
+	public BufferedImage GetPrayerIcon(HeadIcon currentHeadIcon)
+	{
+		return prayerImages.get(currentHeadIcon);
 	}
 
 	@Override

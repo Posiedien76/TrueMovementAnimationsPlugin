@@ -7,15 +7,23 @@ import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.kit.KitType;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.game.SpriteManager;
+import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.client.ui.overlay.components.LineComponent;
+import net.runelite.client.util.ColorUtil;
+import net.runelite.client.util.Text;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.font.TextAttribute;
+import java.awt.image.BufferedImage;
+import java.text.AttributedString;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class TrueMovementOverlay extends OverlayPanel
 {
@@ -95,6 +103,64 @@ public class TrueMovementOverlay extends OverlayPanel
 
     }
 
+    public void RenderOverheadPrayer(Graphics2D graphics)
+    {
+        Player player = client.getLocalPlayer();
+        var playerEntry = MovementHandlerCache.get(player.getId());
+
+        HeadIcon headIcon = player.getOverheadIcon();
+        if (headIcon == null || playerEntry == null)
+        {
+            return;
+        }
+
+        final LocalPoint localLocation = playerEntry.Model.getLocation();
+
+        int groundHeight = Perspective.getFootprintTileHeight(
+                client,
+                localLocation,
+                client.getLocalPlayer().getWorldView().getPlane(),
+                player.getFootprintSize()
+        );
+        // Adjust height in 3D space
+        int zOffset = player.getLogicalHeight()+config.OverheadPrayerOffset(); // tweak this
+
+        Point point = Perspective.localToCanvas(
+                client,
+                localLocation.getX(),
+                localLocation.getY(),
+                groundHeight - zOffset
+        );
+
+        boolean isSkulled = client.getLocalPlayer().getSkullIcon() != -1;
+        if (point == null)
+        {
+            return;
+        }
+        boolean isOverheadTextActive = player.getOverheadText() != null;
+
+        BufferedImage image = plugin.GetPrayerIcon(headIcon);
+
+        int yOffset = 0;
+        if (isSkulled)
+        {
+            yOffset = -28;
+        }
+
+        // Chat text changes the overhead offset.
+        if (isOverheadTextActive)
+        {
+            yOffset = yOffset - 5;
+        }
+
+        graphics.drawImage(
+                image,
+                point.getX() - image.getWidth() / 2,
+                point.getY() - 30 - 2 + yOffset,
+                null
+        );
+    }
+
     @Override
     public Dimension render(Graphics2D graphics)
     {
@@ -141,6 +207,9 @@ public class TrueMovementOverlay extends OverlayPanel
 
         // Render HP bar
         RenderHPBar(graphics);
+
+        // Prayer
+        RenderOverheadPrayer(graphics);
 
         return null;
     }
