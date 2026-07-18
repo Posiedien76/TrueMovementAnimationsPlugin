@@ -113,6 +113,8 @@ public class TrueMovementOverlay extends OverlayPanel
             return;
         }
 
+        graphics.setFont(FontManager.getRunescapeSmallFont());
+
         Player player = client.getLocalPlayer();
         var playerEntry = MovementHandlerCache.get(player.getId());
         if (playerEntry == null)
