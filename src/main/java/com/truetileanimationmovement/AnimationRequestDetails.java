@@ -3,7 +3,8 @@ package com.truetileanimationmovement;
 public class AnimationRequestDetails
 {
     public double MovementSpeedMultiplier = 1;
-    public int AnimationToPlay = 0;
+    public int AnimationToPlay = -1;
+    public int PoseAnimationToPlay = -1;
     public int StartingFrame = 0;
     public int EndingFrame = 5000;
     public int AnimationSpeed = 1;
@@ -19,6 +20,7 @@ public class AnimationRequestDetails
 
         newObject.MovementSpeedMultiplier = InDetails.MovementSpeedMultiplier;
         newObject.AnimationToPlay = InDetails.AnimationToPlay;
+        newObject.PoseAnimationToPlay = InDetails.PoseAnimationToPlay;
         newObject.StartingFrame = InDetails.StartingFrame;
         newObject.EndingFrame = InDetails.EndingFrame;
         newObject.AnimationSpeed = InDetails.AnimationSpeed;

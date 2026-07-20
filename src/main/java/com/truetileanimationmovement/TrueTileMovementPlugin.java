@@ -99,7 +99,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		@Override
 		public boolean addEntity(Renderable renderable, boolean ui)
 		{
-			if (bForceEarlyOut || !bIsPluginSupportedCurrently || !config.CustomOverheadRendering())
+			if (bForceEarlyOut || !bIsPluginSupportedCurrently || !config.CustomOverheadRendering() || client.getLocalPlayer() == null)
 			{
 				return true;
 			}

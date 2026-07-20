@@ -49,8 +49,10 @@ public class CustomMovementHandler
 
     // Animation Handling
     private int NO_ANIMATION = -1;
+    private int CurrentAnimation = 0;
     private int CurrentPoseAnimation = 0;
     private boolean bResetCurrentAnimation = true;
+    private boolean bResetCurrentPoseAnimation = true;
     Set<Integer> UniqueAnimationExceptionList = new HashSet<Integer>();
     Set<Integer> UniqueAnimationLocationAndOrientationExceptionList = new HashSet<Integer>();
     private long LastTimeUniqueAnimationLocationOrientationWasUsed = 0;
@@ -189,10 +191,18 @@ public class CustomMovementHandler
         return (Owner instanceof Player);
     }
 
-    public void SetAllPoseAnimations(int PoseAnimationToSet)
-    {
-
-    }
+    //public void SetAllPoseAnimations(int PoseAnimationToSet)
+    //{
+    //    Owner.setPoseAnimation(PoseAnimationToSet);
+    //    Owner.setIdleRotateLeft(PoseAnimationToSet);
+    //    Owner.setIdleRotateRight(PoseAnimationToSet);
+    //    Owner.setWalkAnimation(PoseAnimationToSet);
+    //    Owner.setWalkRotateLeft(PoseAnimationToSet);
+    //    Owner.setWalkRotateRight(PoseAnimationToSet);
+    //    Owner.setWalkRotate180(PoseAnimationToSet);
+    //    Owner.setIdlePoseAnimation(PoseAnimationToSet);
+    //    Owner.setRunAnimation(PoseAnimationToSet);
+    //}
 
     public void Initialize(boolean bRuneliteObjectsStale)
     {
@@ -794,7 +804,7 @@ public class CustomMovementHandler
                     if (Owner.getLocalLocation().getX() == CurrentTrueTilePosition.getX() &&
                             Owner.getLocalLocation().getY() == CurrentTrueTilePosition.getY() )
                     {
-                        CurrentAnimationRequest.AnimationToPlay = OldAnimationSet.IdlePoseAnimation;
+                        CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdlePoseAnimation;
                     }
                     else
                     {
@@ -901,15 +911,15 @@ public class CustomMovementHandler
             int ShortestAngle = ShortestAngleDifference(CurrentOrientation, TargetOrientation);
             if (ShortestAngle >= 10)
             {;
-                CurrentAnimationRequest.AnimationToPlay = OldAnimationSet.IdleRotateRight;
+                CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdleRotateRight;
             }
             else if (ShortestAngle <= -10)
             {
-                CurrentAnimationRequest.AnimationToPlay = OldAnimationSet.IdleRotateLeft;
+                CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdleRotateLeft;
             }
             else
             {;
-                CurrentAnimationRequest.AnimationToPlay = OldAnimationSet.IdlePoseAnimation;
+                CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdlePoseAnimation;
             }
 
             bWooxWalkBroken = true;
@@ -931,6 +941,7 @@ public class CustomMovementHandler
         if (CurrentAnimationRequest.bResetAnimationOnNewTile && bNewTileMovementStarted)
         {
             bResetCurrentAnimation = true; // Reset animation
+            bResetCurrentPoseAnimation = true;
         }
 
     }
@@ -1166,17 +1177,27 @@ public class CustomMovementHandler
             }
 
 
-            if (Owner.getPoseAnimation() != CurrentAnimationRequest.AnimationToPlay || bResetCurrentAnimation)
+            if (CurrentAnimationRequest.PoseAnimationToPlay != -1 &&
+                    (Owner.getPoseAnimation() != CurrentAnimationRequest.PoseAnimationToPlay || bResetCurrentPoseAnimation))
+            {
+                bResetCurrentPoseAnimation = false;
+                //SetAllPoseAnimations(CurrentAnimationRequest.PoseAnimationToPlay);
+                Owner.setPoseAnimation(CurrentAnimationRequest.PoseAnimationToPlay);
+                CurrentPoseAnimation = CurrentAnimationRequest.PoseAnimationToPlay;
+
+                //if (AnimController.getAnimation() != client.loadAnimation(CurrentAnimationRequest.AnimationToPlay))
+                //{
+                //    AnimController.setAnimation(client.loadAnimation(CurrentAnimationRequest.AnimationToPlay));
+                //    AnimController.setFrame(CurrentAnimationRequest.StartingFrame);
+                //}
+            }
+
+            if (CurrentAnimationRequest.AnimationToPlay != -1 &&
+                    (Owner.getAnimation() != CurrentAnimationRequest.AnimationToPlay || bResetCurrentAnimation))
             {
                 bResetCurrentAnimation = false;
-                Owner.setPoseAnimation(CurrentAnimationRequest.AnimationToPlay);
-                CurrentPoseAnimation = CurrentAnimationRequest.AnimationToPlay;
-
-                if (AnimController.getAnimation() != client.loadAnimation(CurrentAnimationRequest.AnimationToPlay))
-                {
-                    AnimController.setAnimation(client.loadAnimation(CurrentAnimationRequest.AnimationToPlay));
-                    AnimController.setFrame(CurrentAnimationRequest.StartingFrame);
-                }
+                Owner.setAnimation(CurrentAnimationRequest.AnimationToPlay);
+                CurrentAnimation = CurrentAnimationRequest.AnimationToPlay;
             }
 
 
