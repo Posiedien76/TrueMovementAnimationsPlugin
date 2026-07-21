@@ -21,7 +21,7 @@ public class CustomMovementHandler
     public int CurrentFrameDelta;
     private long LastTimeMilliseconds = 0;
     private long LastAnimationTickTime = 0;
-    private int MillisecondsSinceTileChange = 0;
+    private long MillisecondsSinceTileChange = 1000;
 
     // Runelite object management
     private Actor Owner = null;
@@ -213,6 +213,7 @@ public class CustomMovementHandler
             {
                 // Reset animation (loop)
                 InController.setFrame(0);
+                bTargetWasKilled = false;
             });
         }
 
@@ -425,7 +426,10 @@ public class CustomMovementHandler
         CurrentTime = System.currentTimeMillis();
         CurrentFrameDelta = (int) (CurrentTime - LastTimeMilliseconds);
         LastTimeMilliseconds = CurrentTime;
-        MillisecondsSinceTileChange += CurrentFrameDelta;
+        if (CurrentFrameDelta > 0)
+        {
+            MillisecondsSinceTileChange += CurrentFrameDelta;
+        }
     }
 
     private void UpdateTrueTileLocation()
@@ -1183,21 +1187,30 @@ public class CustomMovementHandler
                 bResetCurrentPoseAnimation = false;
                 //SetAllPoseAnimations(CurrentAnimationRequest.PoseAnimationToPlay);
                 Owner.setPoseAnimation(CurrentAnimationRequest.PoseAnimationToPlay);
+                Owner.setPoseAnimationFrame(CurrentAnimationRequest.StartingFrame);
                 CurrentPoseAnimation = CurrentAnimationRequest.PoseAnimationToPlay;
-
-                //if (AnimController.getAnimation() != client.loadAnimation(CurrentAnimationRequest.AnimationToPlay))
-                //{
-                //    AnimController.setAnimation(client.loadAnimation(CurrentAnimationRequest.AnimationToPlay));
-                //    AnimController.setFrame(CurrentAnimationRequest.StartingFrame);
-                //}
             }
+
 
             if (CurrentAnimationRequest.AnimationToPlay != -1 &&
                     (Owner.getAnimation() != CurrentAnimationRequest.AnimationToPlay || bResetCurrentAnimation))
             {
                 bResetCurrentAnimation = false;
-                Owner.setAnimation(CurrentAnimationRequest.AnimationToPlay);
+
+                if (!UniqueAnimationExceptionList.contains(Owner.getAnimation()))
+                {
+                    Owner.setAnimation(CurrentAnimationRequest.AnimationToPlay);
+                    Owner.setAnimationFrame(CurrentAnimationRequest.StartingFrame);
+                }
+                else
+                {
+                    Owner.setAnimation(-1);
+                    Owner.setAnimationFrame(0);
+                }
+
                 CurrentAnimation = CurrentAnimationRequest.AnimationToPlay;
+                AnimController.setAnimation(client.loadAnimation(CurrentAnimationRequest.AnimationToPlay));
+                AnimController.setFrame(CurrentAnimationRequest.StartingFrame);
             }
 
 
