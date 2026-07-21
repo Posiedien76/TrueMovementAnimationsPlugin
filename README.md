@@ -21,6 +21,7 @@ Features
 CONTRIBUTOR LIST->
 - Posiedien (plugin owner)
 - MK677
+- JarateKing
 
 
 ![Demo GIF](docs/screenshots/PluginFeatureGif.gif)
