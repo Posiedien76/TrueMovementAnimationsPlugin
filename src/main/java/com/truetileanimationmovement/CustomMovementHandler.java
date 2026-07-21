@@ -191,19 +191,6 @@ public class CustomMovementHandler
         return (Owner instanceof Player);
     }
 
-    //public void SetAllPoseAnimations(int PoseAnimationToSet)
-    //{
-    //    Owner.setPoseAnimation(PoseAnimationToSet);
-    //    Owner.setIdleRotateLeft(PoseAnimationToSet);
-    //    Owner.setIdleRotateRight(PoseAnimationToSet);
-    //    Owner.setWalkAnimation(PoseAnimationToSet);
-    //    Owner.setWalkRotateLeft(PoseAnimationToSet);
-    //    Owner.setWalkRotateRight(PoseAnimationToSet);
-    //    Owner.setWalkRotate180(PoseAnimationToSet);
-    //    Owner.setIdlePoseAnimation(PoseAnimationToSet);
-    //    Owner.setRunAnimation(PoseAnimationToSet);
-    //}
-
     public void Initialize(boolean bRuneliteObjectsStale)
     {
         if (AnimController == null)
@@ -1185,7 +1172,6 @@ public class CustomMovementHandler
                     (Owner.getPoseAnimation() != CurrentAnimationRequest.PoseAnimationToPlay || bResetCurrentPoseAnimation))
             {
                 bResetCurrentPoseAnimation = false;
-                //SetAllPoseAnimations(CurrentAnimationRequest.PoseAnimationToPlay);
                 Owner.setPoseAnimation(CurrentAnimationRequest.PoseAnimationToPlay);
                 Owner.setPoseAnimationFrame(CurrentAnimationRequest.StartingFrame);
                 CurrentPoseAnimation = CurrentAnimationRequest.PoseAnimationToPlay;
@@ -1196,17 +1182,6 @@ public class CustomMovementHandler
                     (Owner.getAnimation() != CurrentAnimationRequest.AnimationToPlay || bResetCurrentAnimation))
             {
                 bResetCurrentAnimation = false;
-
-                if (!UniqueAnimationExceptionList.contains(Owner.getAnimation()))
-                {
-                    Owner.setAnimation(CurrentAnimationRequest.AnimationToPlay);
-                    Owner.setAnimationFrame(CurrentAnimationRequest.StartingFrame);
-                }
-                else
-                {
-                    Owner.setAnimation(-1);
-                    Owner.setAnimationFrame(0);
-                }
 
                 CurrentAnimation = CurrentAnimationRequest.AnimationToPlay;
                 AnimController.setAnimation(client.loadAnimation(CurrentAnimationRequest.AnimationToPlay));
