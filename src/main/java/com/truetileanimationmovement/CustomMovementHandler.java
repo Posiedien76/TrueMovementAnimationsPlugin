@@ -21,7 +21,7 @@ public class CustomMovementHandler
     public int CurrentFrameDelta;
     private long LastTimeMilliseconds = 0;
     private long LastAnimationTickTime = 0;
-    private int MillisecondsSinceTileChange = 0;
+    private int MillisecondsSinceTileChange = 1000;
 
     // Runelite object management
     private Actor Owner = null;
