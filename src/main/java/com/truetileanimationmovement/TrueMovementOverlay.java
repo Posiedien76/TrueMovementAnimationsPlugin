@@ -40,6 +40,7 @@ public class TrueMovementOverlay extends OverlayPanel
     public boolean bRecentlyClickedEvent = false;
     public long LastTimeTeleport = 0;
     public boolean bShouldPlayTeleportAnimation = false;
+    public boolean bTeleportInterrupted = false;
 
     // HP Bar
     public boolean bShowHPBar = true;
