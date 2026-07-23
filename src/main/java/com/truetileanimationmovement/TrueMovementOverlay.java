@@ -56,7 +56,7 @@ public class TrueMovementOverlay extends OverlayPanel
             value.Cleanup();
         }
 
-        MovementHandlerCache.clear();
+        // Do not clear the cache here to avoid rapid runelite object recreation (cleaned up at a later point)
         bEverythingIsStale = true;
     }
 
@@ -345,7 +345,6 @@ public class TrueMovementOverlay extends OverlayPanel
         }
 
         var playerEntry = MovementHandlerCache.get(client.getLocalPlayer().getId());
-
         // Initialize if needed
         playerEntry.Initialize(bRuneliteObjectsStale);
 

@@ -275,9 +275,7 @@ public class CustomMovementHandler
 
         if (Model != null)
         {
-            Model.setModel(null);
-            Model = null;
-            client.removeRuneLiteObject(Model);
+            Model.setActive(false);
 
             if (Owner.getIdleRotateLeft() != OldAnimationSet.IdleRotateLeft)
             {
@@ -323,8 +321,7 @@ public class CustomMovementHandler
 
         if (cameraModel != null)
         {
-            cameraModel.setModel(null);
-            cameraModel = null;
+            cameraModel.setActive(false);
             client.removeRuneLiteObject(cameraModel);
         }
     }
@@ -1070,7 +1067,7 @@ public class CustomMovementHandler
 
                 if (CurrentCameraModelIndex == 0)
                 {
-                    cameraModel.setModel(null);
+                    cameraModel.setActive(false);
                 }
                 else
                 {
@@ -1120,7 +1117,7 @@ public class CustomMovementHandler
             }
             else if (cameraModel != null)
             {
-                cameraModel.setModel(null);
+                cameraModel.setActive(false);
             }
         }
     }
@@ -1362,7 +1359,6 @@ public class CustomMovementHandler
                     bResetCurrentAnimation = false;
                 }
 
-
                 Model.setModel(client.mergeModels(Owner.getModel()));
             }
 
@@ -1418,15 +1414,16 @@ public class CustomMovementHandler
                 Model.setActive(true);
             }
 
+
             UpdateCamera();
         }
         else
         {
             SetAllIdlePosesDefault();
-            Model.setModel(null);
+            Model.setActive(false);
             if (cameraModel != null)
             {
-                cameraModel.setModel(null);
+                cameraModel.setActive(false);
             }
         }
 
