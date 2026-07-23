@@ -3,6 +3,7 @@ package com.truetileanimationmovement;
 import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.client.config.ConfigItem;
 
 import javax.inject.Inject;
 import java.util.HashSet;
@@ -33,6 +34,7 @@ public class CustomMovementHandler
     private int NotInteractingTimer = 0;
 
     // Rendering owner
+    public boolean bRenderOriginalOwnerDueToProximity = false;
     public boolean bShouldRenderOwner = false;
     public boolean bAttemptToRenderOwner = false;
     public boolean bTransitioningToBattleMode = false;
@@ -994,6 +996,19 @@ public class CustomMovementHandler
         }
     }
 
+    private boolean IsOwnerCloseEnoughToModel()
+    {
+        // Location and Orientation is close enough
+        if (config.AllowOriginalModelWhenCloseProximity() &&
+                Math.abs(Owner.getLocalLocation().getX() - Model.getLocation().getX()) <= config.OriginalModelProximityDistanceThreshold() &&
+                Math.abs(Owner.getLocalLocation().getY() - Model.getLocation().getY()) <= config.OriginalModelProximityDistanceThreshold() &&
+                ShortestAngleDifference(Owner.getOrientation(), Model.getOrientation()) <= config.OriginalModelProximityOrientationThreshold())
+        {
+            return true;
+        }
+        return false;
+    }
+
     private void ApplyTweening()
     {
         // 600ms a tick, interpolate between true local point and last true tile position
@@ -1019,7 +1034,7 @@ public class CustomMovementHandler
         {
             TargetOrientation = (getOrientationBetweenPoints(NewLocalPointToDraw.getX(), NewLocalPointToDraw.getY(), currentTarget.getLocalLocation().getX(), currentTarget.getLocalLocation().getY(), 90));
         }
-        else if (Owner.getAnimation() != -1 || // Not walking animation, face towards wherever the client is
+        else if (!bMovingThisAction || // Not walking animation, face towards wherever the client is
                 config.OnlyEnabledInCombat())
         {
             // Target is toward the real player now
@@ -1280,9 +1295,11 @@ public class CustomMovementHandler
             }
 
             // Custom handler
+            boolean bUsedCustomAnimation = false;
             if ((UniqueAnimationExceptionList.contains(Owner.getAnimation()) && bMovingThisAction) ||
                     CurrentAnimationRequest.AnimationToPlay != -1)
             {
+                bUsedCustomAnimation = true;
                 // Anim controller takes control over the pose animation or custom anim
                 Animation CustomAnim = null;
 
@@ -1358,21 +1375,8 @@ public class CustomMovementHandler
                     CurrentPoseAnimation = CurrentAnimationRequest.PoseAnimationToPlay;
                     bResetCurrentAnimation = false;
                 }
-
                 Model.setModel(client.mergeModels(Owner.getModel()));
             }
-
-            //// Do not lerp on unique animations outside of combat
-            //if (Owner.getAnimation() != -1 &&
-            //        (!overlay.bShowHPBar && currentTarget == null) &&
-            //        (!UniqueAnimationExceptionList.contains(Owner.getAnimation()) || CurrentAnimationIDPlaying == OldAnimationSet.IdlePoseAnimation))
-            //{
-            //    Model.setModel(client.mergeModels(Owner.getModel()));
-            //}
-            //else
-            //{
-            //    Model.setModel(client.mergeModels(AnimController.animate(Owner.getModel())));
-            //}
 
             if (Model.getModel().getModelHeight() != Owner.getModel().getModelHeight())
             {
@@ -1409,11 +1413,23 @@ public class CustomMovementHandler
                 Model.setZ(FootprintHeight);
             }
 
-            if (!Model.isActive())
+            // If the actual owner is extremely close to what we decided (and not custom animation), just render the owner
+            if (!bUsedCustomAnimation && IsOwnerCloseEnoughToModel())
             {
-                Model.setActive(true);
+                if (Model.isActive())
+                {
+                    Model.setActive(false);
+                }
+                bRenderOriginalOwnerDueToProximity = true;
             }
-
+            else
+            {
+                if (!Model.isActive())
+                {
+                    Model.setActive(true);
+                }
+                bRenderOriginalOwnerDueToProximity = false;
+            }
 
             UpdateCamera();
         }

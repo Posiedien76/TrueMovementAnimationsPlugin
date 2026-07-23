@@ -131,7 +131,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 
 			// hide player
 			CustomMovementHandler FoundHandler = OverlayRenderer.MovementHandlerCache.get(object.getId());
-			if (FoundHandler != null && !FoundHandler.bShouldRenderOwner)
+			if (FoundHandler != null && !FoundHandler.bShouldRenderOwner && !FoundHandler.bRenderOriginalOwnerDueToProximity)
 			{
 				return false;
 			}

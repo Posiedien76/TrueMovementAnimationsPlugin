@@ -178,6 +178,37 @@ public interface TrueTileMovementConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "AllowOriginalModelWhenCloseProximity",
+			name = "Original Model When Close",
+			description = "Whether or not to allow the original model to be used directly when its close in proximity, orientation, and animation."
+	)
+	default boolean AllowOriginalModelWhenCloseProximity()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "OriginalModelProximityDistanceThreshold",
+			name = "Original Model Proximity Distance Threshold",
+			description = "Original Model Proximity Distance Threshold (128 units = 1 tile)"
+	)
+	default int OriginalModelProximityDistanceThreshold()
+	{
+		return 1;
+	}
+
+	@ConfigItem(
+			keyName = "OriginalModelProximityOrientationThreshold",
+			name = "Original Model Proximity Orientation Threshold",
+			description = "Original Model Proximity Orientation Threshold (2047 = full rotation)"
+	)
+	default int OriginalModelProximityOrientationThreshold()
+	{
+		return 10;
+	}
+
+
+	@ConfigItem(
 			keyName = "StationaryCameraModelIndex",
 			name = "Stationary Camera Model",
 			description = "Index of what geometry to render the camera when stationary",
