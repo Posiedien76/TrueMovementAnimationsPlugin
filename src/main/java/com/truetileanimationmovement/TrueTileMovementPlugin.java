@@ -607,6 +607,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		{
 			OverlayRenderer.LastTimeTeleport = System.currentTimeMillis();
 			OverlayRenderer.bShouldPlayTeleportAnimation = true;
+			OverlayRenderer.bTeleportInterrupted = false;
 		}
 
 		// Print recent animation for convenience

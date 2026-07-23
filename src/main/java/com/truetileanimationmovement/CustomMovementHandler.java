@@ -25,7 +25,7 @@ public class CustomMovementHandler
 
     // Runelite object management
     private Actor Owner = null;
-    public AnimationController AnimController = null;
+    public AnimationController AnimController = null; // Used to blend additional animations
     public RuneLiteObject Model = null;
 
     // Targeting
@@ -49,7 +49,9 @@ public class CustomMovementHandler
 
     // Animation Handling
     private int NO_ANIMATION = -1;
-    private int CurrentAnimationIDPlaying = 3;
+    private int CurrentAnimation = 0;
+    private int CurrentPoseAnimation = 0;
+    private boolean bResetCurrentAnimation = true;
     Set<Integer> UniqueAnimationExceptionList = new HashSet<Integer>();
     Set<Integer> UniqueAnimationLocationAndOrientationExceptionList = new HashSet<Integer>();
     private long LastTimeUniqueAnimationLocationOrientationWasUsed = 0;
@@ -73,6 +75,7 @@ public class CustomMovementHandler
     private LocalPoint LastMovementDestination;
     public boolean bCurrentlyWooxWalking = false;
     public int FramesSinceIdle = 0;
+    public boolean bMovingThisAction = false;
     public boolean bWooxWalkBroken = false;
     public boolean bTargetWasKilled = false;
     public long LastTimeEnemyKilled = 0;
@@ -97,7 +100,6 @@ public class CustomMovementHandler
         this.Owner = Owner;
 
         // Initialize all animations we do want to lerp
-        UniqueAnimationExceptionList.add(829); // Eat food
         UniqueAnimationExceptionList.add(2588); // Agility
         UniqueAnimationExceptionList.add(2586); // Agility
         UniqueAnimationExceptionList.add(2583); // Agility
@@ -197,8 +199,6 @@ public class CustomMovementHandler
             {
                 // Reset animation (loop)
                 InController.setFrame(0);
-
-                // In the case an enemy animation is played, we reset this now
                 bTargetWasKilled = false;
             });
         }
@@ -279,47 +279,42 @@ public class CustomMovementHandler
             Model = null;
             client.removeRuneLiteObject(Model);
 
-            if (Owner.getIdleRotateLeft() == NO_ANIMATION)
+            if (Owner.getIdleRotateLeft() != OldAnimationSet.IdleRotateLeft)
             {
                 Owner.setIdleRotateLeft(OldAnimationSet.IdleRotateLeft);
             }
 
-            if (Owner.getIdleRotateRight() == NO_ANIMATION)
+            if (Owner.getIdleRotateRight() != OldAnimationSet.IdleRotateRight)
             {
                 Owner.setIdleRotateRight(OldAnimationSet.IdleRotateRight);
             }
 
-            if (Owner.getWalkAnimation() == NO_ANIMATION)
+            if (Owner.getWalkAnimation() != OldAnimationSet.WalkAnimation)
             {
                 Owner.setWalkAnimation(OldAnimationSet.WalkAnimation);
             }
 
-            if (Owner.getWalkRotateLeft() == NO_ANIMATION)
+            if (Owner.getWalkRotateLeft() != OldAnimationSet.WalkRotateLeft)
             {
                 Owner.setWalkRotateLeft(OldAnimationSet.WalkRotateLeft);
             }
 
-            if (Owner.getWalkRotateRight() == NO_ANIMATION)
+            if (Owner.getWalkRotateRight() != OldAnimationSet.WalkRotateRight)
             {
                 Owner.setWalkRotateRight(OldAnimationSet.WalkRotateRight);
             }
 
-            if (Owner.getWalkRotate180() == NO_ANIMATION)
+            if (Owner.getWalkRotate180() != OldAnimationSet.WalkRotate180)
             {
                 Owner.setWalkRotate180(OldAnimationSet.WalkRotate180);
             }
 
-            if (Owner.getIdlePoseAnimation() == NO_ANIMATION)
+            if (Owner.getIdlePoseAnimation() != OldAnimationSet.IdlePoseAnimation)
             {
                 Owner.setIdlePoseAnimation(OldAnimationSet.IdlePoseAnimation);
             }
 
-            if (Owner.getPoseAnimation() == NO_ANIMATION)
-            {
-                Owner.setPoseAnimation(OldAnimationSet.PoseAnimation);
-            }
-
-            if (Owner.getRunAnimation() == NO_ANIMATION)
+            if (Owner.getRunAnimation() != OldAnimationSet.RunAnimation)
             {
                 Owner.setRunAnimation(OldAnimationSet.RunAnimation);
             }
@@ -338,6 +333,7 @@ public class CustomMovementHandler
     {
         boolean bAnyChanges = false;
         if (Owner.getIdleRotateLeft() != NO_ANIMATION &&
+                Owner.getIdleRotateLeft() != CurrentPoseAnimation &&
                 OldAnimationSet.IdleRotateLeft != Owner.getIdleRotateLeft())
         {
             OldAnimationSet.IdleRotateLeft = Owner.getIdleRotateLeft();
@@ -345,6 +341,7 @@ public class CustomMovementHandler
         }
 
         if (Owner.getIdleRotateRight() != NO_ANIMATION &&
+                Owner.getIdleRotateRight() != CurrentPoseAnimation &&
                 OldAnimationSet.IdleRotateRight != Owner.getIdleRotateRight())
         {
             OldAnimationSet.IdleRotateRight = Owner.getIdleRotateRight();
@@ -352,6 +349,7 @@ public class CustomMovementHandler
         }
 
         if (Owner.getWalkAnimation() != NO_ANIMATION &&
+                Owner.getWalkAnimation() != CurrentPoseAnimation &&
                 OldAnimationSet.WalkAnimation != Owner.getWalkAnimation())
         {
             OldAnimationSet.WalkAnimation = Owner.getWalkAnimation();
@@ -359,6 +357,7 @@ public class CustomMovementHandler
         }
 
         if (Owner.getWalkRotateLeft() != NO_ANIMATION &&
+                Owner.getWalkRotateLeft() != CurrentPoseAnimation &&
                 OldAnimationSet.WalkRotateLeft != Owner.getWalkRotateLeft())
         {
             OldAnimationSet.WalkRotateLeft = Owner.getWalkRotateLeft();
@@ -366,6 +365,7 @@ public class CustomMovementHandler
         }
 
         if (Owner.getWalkRotateRight() != NO_ANIMATION &&
+                Owner.getWalkRotateRight() != CurrentPoseAnimation &&
                 OldAnimationSet.WalkRotateRight != Owner.getWalkRotateRight())
         {
             OldAnimationSet.WalkRotateRight = Owner.getWalkRotateRight();
@@ -373,6 +373,7 @@ public class CustomMovementHandler
         }
 
         if (Owner.getWalkRotate180() != NO_ANIMATION &&
+                Owner.getWalkRotate180() != CurrentPoseAnimation &&
                 OldAnimationSet.WalkRotate180 != Owner.getWalkRotate180())
         {
             OldAnimationSet.WalkRotate180 = Owner.getWalkRotate180();
@@ -380,20 +381,15 @@ public class CustomMovementHandler
         }
 
         if (Owner.getIdlePoseAnimation() != NO_ANIMATION &&
+                Owner.getIdlePoseAnimation() != CurrentPoseAnimation &&
                 OldAnimationSet.IdlePoseAnimation != Owner.getIdlePoseAnimation())
         {
             OldAnimationSet.IdlePoseAnimation = Owner.getIdlePoseAnimation();
             bAnyChanges = true;
         }
 
-        if (Owner.getPoseAnimation() != NO_ANIMATION &&
-                OldAnimationSet.PoseAnimation != Owner.getPoseAnimation())
-        {
-            OldAnimationSet.PoseAnimation = Owner.getPoseAnimation();
-            bAnyChanges = true;
-        }
-
         if (Owner.getRunAnimation() != NO_ANIMATION &&
+                Owner.getRunAnimation() != CurrentPoseAnimation &&
                 OldAnimationSet.RunAnimation != Owner.getRunAnimation())
         {
             OldAnimationSet.RunAnimation = Owner.getRunAnimation();
@@ -424,7 +420,10 @@ public class CustomMovementHandler
         CurrentTime = System.currentTimeMillis();
         CurrentFrameDelta = (int) (CurrentTime - LastTimeMilliseconds);
         LastTimeMilliseconds = CurrentTime;
-        MillisecondsSinceTileChange += CurrentFrameDelta;
+        if (CurrentFrameDelta > 0)
+        {
+            MillisecondsSinceTileChange += CurrentFrameDelta;
+        }
     }
 
     private void UpdateTrueTileLocation()
@@ -648,6 +647,12 @@ public class CustomMovementHandler
                 }
                 ++FramesSinceIdle;
 
+                // Interrupt the teleport
+                if (CurrentAnimationRequest.bShouldTeleportToLocation && FramesSinceIdle > 1)
+                {
+                    overlay.bTeleportInterrupted = true;
+                }
+
                 // Fallback to quick and dirty move
                 if (NextLerpPoint != null &&
                         !((Math.abs(NextLerpPoint.getX() - LastLerpPosition.getX()) <= 1024) &&
@@ -676,6 +681,7 @@ public class CustomMovementHandler
                     {
                         overlay.LastTimeTeleport = System.currentTimeMillis() - 600; // (We are at this location already, offset expected 1 tick animation time)
                         overlay.bShouldPlayTeleportAnimation = false; // Fallback, do not play animation
+                        overlay.bTeleportInterrupted = false;
                     }
                 }
 
@@ -754,6 +760,7 @@ public class CustomMovementHandler
         // Currently moving
         if (MillisecondsSinceTileChange < 600 ) // 1 tick
         {
+            bMovingThisAction = true;
 
             // Analyze the type of movement we're doing
             CurrentAnimationRequest = AnimationRequestMoveset.GetDefaultIdleMoveAnimationRequest(config);
@@ -769,7 +776,7 @@ public class CustomMovementHandler
             }
 
             // Just teleported
-            if (IsPlayerOwner() && CurrentTime - overlay.LastTimeTeleport < 1800)
+            if (IsPlayerOwner() && CurrentTime - overlay.LastTimeTeleport < 1800 && !overlay.bTeleportInterrupted)
             {
                 if (overlay.bShouldPlayTeleportAnimation && bIsDefaultHumanAnimationSet)
                 {
@@ -803,7 +810,7 @@ public class CustomMovementHandler
                     if (Owner.getLocalLocation().getX() == CurrentTrueTilePosition.getX() &&
                             Owner.getLocalLocation().getY() == CurrentTrueTilePosition.getY() )
                     {
-                        CurrentAnimationRequest.AnimationToPlay = OldAnimationSet.IdlePoseAnimation;
+                        CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdlePoseAnimation;
                     }
                     else
                     {
@@ -901,6 +908,8 @@ public class CustomMovementHandler
         // Not moving
         else
         {
+            bMovingThisAction = false;
+
             CurrentAnimationRequest = AnimationRequestMoveset.GetDefaultIdleMoveAnimationRequest(config);
             CurrentAnimationRequest.bUseLinearTween = true;
             CurrentAnimationRequest.MovementSpeedMultiplier = 1.0;
@@ -910,15 +919,15 @@ public class CustomMovementHandler
             int ShortestAngle = ShortestAngleDifference(CurrentOrientation, TargetOrientation);
             if (ShortestAngle >= 10)
             {;
-                CurrentAnimationRequest.AnimationToPlay = OldAnimationSet.IdleRotateRight;
+                CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdleRotateRight;
             }
             else if (ShortestAngle <= -10)
             {
-                CurrentAnimationRequest.AnimationToPlay = OldAnimationSet.IdleRotateLeft;
+                CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdleRotateLeft;
             }
             else
             {;
-                CurrentAnimationRequest.AnimationToPlay = OldAnimationSet.IdlePoseAnimation;
+                CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdlePoseAnimation;
             }
 
             bWooxWalkBroken = true;
@@ -939,7 +948,7 @@ public class CustomMovementHandler
 
         if (CurrentAnimationRequest.bResetAnimationOnNewTile && bNewTileMovementStarted)
         {
-            CurrentAnimationIDPlaying = 0; // Reset animation
+            bResetCurrentAnimation = true; // Reset animation
         }
 
     }
@@ -1116,6 +1125,93 @@ public class CustomMovementHandler
         }
     }
 
+    private void SetAllIdlePosesDefault()
+    {
+        if (Owner.getIdleRotateLeft() != OldAnimationSet.IdleRotateLeft)
+        {
+            Owner.setIdleRotateLeft(OldAnimationSet.IdleRotateLeft);
+        }
+
+        if (Owner.getIdleRotateRight() != OldAnimationSet.IdleRotateRight)
+        {
+            Owner.setIdleRotateRight(OldAnimationSet.IdleRotateRight);
+        }
+
+        if (Owner.getWalkAnimation() != OldAnimationSet.WalkAnimation)
+        {
+            Owner.setWalkAnimation(OldAnimationSet.WalkAnimation);
+        }
+
+        if (Owner.getWalkRotateLeft() != OldAnimationSet.WalkRotateLeft)
+        {
+            Owner.setWalkRotateLeft(OldAnimationSet.WalkRotateLeft);
+        }
+
+        if (Owner.getWalkRotateRight() != OldAnimationSet.WalkRotateRight)
+        {
+            Owner.setWalkRotateRight(OldAnimationSet.WalkRotateRight);
+        }
+
+        if (Owner.getWalkRotate180() != OldAnimationSet.WalkRotate180)
+        {
+            Owner.setWalkRotate180(OldAnimationSet.WalkRotate180);
+        }
+
+        if (Owner.getIdlePoseAnimation() != OldAnimationSet.IdlePoseAnimation)
+        {
+            Owner.setIdlePoseAnimation(OldAnimationSet.IdlePoseAnimation);
+        }
+
+        if (Owner.getRunAnimation() != OldAnimationSet.RunAnimation)
+        {
+            Owner.setRunAnimation(OldAnimationSet.RunAnimation);
+        }
+    }
+    private void SetAllIdlePosesNoAnimation()
+    {
+
+        if (Owner.getIdleRotateLeft() != NO_ANIMATION)
+        {
+            Owner.setIdleRotateLeft(NO_ANIMATION);
+        }
+
+        if (Owner.getIdleRotateRight() != NO_ANIMATION)
+        {
+            Owner.setIdleRotateRight(NO_ANIMATION);
+        }
+
+        if (Owner.getWalkAnimation() != NO_ANIMATION)
+        {
+            Owner.setWalkAnimation(NO_ANIMATION);
+        }
+
+        if (Owner.getWalkRotateLeft() != NO_ANIMATION)
+        {
+            Owner.setWalkRotateLeft(NO_ANIMATION);
+        }
+
+        if (Owner.getWalkRotateRight() != NO_ANIMATION)
+        {
+            Owner.setWalkRotateRight(NO_ANIMATION);
+        }
+
+        if (Owner.getWalkRotate180() != NO_ANIMATION)
+        {
+            Owner.setWalkRotate180(NO_ANIMATION);
+        }
+
+        if (Owner.getIdlePoseAnimation() != NO_ANIMATION)
+        {
+            Owner.setIdlePoseAnimation(NO_ANIMATION);
+        }
+
+        if (Owner.getRunAnimation() != NO_ANIMATION)
+        {
+            Owner.setRunAnimation(NO_ANIMATION);
+        }
+
+    }
+
     private void UpdateModelVisibleState()
     {
         // Enter combat mode
@@ -1126,19 +1222,6 @@ public class CustomMovementHandler
 
         if (!bShouldRenderOwner)
         {
-            if (!bAttemptToRenderOwner)
-            {
-                Owner.setIdleRotateLeft(NO_ANIMATION);
-                Owner.setIdleRotateRight(NO_ANIMATION);
-                Owner.setWalkAnimation(NO_ANIMATION);
-                Owner.setWalkRotateLeft(NO_ANIMATION);
-                Owner.setWalkRotateRight(NO_ANIMATION);
-                Owner.setWalkRotate180(NO_ANIMATION);
-                Owner.setIdlePoseAnimation(NO_ANIMATION);
-                Owner.setRunAnimation(NO_ANIMATION);
-                Owner.setPoseAnimation(NO_ANIMATION);
-            }
-
             // Animation has opted to use the true location/orientation (probably agility obstacle)
             int OwnerAnimation = Owner.getAnimation();
             bShouldUseTrueLocationOrientation |= (OwnerAnimation != -1 &&
@@ -1147,8 +1230,15 @@ public class CustomMovementHandler
 
             if (bShouldUseTrueLocationOrientation || (CurrentTime - LastTimeUniqueAnimationLocationOrientationWasUsed) < 600) // A little bit of time before going to other animation
             {
-                Model.setLocation(Owner.getLocalLocation(), Owner.getWorldView().getPlane());
-                Model.setOrientation(Owner.getOrientation());
+                if (Model.getLocation() != Owner.getLocalLocation())
+                {
+                    Model.setLocation(Owner.getLocalLocation(), Owner.getWorldView().getPlane());
+                }
+                if (Model.getOrientation() != Owner.getOrientation())
+                {
+                    Model.setOrientation(Owner.getOrientation());
+                }
+
                 CurrentOrientation = Owner.getOrientation();
 
                 if (bShouldUseTrueLocationOrientation)
@@ -1158,8 +1248,10 @@ public class CustomMovementHandler
             }
             else
             {
-                Model.setLocation(NewLocalPointToDraw, Owner.getWorldView().getPlane());
-
+                if (Model.getLocation() != NewLocalPointToDraw)
+                {
+                    Model.setLocation(NewLocalPointToDraw, Owner.getWorldView().getPlane());
+                }
                 // Find best direction to go, offset by 10000 for comparison to avoid negatives
                 int ShortestAngle = ShortestAngleDifference(CurrentOrientation, TargetOrientation);
 
@@ -1184,43 +1276,127 @@ public class CustomMovementHandler
                 }
 
                 // Don't rotate if we are at the destination when we are not in battle mode
-                Model.setOrientation(CurrentOrientation);
-            }
-
-
-            if (CurrentAnimationIDPlaying != CurrentAnimationRequest.AnimationToPlay)
-            {
-                CurrentAnimationIDPlaying = CurrentAnimationRequest.AnimationToPlay;
-                AnimController.setAnimation(client.loadAnimation(CurrentAnimationIDPlaying));
-                AnimController.setFrame(CurrentAnimationRequest.StartingFrame);
-            }
-
-            if (CurrentTime - LastAnimationTickTime >= 17) // 17ms per frame->60FPS
-            {
-                LastAnimationTickTime = CurrentTime;
-                int CurrentFrame = AnimController.getFrame();
-                if (CurrentFrame >= CurrentAnimationRequest.EndingFrame) {
-                    AnimController.setFrame(CurrentAnimationRequest.EndingFrame);
-                } else {
-                    AnimController.tick(CurrentAnimationRequest.AnimationSpeed);
+                if (Model.getOrientation() != CurrentOrientation)
+                {
+                    Model.setOrientation(CurrentOrientation);
                 }
             }
 
-            // Do not lerp on unique animations outside of combat
-            if (Owner.getAnimation() != -1 &&
-                    (!overlay.bShowHPBar && currentTarget == null) &&
-                    (!UniqueAnimationExceptionList.contains(Owner.getAnimation()) || CurrentAnimationIDPlaying == OldAnimationSet.IdlePoseAnimation))
+            // Custom handler
+            if ((UniqueAnimationExceptionList.contains(Owner.getAnimation()) && bMovingThisAction) ||
+                    CurrentAnimationRequest.AnimationToPlay != -1)
             {
-                Model.setModel(client.mergeModels(Owner.getModel()));
+                // Anim controller takes control over the pose animation or custom anim
+                Animation CustomAnim = null;
+
+                boolean bUsingPoseAnim = false;
+                if (CurrentAnimationRequest.PoseAnimationToPlay != -1)
+                {
+                    bUsingPoseAnim = true;
+                    CustomAnim = client.loadAnimation(CurrentAnimationRequest.PoseAnimationToPlay);
+                }
+                else
+                {
+                    CustomAnim = client.loadAnimation(CurrentAnimationRequest.AnimationToPlay);
+                }
+
+                if (AnimController.getAnimation() != CustomAnim || bResetCurrentAnimation)
+                {
+                    AnimController.setAnimation(CustomAnim);
+
+                    if (bUsingPoseAnim &&
+                            Owner.getPoseAnimationFrame() < CustomAnim.getNumFrames() &&
+                            !bResetCurrentAnimation)
+                    {
+                        AnimController.setFrame(Owner.getPoseAnimationFrame());
+                    }
+                    else
+                    {
+                        AnimController.setFrame(CurrentAnimationRequest.StartingFrame);
+                    }
+                    bResetCurrentAnimation = false;
+                }
+                SetAllIdlePosesNoAnimation();
+                Owner.setPoseAnimation(NO_ANIMATION);
+                Owner.setPoseAnimationFrame(0);
+
+                if (CurrentTime - LastAnimationTickTime >= 17) // 17ms per frame->60FPS
+                {
+                    LastAnimationTickTime = CurrentTime;
+                    int CurrentFrame = AnimController.getFrame();
+                    if (CurrentFrame >= CurrentAnimationRequest.EndingFrame)
+                    {
+                        AnimController.setFrame(CurrentAnimationRequest.EndingFrame);
+                    } else
+                    {
+                        AnimController.tick(CurrentAnimationRequest.AnimationSpeed);
+                    }
+                }
+
+                Model.setModel(client.mergeModels(AnimController.animate(Owner.getModel())));
             }
             else
             {
-                Model.setModel(client.mergeModels(AnimController.animate(Owner.getModel())));
+                // Normal controller takes back over
+                SetAllIdlePosesDefault();
+                if (AnimController.getAnimation() != null)
+                {
+                    Owner.setPoseAnimation(AnimController.getAnimation().getId());
+                    Owner.setPoseAnimationFrame(AnimController.getFrame());
+                    AnimController.setAnimation(null);
+                    AnimController.setFrame(0);
+                }
+
+                if (CurrentAnimationRequest.PoseAnimationToPlay != -1 &&
+                        (Owner.getPoseAnimation() != CurrentAnimationRequest.PoseAnimationToPlay || bResetCurrentAnimation))
+                {
+                    Animation CustomAnim = client.loadAnimation(CurrentAnimationRequest.PoseAnimationToPlay);
+
+                    if (Owner.getPoseAnimationFrame() >= CustomAnim.getNumFrames() || bResetCurrentAnimation)
+                    {
+                        Owner.setPoseAnimationFrame(CurrentAnimationRequest.StartingFrame);
+                    }
+
+                    Owner.setPoseAnimation(CurrentAnimationRequest.PoseAnimationToPlay);
+                    CurrentPoseAnimation = CurrentAnimationRequest.PoseAnimationToPlay;
+                    bResetCurrentAnimation = false;
+                }
+
+
+                Model.setModel(client.mergeModels(Owner.getModel()));
             }
-            Model.getModel().setModelHeight(Owner.getModel().getModelHeight());
-            Model.getModel().setUvBufferOffset(Owner.getModel().getUvBufferOffset());
-            Model.getModel().setBufferOffset(Owner.getModel().getBufferOffset());
-            Model.getModel().setSceneId(Owner.getModel().getSceneId());
+
+            //// Do not lerp on unique animations outside of combat
+            //if (Owner.getAnimation() != -1 &&
+            //        (!overlay.bShowHPBar && currentTarget == null) &&
+            //        (!UniqueAnimationExceptionList.contains(Owner.getAnimation()) || CurrentAnimationIDPlaying == OldAnimationSet.IdlePoseAnimation))
+            //{
+            //    Model.setModel(client.mergeModels(Owner.getModel()));
+            //}
+            //else
+            //{
+            //    Model.setModel(client.mergeModels(AnimController.animate(Owner.getModel())));
+            //}
+
+            if (Model.getModel().getModelHeight() != Owner.getModel().getModelHeight())
+            {
+                Model.getModel().setModelHeight(Owner.getModel().getModelHeight());
+            }
+
+            if (Model.getModel().getUvBufferOffset() != Owner.getModel().getUvBufferOffset())
+            {
+                Model.getModel().setUvBufferOffset(Owner.getModel().getUvBufferOffset());
+            }
+
+            if (Model.getModel().getBufferOffset() != Owner.getModel().getBufferOffset())
+            {
+                Model.getModel().setBufferOffset(Owner.getModel().getBufferOffset());
+            }
+
+            if (Model.getModel().getSceneId() != Owner.getModel().getSceneId())
+            {
+                Model.getModel().setSceneId(Owner.getModel().getSceneId());
+            }
 
             int FootprintHeight = Perspective.getFootprintTileHeight(client, Model.getLocation(), Owner.getWorldView().getPlane(), Owner.getFootprintSize());
             if (Owner.getAnimation() != -1)
@@ -1232,7 +1408,11 @@ public class CustomMovementHandler
                 FootprintHeight -= OldAnimationHeight;
             }
 
-            Model.setZ(FootprintHeight);
+            if (Model.getZ() != FootprintHeight)
+            {
+                Model.setZ(FootprintHeight);
+            }
+
             if (!Model.isActive())
             {
                 Model.setActive(true);
@@ -1242,51 +1422,7 @@ public class CustomMovementHandler
         }
         else
         {
-            if (Owner.getIdleRotateLeft() == NO_ANIMATION)
-            {
-                Owner.setIdleRotateLeft(OldAnimationSet.IdleRotateLeft);
-            }
-
-            if (Owner.getIdleRotateRight() == NO_ANIMATION)
-            {
-                Owner.setIdleRotateRight(OldAnimationSet.IdleRotateRight);
-            }
-
-            if (Owner.getWalkAnimation() == NO_ANIMATION)
-            {
-                Owner.setWalkAnimation(OldAnimationSet.WalkAnimation);
-            }
-
-            if (Owner.getWalkRotateLeft() == NO_ANIMATION)
-            {
-                Owner.setWalkRotateLeft(OldAnimationSet.WalkRotateLeft);
-            }
-
-            if (Owner.getWalkRotateRight() == NO_ANIMATION)
-            {
-                Owner.setWalkRotateRight(OldAnimationSet.WalkRotateRight);
-            }
-
-            if (Owner.getWalkRotate180() == NO_ANIMATION)
-            {
-                Owner.setWalkRotate180(OldAnimationSet.WalkRotate180);
-            }
-
-            if (Owner.getIdlePoseAnimation() == NO_ANIMATION)
-            {
-                Owner.setIdlePoseAnimation(OldAnimationSet.IdlePoseAnimation);
-            }
-
-            if (Owner.getPoseAnimation() == NO_ANIMATION)
-            {
-                Owner.setPoseAnimation(OldAnimationSet.PoseAnimation);
-            }
-
-            if (Owner.getRunAnimation() == NO_ANIMATION)
-            {
-                Owner.setRunAnimation(OldAnimationSet.RunAnimation);
-            }
-
+            SetAllIdlePosesDefault();
             Model.setModel(null);
             if (cameraModel != null)
             {

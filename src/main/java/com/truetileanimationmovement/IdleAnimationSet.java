@@ -9,7 +9,6 @@ public class IdleAnimationSet
     public int WalkRotateRight = 0;
     public int WalkRotate180 = 0;
     public int IdlePoseAnimation = 0;
-    public int PoseAnimation = 0;
     public int RunAnimation = 0;
 
     private String UniqueLabel;
@@ -23,7 +22,6 @@ public class IdleAnimationSet
                 String.valueOf(WalkRotateRight) +
                 String.valueOf(WalkRotate180) +
                 String.valueOf(IdlePoseAnimation) +
-                String.valueOf(PoseAnimation) +
                 String.valueOf(RunAnimation);
     }
 

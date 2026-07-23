@@ -153,7 +153,8 @@ public class AnimationRequestMoveset
         AnimationRequestDetails NewRequest = new AnimationRequestDetails();
 
         NewRequest.bResetAnimationOnNewTile = true;
-        NewRequest.AnimationToPlay = 0;
+        NewRequest.AnimationToPlay = -1;
+        NewRequest.PoseAnimationToPlay = -1;
         NewRequest.StartingFrame = 0;
         NewRequest.EndingFrame = 100000;
         NewRequest.AnimationSpeed = 1;
@@ -170,7 +171,8 @@ public class AnimationRequestMoveset
         AnimationRequestDetails NewRequest = new AnimationRequestDetails();
 
         NewRequest.bResetAnimationOnNewTile = false;
-        NewRequest.AnimationToPlay = 0;
+        NewRequest.AnimationToPlay = -1;
+        NewRequest.PoseAnimationToPlay = -1;
         NewRequest.StartingFrame = 0;
         NewRequest.EndingFrame = 5000;
         NewRequest.AnimationSpeed = 1;
@@ -435,34 +437,34 @@ public class AnimationRequestMoveset
         }
         Initialize();
 
-        SOUTHEAST_2.AnimationToPlay = AnimSet.WalkRotate180; SOUTHEAST_2.AnimationSpeed = 2; // Backwards 2, side step 2
-        SOUTHWESTWEST.AnimationToPlay = AnimSet.WalkRotateRight; // South, side step 2
-        WEST_2.AnimationToPlay = AnimSet.WalkRotateLeft; // Side step 2
-        NORTHWESTWEST.AnimationToPlay = AnimSet.WalkRotateLeft; // North, Side step 2
-        NORTHEAST_2.AnimationToPlay = AnimSet.RunAnimation; // North-west 2
+        SOUTHEAST_2.PoseAnimationToPlay = AnimSet.WalkRotate180; SOUTHEAST_2.AnimationSpeed = 2; // Backwards 2, side step 2
+        SOUTHWESTWEST.PoseAnimationToPlay = AnimSet.WalkRotateRight; // South, side step 2
+        WEST_2.PoseAnimationToPlay = AnimSet.WalkRotateLeft; // Side step 2
+        NORTHWESTWEST.PoseAnimationToPlay = AnimSet.WalkRotateLeft; // North, Side step 2
+        NORTHEAST_2.PoseAnimationToPlay = AnimSet.RunAnimation; // North-west 2
 
-        SOUTHSOUTHEAST.AnimationToPlay = AnimSet.WalkRotate180; SOUTHSOUTHEAST.AnimationSpeed = 2; // Backwards 2, side step 1
-        SOUTHWEST_1.AnimationToPlay = AnimSet.WalkRotate180; // South-west
-        WEST_1.AnimationToPlay = AnimSet.WalkRotateLeft; // Side step 1
-        NORTHWEST_1.AnimationToPlay = AnimSet.WalkAnimation; // North-west
-        NORTHNORTHEAST.AnimationToPlay = AnimSet.RunAnimation; // West, forward 2
+        SOUTHSOUTHEAST.PoseAnimationToPlay = AnimSet.WalkRotate180; SOUTHSOUTHEAST.AnimationSpeed = 2; // Backwards 2, side step 1
+        SOUTHWEST_1.PoseAnimationToPlay = AnimSet.WalkRotate180; // South-west
+        WEST_1.PoseAnimationToPlay = AnimSet.WalkRotateLeft; // Side step 1
+        NORTHWEST_1.PoseAnimationToPlay = AnimSet.WalkAnimation; // North-west
+        NORTHNORTHEAST.PoseAnimationToPlay = AnimSet.RunAnimation; // West, forward 2
 
-        BACK_2.AnimationToPlay = AnimSet.WalkRotate180; BACK_2.AnimationSpeed = 2; // Backwards 2
-        BACK_1.AnimationToPlay = AnimSet.WalkRotate180; // Backwards
-        CENTER.AnimationToPlay = AnimSet.IdleRotateRight; // Center
-        FORWARD_1.AnimationToPlay = AnimSet.WalkAnimation; // Forward
-        FORWARD_2.AnimationToPlay = AnimSet.RunAnimation; // 2 Forward
+        BACK_2.PoseAnimationToPlay = AnimSet.WalkRotate180; BACK_2.AnimationSpeed = 2; // Backwards 2
+        BACK_1.PoseAnimationToPlay = AnimSet.WalkRotate180; // Backwards
+        CENTER.PoseAnimationToPlay = AnimSet.IdleRotateRight; // Center
+        FORWARD_1.PoseAnimationToPlay = AnimSet.WalkAnimation; // Forward
+        FORWARD_2.PoseAnimationToPlay = AnimSet.RunAnimation; // 2 Forward
 
-        SOUTHSOUTHWEST.AnimationToPlay = AnimSet.WalkRotate180; SOUTHSOUTHWEST.AnimationSpeed = 2; // Backwards 2, side step 1
-        SOUTHEAST_1.AnimationToPlay = AnimSet.WalkRotate180; // South-east
-        EAST_1.AnimationToPlay = AnimSet.WalkRotateRight; // Side step 1
-        NORTHEAST_1.AnimationToPlay = AnimSet.WalkAnimation; // North-east
-        NORTHNORTHWEST.AnimationToPlay = AnimSet.RunAnimation; // East, forward 2
+        SOUTHSOUTHWEST.PoseAnimationToPlay = AnimSet.WalkRotate180; SOUTHSOUTHWEST.AnimationSpeed = 2; // Backwards 2, side step 1
+        SOUTHEAST_1.PoseAnimationToPlay = AnimSet.WalkRotate180; // South-east
+        EAST_1.PoseAnimationToPlay = AnimSet.WalkRotateRight; // Side step 1
+        NORTHEAST_1.PoseAnimationToPlay = AnimSet.WalkAnimation; // North-east
+        NORTHNORTHWEST.PoseAnimationToPlay = AnimSet.RunAnimation; // East, forward 2
 
-        SOUTHWEST_2.AnimationToPlay = AnimSet.WalkRotate180; SOUTHWEST_2.AnimationSpeed = 2; // Backwards 2, side step 2
-        SOUTHEASTEAST.AnimationToPlay = AnimSet.WalkRotateRight; // South, side step 2
-        EAST_2.AnimationToPlay = AnimSet.WalkRotateRight; // Side step 2
-        NORTHEASTEAST.AnimationToPlay = AnimSet.WalkRotateRight; // North, Side step 2
-        NORTHWEST_2.AnimationToPlay = AnimSet.RunAnimation; // North-east 2
+        SOUTHWEST_2.PoseAnimationToPlay = AnimSet.WalkRotate180; SOUTHWEST_2.AnimationSpeed = 2; // Backwards 2, side step 2
+        SOUTHEASTEAST.PoseAnimationToPlay = AnimSet.WalkRotateRight; // South, side step 2
+        EAST_2.PoseAnimationToPlay = AnimSet.WalkRotateRight; // Side step 2
+        NORTHEASTEAST.PoseAnimationToPlay = AnimSet.WalkRotateRight; // North, Side step 2
+        NORTHWEST_2.PoseAnimationToPlay = AnimSet.RunAnimation; // North-east 2
     }
 }
