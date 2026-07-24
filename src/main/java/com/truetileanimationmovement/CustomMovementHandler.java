@@ -1352,6 +1352,7 @@ public class CustomMovementHandler
             else
             {
                 // Normal controller takes back over
+                bTargetWasKilled = false; // If normal controller is taking it, cancel target killed animation
                 SetAllIdlePosesDefault();
                 if (AnimController.getAnimation() != null)
                 {
