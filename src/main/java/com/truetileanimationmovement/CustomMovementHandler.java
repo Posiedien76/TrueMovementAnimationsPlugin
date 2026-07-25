@@ -115,6 +115,7 @@ public class CustomMovementHandler
         UniqueAnimationExceptionList.add(4071); // Teleport
         UniqueAnimationExceptionList.add(3869); // Teleport
         UniqueAnimationExceptionList.add(3865); // Teleport
+        UniqueAnimationExceptionList.add(2881); // Teleport
 
         UniqueAnimationLocationAndOrientationExceptionList.add(749); // crawl pipe
         UniqueAnimationLocationAndOrientationExceptionList.add(751); // rope swing

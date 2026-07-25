@@ -523,7 +523,8 @@ public class TrueTileMovementPlugin extends Plugin
 				client.getLocalPlayer().getAnimation() == 4069 ||
 				client.getLocalPlayer().getAnimation() == 4071 ||
 				client.getLocalPlayer().getAnimation() == 3869 ||
-				client.getLocalPlayer().getAnimation() == 3865
+				client.getLocalPlayer().getAnimation() == 3865 ||
+				client.getLocalPlayer().getAnimation() == 2881
 		)
 		{
 			OverlayRenderer.LastTimeTeleport = System.currentTimeMillis();
