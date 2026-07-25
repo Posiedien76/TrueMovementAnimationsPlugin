@@ -1,10 +1,7 @@
 package com.truetileanimationmovement;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Provides;
 import javax.inject.Inject;
-import javax.swing.*;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
@@ -13,49 +10,33 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
 import net.runelite.api.gameval.VarClientID;
 import net.runelite.api.widgets.Widget;
-import net.runelite.client.RuneLite;
 import net.runelite.client.callback.ClientThread;
-import net.runelite.client.callback.Hooks;
 import net.runelite.client.callback.RenderCallback;
 import net.runelite.client.callback.RenderCallbackManager;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.PluginChanged;
 import net.runelite.client.input.KeyListener;
 import net.runelite.client.input.KeyManager;
-import net.runelite.client.input.MouseManager;
-import net.runelite.client.input.MouseWheelListener;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import com.google.common.annotations.VisibleForTesting;
+import net.runelite.client.ui.DrawManager;
 import net.runelite.client.ui.overlay.OverlayManager;
 
-import java.awt.*;
-import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.Writer;
-import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 
 import net.runelite.api.Perspective;
 import net.runelite.client.util.ImageUtil;
 
-import static com.sun.jna.platform.linux.Mman.MAP_TYPE;
 import static net.runelite.api.HitsplatID.*;
 import static net.runelite.api.MenuAction.*;
-import static net.runelite.api.MenuAction.GROUND_ITEM_FIFTH_OPTION;
-import static net.runelite.api.MenuAction.GROUND_ITEM_THIRD_OPTION;
 
 @Slf4j
 @PluginDescriptor(
 	name = "True Tile Movement"
 )
-public class TrueTileMovementPlugin extends Plugin implements MouseListener, KeyListener, MouseWheelListener
+public class TrueTileMovementPlugin extends Plugin
 {
 	@Inject
 	private Client client;
@@ -76,20 +57,7 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	private ClientThread clientThread;
 
 	@Inject
-	private KeyManager keyManager;
-
-	@Inject
-	private MouseManager mouseManager;
-
-	@Inject
-	private Gson gson;
-
-	private static final Type MAP_TYPE =
-			new TypeToken<Map<String, String>>() {}.getType();
-
-	private final Path saveFile = RuneLite.RUNELITE_DIR.toPath()
-			.resolve("TrueTileMovementPlugin")
-			.resolve("data.json");
+	private DrawManager drawManager;
 
 	public List<Hitsplat> CurrentHitsplats = new ArrayList<>();
 	public boolean bIsPluginSupportedCurrently = true;
@@ -147,158 +115,50 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 
 	private float CurrentCameraPositionX = -1; // Offset in "sudo world space" (see adaptive camera function)
 	private float CurrentCameraPositionZ = -1;
-
-	private boolean bIsWalkHereOptionWithExamine = false;
-	private long LastInputTime = 0;
-	private boolean bIsRecentInput = false;
-	private boolean bAwaitingCompletedLeftClickCameraResume = false;
-	private float CurrentPredictedZoomLevel = 0; // (default to halfway) Value between 37 (zoomed out) and 112 (zoomed in)
-	private static final float ACCEPTED_ZOOM_TO_PREDICTED_ZOOM_SCALE = 0.098f;
-	private Integer LastAcceptedZoomLevel = null;
-	private boolean bLastAcceptedZoomWasResized = false;
-
-	// Cache of target name to default action, serialize this so the user can accumulate right click options
-	private Map<String, String> MainActionCache = new HashMap<>();
-	private void saveMainActionCache() throws IOException
+	private static final float ADAPTIVE_CAMERA_REFERENCE_FRAME_MILLISECONDS = 16.667f;
+	private static final float MAX_ADAPTIVE_CAMERA_FRAME_DELTA_MILLISECONDS = 100.0f;
+	private long LastAdaptiveCameraUpdateNanos = 0;
+	private volatile boolean bAdaptiveCameraRenderedThisFrame = false;
+	private final Runnable PostDrawCameraModeHandoff = () ->
 	{
-		Files.createDirectories(saveFile.getParent());
-
-		try (Writer writer = Files.newBufferedWriter(saveFile))
+		boolean AdaptiveCameraWasRendered = bAdaptiveCameraRenderedThisFrame;
+		if (AdaptiveCameraWasRendered)
 		{
-			gson.toJson(MainActionCache, MAP_TYPE, writer);
+			bAdaptiveCameraRenderedThisFrame = false;
+			client.setCameraMode(0);
 		}
-	}
+	};
 
-	void loadMainActionCache() throws IOException
-	{
-		if (!Files.exists(saveFile))
-		{
-			MainActionCache = new HashMap<>();
-			return;
-		}
-
-		try (Reader reader = Files.newBufferedReader(saveFile))
-		{
-			MainActionCache = gson.fromJson(reader, MAP_TYPE);
-			if (MainActionCache == null)
-			{
-				MainActionCache = new HashMap<>();
-			}
-		}
-	}
+	private static final int CAMERA_VIEWPORT_BASE_HEIGHT = 334;
+	private static final int CAMERA_VIEWPORT_ZOOM_BLEND_RANGE = 100;
+	private static final int CAMERA_FOLLOW_HEIGHT_BASE = 25;
+	private static final int CAMERA_FOLLOW_HEIGHT_SCALE = 25;
+	private static final int CAMERA_FOLLOW_HEIGHT_DIVISOR = 256;
 
 	private WorldView currentWorldView = null;
 	private int LastPrintedAnimation = 0;
-
-	int ConvertFromTypeToPriority(MenuAction Type)
-	{
-		int ReturnValue = 0;
-
-		if (Type == GROUND_ITEM_FIFTH_OPTION)
-		{
-			ReturnValue = 1;
-		}
-		else if (Type == GROUND_ITEM_FOURTH_OPTION)
-		{
-			ReturnValue = 2;
-		}
-		else if (Type == GROUND_ITEM_THIRD_OPTION)
-		{
-			ReturnValue = 3;
-		}
-		else if (Type == GROUND_ITEM_SECOND_OPTION)
-		{
-			ReturnValue = 4;
-		}
-		else if (Type == GROUND_ITEM_FIRST_OPTION)
-		{
-			ReturnValue = 5;
-		}
-		else if (Type == NPC_FIFTH_OPTION)
-		{
-			ReturnValue = 6;
-		}
-		else if (Type == NPC_FOURTH_OPTION)
-		{
-			ReturnValue = 7;
-		}
-		else if (Type == NPC_THIRD_OPTION)
-		{
-			ReturnValue = 8;
-		}
-		else if (Type == NPC_SECOND_OPTION)
-		{
-			ReturnValue = 9;
-		}
-		else if (Type == NPC_FIRST_OPTION)
-		{
-			ReturnValue = 10;
-		}
-		else if (Type == GAME_OBJECT_FIFTH_OPTION)
-		{
-			ReturnValue = 11;
-		}
-		else if (Type == GAME_OBJECT_FOURTH_OPTION)
-		{
-			ReturnValue = 12;
-		}
-		else if (Type == GAME_OBJECT_THIRD_OPTION)
-		{
-			ReturnValue = 13;
-		}
-		else if (Type == GAME_OBJECT_SECOND_OPTION)
-		{
-			ReturnValue = 14;
-		}
-		else if (Type == GAME_OBJECT_FIRST_OPTION)
-		{
-			ReturnValue = 15;
-		}
-
-
-		return ReturnValue;
-	}
-
-	MenuEntry[] FindFirstEntry()
-	{
-		// Find the target
-		MenuEntry FirstMenuEntry = null;
-		MenuEntry WalkHereMenuEntry = null;
-		int HighestPriorityMenuEntry = -1;
-		MenuEntry[] entries = client.getMenuEntries();
-		for (MenuEntry entry : entries)
-		{
-			int TypePriority = ConvertFromTypeToPriority(entry.getType());
-			if (HighestPriorityMenuEntry < TypePriority && entry.getTarget() != null)
-			{
-				HighestPriorityMenuEntry = TypePriority;
-				FirstMenuEntry = entry;
-			}
-			else if (entry.getType() == WALK)
-			{
-				WalkHereMenuEntry = entry;
-			}
-		}
-
-		// Walk here option
-		if (FirstMenuEntry == null)
-		{
-			FirstMenuEntry = WalkHereMenuEntry;
-		}
-
-		MenuEntry[] BundledReturn = new MenuEntry[2];
-		BundledReturn[0] = FirstMenuEntry;
-		BundledReturn[1] = WalkHereMenuEntry;
-
-		return BundledReturn;
-	}
 
 	private boolean IsAdaptiveCameraOn()
 	{
 		return !bForceAdaptiveCameraOff && config.AdaptiveCameraOn() && !bNonAdaptiveCameraActionActive;
 	}
 
-	private double CurrentMinimapZoomLevel = 0;
+	private float GetAdaptiveCameraFrameDeltaMilliseconds()
+	{
+		long CurrentUpdateNanos = System.nanoTime();
+		float FrameDeltaMilliseconds = ADAPTIVE_CAMERA_REFERENCE_FRAME_MILLISECONDS;
+
+		if (LastAdaptiveCameraUpdateNanos != 0 && CurrentUpdateNanos > LastAdaptiveCameraUpdateNanos)
+		{
+			FrameDeltaMilliseconds = Math.min(
+					(CurrentUpdateNanos - LastAdaptiveCameraUpdateNanos) / 1_000_000.0f,
+					MAX_ADAPTIVE_CAMERA_FRAME_DELTA_MILLISECONDS);
+		}
+
+		LastAdaptiveCameraUpdateNanos = CurrentUpdateNanos;
+		return FrameDeltaMilliseconds;
+	}
+
 	@Subscribe
 	public void onClientTick(ClientTick event)
 	{
@@ -317,59 +177,6 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 			bForceAdaptiveCameraOff = false;
 		}
 
-		// Option has walk here option
-		MenuEntry[] entries = client.getMenuEntries();
-		if (IsAdaptiveCameraOn() && entries.length > 2)
-		{
-			MenuEntry[] BundledEntries = FindFirstEntry();
-			MenuEntry FirstMenuEntry = BundledEntries[0];
-			MenuEntry WalkHereMenuEntry = BundledEntries[1];
-
-			String TargetString = "";
-			if (FirstMenuEntry == null)
-			{
-				FirstMenuEntry = WalkHereMenuEntry;
-			}
-
-			TargetString = FirstMenuEntry.getTarget();
-
-			String TargetOption = "Interact";
-			if (MainActionCache.containsKey(TargetString))
-			{
-				TargetOption = MainActionCache.get(TargetString);
-			}
-
-			for (int i = 0; i < entries.length; ++i)
-			{
-				if (entries[i].getType() == WALK)
-				{
-					if (!client.isMenuOpen() && !TargetString.isEmpty())
-					{
-						entries[i].setOption(TargetOption);
-						entries[i].setTarget(TargetString);
-					}
-					else if (entries[i] != FirstMenuEntry)
-					{
-						entries[i].setOption("Walk here");
-						entries[i].setTarget("");
-					}
-				}
-			}
-
-			if (WalkHereMenuEntry != null)
-			{
-				bIsWalkHereOptionWithExamine = true;
-			}
-			else
-			{
-				bIsWalkHereOptionWithExamine = false;
-			}
-		}
-		else
-		{
-			bIsWalkHereOptionWithExamine = false;
-		}
-
 		// Plugin no longer supported (Need GPU plugin)
 		if (TicksSincePluginWasSupport > 5)
 		{
@@ -382,15 +189,20 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		++TicksSincePluginWasSupport;
 	}
 
-	private void UpdateAdaptiveCamera(CustomMovementHandler PlayerMovementHandler, int FootprintHeight)
+	private void UpdateAdaptiveCamera(
+			CustomMovementHandler PlayerMovementHandler,
+			float FootprintHeight,
+			int CameraFollowHeight)
 	{
 		Player player = client.getLocalPlayer();
 		WorldPoint trueWorldTile = player.getWorldLocation();
 		LocalPoint trueLocalTile = LocalPoint.fromWorld(client, trueWorldTile);
 		if (trueLocalTile == null)
 		{
+			LastAdaptiveCameraUpdateNanos = 0;
 			return;
 		}
+		float CameraFrameDeltaMilliseconds = GetAdaptiveCameraFrameDeltaMilliseconds();
 
 		// Store in sudo world space to prevent jumps when loading new chunks
 		double CalculationOffsetVectorX = trueLocalTile.getX() - trueWorldTile.getX() * 128;
@@ -429,8 +241,9 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		float DistanceX = Math.abs(DirectionX);
 		float DistanceZ = Math.abs(DirectionZ);
 
-		// Adjust using the current framerate (Tuned to 60FPS)
-		Velocity *= (float) (PlayerMovementHandler.CurrentFrameDelta / 16.667);// Speed value centered at 60FPS
+		// Scale with the interval for this rendered camera frame. The movement handler is
+		// updated later in overlay rendering, so its CurrentFrameDelta belongs to the prior frame.
+		Velocity *= CameraFrameDeltaMilliseconds / ADAPTIVE_CAMERA_REFERENCE_FRAME_MILLISECONDS;
 
 		if (DistanceToTarget != 0)
 		{
@@ -459,87 +272,196 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 			}
 		}
 
-		// TODO: Probably do to Y too
-
 		client.setCameraMode(1);
 		client.setFreeCameraSpeed(0);
 
 		client.setCameraFocalPointX(CurrentCameraPositionX);
-		client.setCameraFocalPointY(FootprintHeight - CurrentPredictedZoomLevel);
+		client.setCameraFocalPointY(FootprintHeight - CameraFollowHeight);
 		client.setCameraFocalPointZ(CurrentCameraPositionZ);
+		bAdaptiveCameraRenderedThisFrame = true;
 
 		// Store in sudo-world space to prevent jumps
 		CurrentCameraPositionX -= (float) CalculationOffsetVectorX;
 		CurrentCameraPositionZ -= (float) CalculationOffsetVectorY;
 	}
 
+	private static int Clamp(int value, int minimum, int maximum)
+	{
+		return Math.max(minimum, Math.min(maximum, value));
+	}
+
+	/**
+	 * Mirrors the normal camera settings script. In particular, its final
+	 * multiply and divide use integer arithmetic; the follow height is not a
+	 * floating-point zoom delta.
+	 */
+	private int GetCameraFollowHeight()
+	{
+		int SmallZoom = Clamp(
+				client.getVarcIntValue(VarClientID.CAMERA_ZOOM_SMALL),
+				client.getVarcIntValue(VarClientID.CAMERA_ZOOM_SMALL_MIN),
+				client.getVarcIntValue(VarClientID.CAMERA_ZOOM_SMALL_MAX));
+		int BigZoom = Clamp(
+				client.getVarcIntValue(VarClientID.CAMERA_ZOOM_BIG),
+				client.getVarcIntValue(VarClientID.CAMERA_ZOOM_BIG_MIN),
+				client.getVarcIntValue(VarClientID.CAMERA_ZOOM_BIG_MAX));
+		int ViewportBlend = Clamp(
+				client.getViewportHeight() - CAMERA_VIEWPORT_BASE_HEIGHT,
+				0,
+				CAMERA_VIEWPORT_ZOOM_BLEND_RANGE);
+		int EffectiveZoom = SmallZoom +
+				(BigZoom - SmallZoom) * ViewportBlend / CAMERA_VIEWPORT_ZOOM_BLEND_RANGE;
+		return CAMERA_FOLLOW_HEIGHT_BASE +
+				CAMERA_FOLLOW_HEIGHT_SCALE * EffectiveZoom / CAMERA_FOLLOW_HEIGHT_DIVISOR;
+	}
+
+	/**
+	 * Matches the native client's floating-point terrain interpolation used by
+	 * its camera follow calculation. The public Perspective helper returns an
+	 * integer and loses the fractional terrain component on sloped tiles.
+	 */
+	private static float GetCameraTileHeight(
+			WorldView worldView,
+			float localX,
+			float localY,
+			int plane)
+	{
+		int TileX = (int) (localX / Perspective.LOCAL_TILE_SIZE);
+		int TileY = (int) (localY / Perspective.LOCAL_TILE_SIZE);
+		if (TileX < 0 || TileY < 0 || TileX >= worldView.getSizeX() || TileY >= worldView.getSizeY())
+		{
+			return 0;
+		}
+
+		int EffectivePlane = plane;
+		byte[][][] TileSettings = worldView.getTileSettings();
+		if (plane < 3 && (TileSettings[1][TileX][TileY] & 2) == 2)
+		{
+			EffectivePlane++;
+		}
+
+		int[][] TileHeights = worldView.getTileHeights()[EffectivePlane];
+		float TileOffsetX = localX % Perspective.LOCAL_TILE_SIZE;
+		float TileOffsetY = localY % Perspective.LOCAL_TILE_SIZE;
+		float SouthHeight =
+				(Perspective.LOCAL_TILE_SIZE - TileOffsetX) * TileHeights[TileX][TileY] +
+						TileOffsetX * TileHeights[TileX + 1][TileY];
+		SouthHeight /= Perspective.LOCAL_TILE_SIZE;
+		float NorthHeight =
+				(Perspective.LOCAL_TILE_SIZE - TileOffsetX) * TileHeights[TileX][TileY + 1] +
+						TileOffsetX * TileHeights[TileX + 1][TileY + 1];
+		NorthHeight /= Perspective.LOCAL_TILE_SIZE;
+
+		return (TileOffsetY * NorthHeight +
+				(Perspective.LOCAL_TILE_SIZE - TileOffsetY) * SouthHeight) /
+				Perspective.LOCAL_TILE_SIZE;
+	}
+
+	private static float GetCameraFootprintTileHeight(
+			WorldView worldView,
+			LocalPoint localLocation,
+			int plane,
+			int footprintSize)
+	{
+		float LocalX = localLocation.getX();
+		float LocalY = localLocation.getY();
+		if (footprintSize == 0)
+		{
+			return GetCameraTileHeight(worldView, LocalX, LocalY, plane);
+		}
+
+		int HalfFootprint = footprintSize / 2;
+		float Left = LocalX - HalfFootprint;
+		float Bottom = LocalY - HalfFootprint;
+		float Right = LocalX + HalfFootprint;
+		float Top = LocalY + HalfFootprint;
+		float MinimumHeight = Float.MAX_VALUE;
+
+		for (float TileX = Left / Perspective.LOCAL_TILE_SIZE + 1;
+		     TileX <= Right / Perspective.LOCAL_TILE_SIZE;
+		     TileX++)
+		{
+			for (float TileY = Bottom / Perspective.LOCAL_TILE_SIZE + 1;
+			     TileY <= Top / Perspective.LOCAL_TILE_SIZE;
+			     TileY++)
+			{
+				MinimumHeight = Math.min(
+						MinimumHeight,
+						GetCameraTileHeight(
+								worldView,
+								TileX * Perspective.LOCAL_TILE_SIZE,
+								TileY * Perspective.LOCAL_TILE_SIZE,
+								plane));
+			}
+		}
+
+		MinimumHeight = Math.min(MinimumHeight, GetCameraTileHeight(worldView, LocalX, LocalY, plane));
+		MinimumHeight = Math.min(MinimumHeight, GetCameraTileHeight(worldView, Left, Bottom, plane));
+		MinimumHeight = Math.min(MinimumHeight, GetCameraTileHeight(worldView, Left, Top, plane));
+		MinimumHeight = Math.min(MinimumHeight, GetCameraTileHeight(worldView, Right, Bottom, plane));
+		MinimumHeight = Math.min(MinimumHeight, GetCameraTileHeight(worldView, Right, Top, plane));
+		return MinimumHeight;
+	}
+
+	static boolean ShouldRenderAdaptiveCamera(
+			boolean AdaptiveCameraOn,
+			boolean ShouldRenderOwner)
+	{
+		return AdaptiveCameraOn && !ShouldRenderOwner;
+	}
 	@Subscribe
 	public void onBeforeRender(BeforeRender beforeRender)
 	{
+		bAdaptiveCameraRenderedThisFrame = false;
 		if (bForceEarlyOut || !bIsPluginSupportedCurrently || client.getLocalPlayer() == null)
 		{
+			LastAdaptiveCameraUpdateNanos = 0;
 			return;
 		}
 
-		CustomMovementHandler PlayerMovementHandler = OverlayRenderer.MovementHandlerCache.get(client.getLocalPlayer().getId());
+		Player player = client.getLocalPlayer();
+		CustomMovementHandler PlayerMovementHandler = OverlayRenderer.MovementHandlerCache.get(player.getId());
 		if (PlayerMovementHandler == null)
 		{
+			LastAdaptiveCameraUpdateNanos = 0;
+			return;
+		}
+		LocalPoint CameraHeightLocation = PlayerMovementHandler.Model == null
+				? null
+				: PlayerMovementHandler.Model.getLocation();
+		if (CameraHeightLocation == null)
+		{
+			LastAdaptiveCameraUpdateNanos = 0;
 			return;
 		}
 
-		int FootprintHeight = Perspective.getFootprintTileHeight(client, client.getLocalPlayer().getLocalLocation(), client.getLocalPlayer().getWorldView().getPlane(), client.getLocalPlayer().getFootprintSize());
-		if (client.getLocalPlayer().getAnimation() != -1)
+		float FootprintHeight = GetCameraFootprintTileHeight(
+				player.getWorldView(),
+				CameraHeightLocation,
+				player.getWorldView().getPlane(),
+				player.getFootprintSize());
+		if (player.getAnimation() != -1)
 		{
-			FootprintHeight -= client.getLocalPlayer().getAnimationHeightOffset();
+			FootprintHeight -= player.getAnimationHeightOffset();
 		}
 		else
 		{
 			FootprintHeight -= PlayerMovementHandler.OldAnimationHeight;
 		}
 
-		UpdatePredictedZoomFromAcceptedZoom();
+		int CameraFollowHeight = GetCameraFollowHeight();
 
-		if ( CurrentPredictedZoomLevel == 0)
+		if (ShouldRenderAdaptiveCamera(
+				IsAdaptiveCameraOn(),
+				PlayerMovementHandler.bShouldRenderOwner))
 		{
-			CurrentPredictedZoomLevel = FootprintHeight - client.getCameraFocalPointY();
+			UpdateAdaptiveCamera(PlayerMovementHandler, FootprintHeight, CameraFollowHeight);
 		}
-
-		if (!client.isMenuOpen() && (System.currentTimeMillis() -LastInputTime > 60))
-		{
-			bIsRecentInput = false;
-		}
-		else if (client.getCameraMode() == 0)
-		{
-			CurrentPredictedZoomLevel = FootprintHeight - client.getCameraFocalPointY();
-		}
-
-		if (IsAdaptiveCameraOn() && !bIsRecentInput && !PlayerMovementHandler.bShouldRenderOwner)
-		{
-			UpdateAdaptiveCamera(PlayerMovementHandler, FootprintHeight);
-		}
-		// Cache our options
 		else
 		{
+			LastAdaptiveCameraUpdateNanos = 0;
 			if (client.getCameraMode() == 0)
 			{
-				// Find the target
-				MenuEntry[] BundledEntries = FindFirstEntry();
-				MenuEntry FirstMenuEntry = BundledEntries[0];
-				MenuEntry WalkHereMenuEntry = BundledEntries[1];
-
-				String TargetString = "";
-				if (FirstMenuEntry == null)
-				{
-					FirstMenuEntry = WalkHereMenuEntry;
-				}
-				TargetString = FirstMenuEntry.getTarget();
-
-				// Update the cache of the true default option
-				if (FirstMenuEntry != null && !TargetString.isEmpty())
-				{
-					MainActionCache.put(TargetString, FirstMenuEntry.getOption());
-				}
-
 				// Store in sudo world space
 				WorldPoint trueWorldTile = client.getLocalPlayer().getWorldLocation();
 				LocalPoint trueLocalTile = LocalPoint.fromWorld(client, trueWorldTile);
@@ -718,19 +640,18 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	@Override
 	protected void startUp() throws Exception
 	{
-		loadMainActionCache();
 		InitializePrayerImages();
 		InitializeSkullImages();
 		InitializeHitsplatImages();
 
-		client.getCanvas().addMouseListener(this);
-		mouseManager.registerMouseWheelListener(this);
-		keyManager.registerKeyListener(this);
 		renderCallbackManager.register(renderCallback);
+		drawManager.registerEveryFrameListener(PostDrawCameraModeHandoff);
 		overlayManager.add(OverlayRenderer);
 		bForceEarlyOut = false;
 		CurrentCameraPositionX = -1;
 		CurrentCameraPositionZ = -1;
+		LastAdaptiveCameraUpdateNanos = 0;
+		bAdaptiveCameraRenderedThisFrame = false;
 	}
 
 	public BufferedImage GetPrayerIcon(HeadIcon currentHeadIcon)
@@ -746,17 +667,16 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 	@Override
 	protected void shutDown() throws Exception
 	{
-		saveMainActionCache();
 		CurrentCameraPositionX = -1;
 		CurrentCameraPositionZ = -1;
+		LastAdaptiveCameraUpdateNanos = 0;
+		bAdaptiveCameraRenderedThisFrame = false;
 
 		clientThread.invoke(() ->
 		{
-            client.getCanvas().removeMouseListener(this);
-			mouseManager.unregisterMouseWheelListener(this);
-			keyManager.unregisterKeyListener(this);
 			OverlayRenderer.Cleanup();
 			renderCallbackManager.unregister(renderCallback);
+			drawManager.unregisterEveryFrameListener(PostDrawCameraModeHandoff);
 			overlayManager.remove(OverlayRenderer);
 			bForceEarlyOut = true;
 			client.setCameraMode(0);
@@ -769,16 +689,6 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		if (bForceEarlyOut || !bIsPluginSupportedCurrently)
 		{
 			return;
-		}
-
-		// A non-CANCEL MenuOptionClicked proves that the pending left-click action was resolved.
-		if (bAwaitingCompletedLeftClickCameraResume)
-		{
-			bAwaitingCompletedLeftClickCameraResume = false;
-			if (event.getMenuAction() != CANCEL)
-			{
-				bIsRecentInput = false;
-			}
 		}
 
 		// These actions disable the adaptive camera
@@ -810,17 +720,6 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 			return;
 		}
 
-		// Cache our plugin data during a world hop or logout
-		if (gameStateChanged.getGameState() == GameState.HOPPING ||
-		gameStateChanged.getGameState() == GameState.LOGIN_SCREEN)
-		{
-            try {
-                saveMainActionCache();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
 		// Runelite objects are stale
 		if (gameStateChanged.getGameState() == GameState.LOADING ||
 				gameStateChanged.getGameState() == GameState.CONNECTION_LOST ||
@@ -836,121 +735,4 @@ public class TrueTileMovementPlugin extends Plugin implements MouseListener, Key
 		return configManager.getConfig(TrueTileMovementConfig.class);
 	}
 
-	@Override
-	public void mouseClicked(MouseEvent e)
-	{
-	}
-
-	@Override
-	public void mousePressed(MouseEvent e)
-	{
-		// If the option is not just "walk here", swap to the old camera system for just a few frames or while the right click menu is open.
-		// The plugin's camera is so close to the original camera view that the clickboxes are close enough.
-		// The user loses some accuracy, but it allows the feature to be possible.
-		if (bIsWalkHereOptionWithExamine && !SwingUtilities.isMiddleMouseButton(e))
-		{
-			// Only a left press may be completed by the corresponding action event.
-			bAwaitingCompletedLeftClickCameraResume = SwingUtilities.isLeftMouseButton(e);
-			bIsRecentInput = true;
-			client.setCameraMode(0);
-			LastInputTime = System.currentTimeMillis();
-		}
-	}
-	@Override
-	public MouseWheelEvent mouseWheelMoved(MouseWheelEvent event)
-	{
-		return event;
-	}
-
-	private void UpdatePredictedZoomFromAcceptedZoom()
-	{
-		boolean bIsResized = client.isResized();
-		int AcceptedZoomLevel = getAcceptedZoomLevel();
-
-		if (LastAcceptedZoomLevel == null || bLastAcceptedZoomWasResized != bIsResized ||
-				CurrentPredictedZoomLevel == 0)
-
-		{
-			LastAcceptedZoomLevel = AcceptedZoomLevel;
-			bLastAcceptedZoomWasResized = bIsResized;
-			return;
-		}
-
-		int AcceptedZoomDelta = AcceptedZoomLevel - LastAcceptedZoomLevel;
-		LastAcceptedZoomLevel = AcceptedZoomLevel;
-
-		if (AcceptedZoomDelta == 0)
-		{
-			return;
-		}
-
-		CurrentPredictedZoomLevel += AcceptedZoomDelta * ACCEPTED_ZOOM_TO_PREDICTED_ZOOM_SCALE;
-		CurrentPredictedZoomLevel = Math.min(CurrentPredictedZoomLevel, 112);
-		CurrentPredictedZoomLevel = Math.max(CurrentPredictedZoomLevel, 37);
-	}
-
-	private int getAcceptedZoomLevel()
-	{
-		return client.getVarcIntValue(client.isResized()
-				? VarClientID.CAMERA_ZOOM_BIG
-				: VarClientID.CAMERA_ZOOM_SMALL);
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent e)
-	{
-
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent e)
-	{
-	}
-
-	@Override
-	public void mouseExited(MouseEvent e)
-	{
-
-	}
-	private boolean isNonTypingKey(KeyEvent e)
-	{
-		int code = e.getKeyCode();
-
-		return (code >= KeyEvent.VK_F1 && code <= KeyEvent.VK_F12)
-				|| code == KeyEvent.VK_SHIFT
-				|| code == KeyEvent.VK_CONTROL
-				|| code == KeyEvent.VK_ALT
-				|| code == KeyEvent.VK_LEFT
-				|| code == KeyEvent.VK_RIGHT
-				|| code == KeyEvent.VK_UP
-				|| code == KeyEvent.VK_DOWN;
-	}
-
-	@Override
-	public void keyPressed(KeyEvent e)
-	{
-		Widget focused = client.getFocusedInputFieldWidget();
-		if (focused == null)
-		{
-			char c = e.getKeyChar();
-
-			if (!Character.isISOControl(c) && !isNonTypingKey(e))
-			{
-				// This is a printable character that could go into chat, do the same trick as the mouse
-				bIsRecentInput = true;
-				LastInputTime = System.currentTimeMillis();
-				client.setCameraMode(0);
-			}
-		}
-	}
-
-	@Override
-	public void keyReleased(KeyEvent e)
-	{
-	}
-
-	@Override
-	public void keyTyped(KeyEvent e)
-	{
-	}
 }
