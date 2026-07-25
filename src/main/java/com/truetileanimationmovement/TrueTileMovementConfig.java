@@ -23,7 +23,7 @@ public interface TrueTileMovementConfig extends Config
 	// The user loses some accuracy, but it allows the feature to be possible.
 	@ConfigItem(
 			keyName = "AdaptiveCameraOn",
-			name = "  Adaptive Camera",
+			name = "   Adaptive Camera",
 			description = "Adaptive Camera mode"
 	)
 	default boolean AdaptiveCameraOn()
@@ -33,7 +33,7 @@ public interface TrueTileMovementConfig extends Config
 
 	@ConfigItem(
 			keyName = "CustomOverheadRendering",
-			name = "  Custom Overhead Rendering",
+			name = "   Custom Overhead Rendering",
 			description = "Whether or not for the plugin to handle the overhead, HP bar, and hitsplat rendering"
 	)
 	default boolean CustomOverheadRendering()
@@ -87,7 +87,7 @@ public interface TrueTileMovementConfig extends Config
 
 	@ConfigItem(
 			keyName = "MovementSpeedMultiplier",
-			name = " Movement Speed Multiplier",
+			name = "Movement Speed Multiplier",
 			description = "Movement speed multiplier (increase value from 1.0 to match the true tile more but increase jank)"
 	)
 	default double MovementSpeedMultiplier()
@@ -117,7 +117,7 @@ public interface TrueTileMovementConfig extends Config
 
 	@ConfigItem(
 			keyName = "AdaptiveCameraSnapDistance",
-			name = " Adaptive Camera Snap Distance",
+			name = "Adaptive Camera Snap Distance",
 			description = "Distance in tiles to just snap to camera to target"
 	)
 	default double AdaptiveCameraSnapDistance()
@@ -189,7 +189,7 @@ public interface TrueTileMovementConfig extends Config
 
 	@ConfigItem(
 			keyName = "AlwaysHoppingMode",
-			name = "Always Hopping Mode (fun)",
+			name = "  Always Hopping Mode (fun)",
 			description = "Hop Hop Hop."
 	)
 	default boolean AlwaysHoppingMode()
@@ -199,7 +199,7 @@ public interface TrueTileMovementConfig extends Config
 
 	@ConfigItem(
 			keyName = "AllowOriginalModelWhenCloseProximity",
-			name = "Original Model When Close",
+			name = "   Original Model When Close",
 			description = "Whether or not to allow the original model to be used directly when its close in proximity, orientation, and animation."
 	)
 	default boolean AllowOriginalModelWhenCloseProximity()
@@ -285,7 +285,7 @@ public interface TrueTileMovementConfig extends Config
 
 	@ConfigItem(
 			keyName = "OnlyEnabledInCombat",
-			name = "  Disable Plugin outside Combat",
+			name = "   Disable Plugin outside Combat",
 			description = "Whether or not to only enable the plugin movement in combat"
 	)
 	default boolean OnlyEnabledInCombat()
@@ -295,7 +295,7 @@ public interface TrueTileMovementConfig extends Config
 
 	@ConfigItem(
 			keyName = "AllowNPCKilledCelebrationEmote",
-			name = " Enemy Killed Celebration",
+			name = "  Enemy Killed Celebration (fun)",
 			description = "Whether or not to enable the 'automatic celebration' emote on enemy kill"
 	)
 	default boolean AllowNPCKilledCelebrationEmote()
@@ -305,7 +305,7 @@ public interface TrueTileMovementConfig extends Config
 
 	@ConfigItem(
 			keyName = "AllowWooxWalkDetection",
-			name = " Woox Walk Detection Animation",
+			name = "  Woox Walk Jump Animation (fun)",
 			description = "Whether or not to enable the 'jump' behavior when detecting a woox walk"
 	)
 	default boolean AllowWooxWalkDetection()
@@ -315,7 +315,7 @@ public interface TrueTileMovementConfig extends Config
 
 	@ConfigItem(
 			keyName = "TickPerfectMovesUntilJumping",
-			name = " Tick Perfect Movement Animation Combo Start (Disabled by default, change to a value like 3 to use)",
+			name = "Tick Perfect Movement Animation Combo Start (Disabled by default, change to a value like 3 to use)",
 			description = "Amount of perfect moves before activating tick perfect animation jumps (turn off feature by making this value really large)"
 	)
 	default int TickPerfectMovesUntilJumping()
