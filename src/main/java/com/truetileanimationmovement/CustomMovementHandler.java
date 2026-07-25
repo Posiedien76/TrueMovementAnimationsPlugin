@@ -25,7 +25,7 @@ public class CustomMovementHandler
     private int MillisecondsSinceTileChange = 1000;
 
     // Runelite object management
-    private Actor Owner = null;
+    public Actor Owner = null;
     public AnimationController AnimController = null; // Used to blend additional animations
     public RuneLiteObject Model = null;
 

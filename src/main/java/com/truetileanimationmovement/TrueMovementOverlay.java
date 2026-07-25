@@ -345,6 +345,7 @@ public class TrueMovementOverlay extends OverlayPanel
         }
 
         var playerEntry = MovementHandlerCache.get(client.getLocalPlayer().getId());
+        playerEntry.Owner = client.getLocalPlayer();
         // Initialize if needed
         playerEntry.Initialize(bRuneliteObjectsStale);
 
