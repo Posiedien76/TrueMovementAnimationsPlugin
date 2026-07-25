@@ -320,6 +320,17 @@ public interface TrueTileMovementConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "PrintCurrentAnimationIDsToChat",
+			name = "(Debug) Print Current Animation IDs To Chat",
+			description = "Prints the current animation to the chat (useful for figuring out custom animations)",
+			section = advancedSection
+	)
+	default boolean PrintCurrentAnimationIDsToChat()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 			keyName = "CameraModelHeight",
 			name = "Camera Model Height",
 			description = "The height to render the camera model",

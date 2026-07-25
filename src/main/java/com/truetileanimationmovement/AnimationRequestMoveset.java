@@ -52,6 +52,7 @@ public class AnimationRequestMoveset
 // 3,177->standard walk
 // 4,003->land on your butt
 // 4,772->tight rope walk
+// 6529->shrinking animation from grim tales
 // REMEMBER YOU CAN ALSO PLAY THESE BACKWARDS
 
     // 2D grid array

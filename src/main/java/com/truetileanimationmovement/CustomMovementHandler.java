@@ -680,6 +680,10 @@ public class CustomMovementHandler
                 // Lerp point does not exist! Teleport or something like that
                 else
                 {
+                    if (NextLerpPoint == null)
+                    {
+                        NextLerpPoint = RequestedLerpPoint;
+                    }
                     LastLerpPosition = NextLerpPoint;
                     LastLerpPositionWorldPoint = WorldPoint.fromLocal(client, LastLerpPosition);
                     LastTrueTilePosition = CurrentTrueTilePosition;

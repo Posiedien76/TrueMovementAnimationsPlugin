@@ -533,11 +533,11 @@ public class TrueTileMovementPlugin extends Plugin
 		}
 
 		// Print recent animation for convenience
-		//if (LastPrintedAnimation != client.getLocalPlayer().getAnimation())
-		//{
-		//	LastPrintedAnimation = client.getLocalPlayer().getAnimation();
-		//	client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Current Animation ID " + client.getLocalPlayer().getAnimation(), null);
-		//}
+		if (config.PrintCurrentAnimationIDsToChat() && LastPrintedAnimation != client.getLocalPlayer().getAnimation())
+		{
+			LastPrintedAnimation = client.getLocalPlayer().getAnimation();
+			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Current Animation ID " + client.getLocalPlayer().getAnimation(), null);
+		}
 
 		Player player = client.getLocalPlayer();
 		if (player == null)
