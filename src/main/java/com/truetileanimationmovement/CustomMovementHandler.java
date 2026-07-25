@@ -1021,17 +1021,19 @@ public class CustomMovementHandler
     {
         // 600ms a tick, interpolate between true local point and last true tile position
         double TweenValue = 0;
+        double MovementSpeedMultiplier = config.MovementSpeedMultiplier() * CurrentAnimationRequest.MovementSpeedMultiplier;
+        MovementSpeedMultiplier = Math.max(MovementSpeedMultiplier, 1);
         if (CurrentAnimationRequest.bShouldTeleportToLocation)
         {
             TweenValue = 1.0;
         }
         else if (CurrentAnimationRequest.bUseLinearTween)
         {
-            TweenValue = linearTween(0L, (long) (600 / CurrentAnimationRequest.MovementSpeedMultiplier), MillisecondsSinceTileChange);
+            TweenValue = linearTween(0L, (long) (600 / MovementSpeedMultiplier), MillisecondsSinceTileChange);
         }
         else
         {
-            TweenValue = quadraticTween(0L, (long) (600 / CurrentAnimationRequest.MovementSpeedMultiplier), MillisecondsSinceTileChange);
+            TweenValue = quadraticTween(0L, (long) (600 / MovementSpeedMultiplier), MillisecondsSinceTileChange);
         }
 
         NewLocalPointToDraw = new LocalPoint((int) (LastLerpPosition.getX() + (NextLerpPosition.getX() - LastLerpPosition.getX()) * TweenValue),

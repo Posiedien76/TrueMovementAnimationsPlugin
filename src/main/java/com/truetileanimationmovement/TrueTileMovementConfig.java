@@ -86,6 +86,16 @@ public interface TrueTileMovementConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "MovementSpeedMultiplier",
+			name = " Movement Speed Multiplier",
+			description = "Movement speed multiplier (increase value from 1.0 to match the true tile more but increase jank)"
+	)
+	default double MovementSpeedMultiplier()
+	{
+		return 1.0f; // Normal speed
+	}
+
+	@ConfigItem(
 			keyName = "AdaptiveCameraMaxDistanceAllowed",
 			name = " Adaptive Camera Following Distance",
 			description = "Ideal distance from the player for the camera to follow (1 tile = 128)"
