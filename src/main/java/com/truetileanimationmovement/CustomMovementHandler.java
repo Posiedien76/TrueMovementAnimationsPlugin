@@ -556,6 +556,12 @@ public class CustomMovementHandler
         LastLerpPositionWorldPoint = WorldPoint.fromLocal(client, LastLerpPosition);
     }
 
+    public static double euclideanDistance(int x1, int y1, int x2, int y2)
+    {
+        int dx = x2 - x1;
+        int dy = y2 - y1;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
     boolean bNewTileMovementStarted = false;
     int RotatedDirectionX = 0;
     int RotatedDirectionY = 0;
@@ -653,25 +659,27 @@ public class CustomMovementHandler
                 }
 
                 // Fallback to quick and dirty move
-                if (NextLerpPoint != null &&
-                        !((Math.abs(NextLerpPoint.getX() - LastLerpPosition.getX()) <= 1024) &&
-                                (Math.abs(NextLerpPoint.getY() - LastLerpPosition.getY()) <= 1024)))
+
+                int DistanceInTilesToLast = 0;
+                int DistanceInTilesToNextLerp = 0;
+
+                if (NextLerpPoint != null)
                 {
-                    LastLerpPosition = NextLerpPoint;
-                    LastLerpPositionWorldPoint = WorldPoint.fromLocal(client, LastLerpPosition);
+                    DistanceInTilesToLast = (int) (euclideanDistance(NextLerpPoint.getX(), NextLerpPoint.getY(), LastLerpPosition.getX(), LastLerpPosition.getY()) / 128);
+                    DistanceInTilesToNextLerp = (int) (euclideanDistance(NextLerpPoint.getX(), NextLerpPoint.getY(), RequestedLerpPoint.getX(), RequestedLerpPoint.getY()) / 128);
                 }
 
-                else if (NextLerpPoint != null &&
-                        (Math.abs(NextLerpPoint.getX() - RequestedLerpPoint.getX()) <= 1024) &&
-                        (Math.abs(NextLerpPoint.getY() - RequestedLerpPoint.getY()) <= 1024))
+                if (NextLerpPoint != null &&
+                        DistanceInTilesToNextLerp <= config.PlayerModelSnapDistance() &&
+                        DistanceInTilesToLast <= config.PlayerModelSnapDistance())
                 {
                     LastLerpPosition = NextLerpPosition;
                     LastLerpPositionWorldPoint = WorldPoint.fromLocal(client, LastLerpPosition);
                 }
                 // Lerp point does not exist! Teleport or something like that
-                else if (IsPlayerOwner())
+                else
                 {
-                    LastLerpPosition = RequestedLerpPoint;
+                    LastLerpPosition = NextLerpPoint;
                     LastLerpPositionWorldPoint = WorldPoint.fromLocal(client, LastLerpPosition);
                     LastTrueTilePosition = CurrentTrueTilePosition;
 

@@ -167,7 +167,7 @@ public class TrueTileMovementPlugin extends Plugin
 			client.setCameraMode(0);
 		}
 
-		if (client.getWorldView(-1) != client.getLocalPlayer().getWorldView())
+		if (client.getLocalPlayer() == null || client.getWorldView(-1) != client.getLocalPlayer().getWorldView())
 		{
 			bForceAdaptiveCameraOff = true;
 		}

@@ -112,7 +112,17 @@ public interface TrueTileMovementConfig extends Config
 	)
 	default double AdaptiveCameraSnapDistance()
 	{
-		return 20;
+		return 5;
+	}
+
+	@ConfigItem(
+			keyName = "PlayerModelSnapDistance",
+			name = "Player Model Snap Distance",
+			description = "Distance from the player will 'snap' directly to the location instead of lerping (in # of tiles)."
+	)
+	default int PlayerModelSnapDistance()
+	{
+		return 5;
 	}
 
 	@ConfigItem(
