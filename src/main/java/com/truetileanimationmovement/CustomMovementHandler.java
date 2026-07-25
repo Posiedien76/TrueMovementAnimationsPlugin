@@ -1366,6 +1366,7 @@ public class CustomMovementHandler
                 {
                     Owner.setPoseAnimation(AnimController.getAnimation().getId());
                     Owner.setPoseAnimationFrame(AnimController.getFrame());
+                    CurrentPoseAnimation = AnimController.getAnimation().getId();
                     AnimController.setAnimation(null);
                     AnimController.setFrame(0);
                 }
@@ -1381,7 +1382,7 @@ public class CustomMovementHandler
                     }
 
                     Owner.setPoseAnimation(CurrentAnimationRequest.PoseAnimationToPlay);
-                    CurrentPoseAnimation = CurrentAnimationRequest.PoseAnimationToPlay;
+                    CurrentPoseAnimation = NO_ANIMATION;
                     bResetCurrentAnimation = false;
                 }
                 Model.setModel(client.mergeModels(Owner.getModel()));
