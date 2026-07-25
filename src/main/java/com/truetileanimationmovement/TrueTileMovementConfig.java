@@ -3,15 +3,38 @@ package com.truetileanimationmovement;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.ConfigSection;
 
 @ConfigGroup("TrueTileMovement")
 public interface TrueTileMovementConfig extends Config
 {
+	@ConfigSection(
+			name = "General",
+			description = "General plugin settings",
+			position = 0
+	)
+	String generalSection = "general";
+
+	@ConfigSection(
+			name = "'Fun' Features",
+			description = "Fun Features settings",
+			position = 1
+	)
+	String funFeatureSection = "funFeatures";
+
+	@ConfigSection(
+			name = "Advanced",
+			description = "Advanced settings (for nerds)",
+			position = 2
+	)
+	String advancedSection = "advanced";
+
 	@ConfigItem(
 			keyName = "OrientationRotationSpeed",
 			name = "Orientation Rotation Speed",
 			description = "Speed for rotating our character",
-			hidden = true // Broken currently in some cases
+			hidden = true, // Broken currently in some cases,
+			section = advancedSection
 	)
 	default int OrientationRotationSpeed()
 	{
@@ -24,7 +47,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "AdaptiveCameraOn",
 			name = "   Adaptive Camera",
-			description = "Adaptive Camera mode"
+			description = "Adaptive Camera mode",
+			section = generalSection
 	)
 	default boolean AdaptiveCameraOn()
 	{
@@ -34,7 +58,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "CustomOverheadRendering",
 			name = "   Custom Overhead Rendering",
-			description = "Whether or not for the plugin to handle the overhead, HP bar, and hitsplat rendering"
+			description = "Whether or not for the plugin to handle the overhead, HP bar, and hitsplat rendering",
+			section = generalSection
 	)
 	default boolean CustomOverheadRendering()
 	{
@@ -45,7 +70,8 @@ public interface TrueTileMovementConfig extends Config
 			keyName = "OverheadObjectOffset",
 			name = "Overhead Object Height Offset",
 			description = "Overhead Object Height Render Offset",
-			hidden = true
+			hidden = true,
+			section = advancedSection
 	)
 	default int OverheadObjectOffset()
 	{
@@ -56,7 +82,8 @@ public interface TrueTileMovementConfig extends Config
 			keyName = "OverheadTextOffset",
 			name = "Overhead Text Offset",
 			description = "Overhead Text Offset",
-			hidden = true
+			hidden = true,
+			section = advancedSection
 	)
 	default int OverheadTextOffset()
 	{
@@ -67,7 +94,8 @@ public interface TrueTileMovementConfig extends Config
 			keyName = "OverheadHPBarOffset",
 			name = "Overhead HP Bar Offset",
 			description = "Overhead HP Bar Offset",
-			hidden = true
+			hidden = true,
+			section = advancedSection
 	)
 	default int OverheadHPBarOffset()
 	{
@@ -78,7 +106,8 @@ public interface TrueTileMovementConfig extends Config
 			keyName = "MultipleHitsplatOffset",
 			name = "Overhead Multiple Hitsplat Offset",
 			description = "Overhead Multiple Hitsplat Offset",
-			hidden = true
+			hidden = true,
+			section = advancedSection
 	)
 	default int MultipleHitsplatOffset()
 	{
@@ -88,7 +117,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "MovementSpeedMultiplier",
 			name = "Movement Speed Multiplier",
-			description = "Movement speed multiplier (increase value from 1.0 to match the true tile more but increase jank)"
+			description = "Movement speed multiplier (increase value from 1.0 to match the true tile more but increase jank)",
+			section = advancedSection
 	)
 	default double MovementSpeedMultiplier()
 	{
@@ -98,7 +128,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "AdaptiveCameraMaxDistanceAllowed",
 			name = " Adaptive Camera Following Distance",
-			description = "Ideal distance from the player for the camera to follow (1 tile = 128)"
+			description = "Ideal distance from the player for the camera to follow (1 tile = 128)",
+			section = advancedSection
 	)
 	default int AdaptiveCameraMaxDistanceAllowed()
 	{
@@ -108,7 +139,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "AdaptiveCameraReturnVelocity",
 			name = " Adaptive Camera Return Velocity (Velocity to follow the player at)",
-			description = "Velocity the camera is allowed to return back to the player"
+			description = "Velocity the camera is allowed to return back to the player",
+			section = advancedSection
 	)
 	default double AdaptiveCameraReturnVelocity()
 	{
@@ -118,7 +150,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "AdaptiveCameraSnapDistance",
 			name = "Adaptive Camera Snap Distance",
-			description = "Distance in tiles to just snap to camera to target"
+			description = "Distance in tiles to just snap to camera to target",
+			section = advancedSection
 	)
 	default double AdaptiveCameraSnapDistance()
 	{
@@ -128,7 +161,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "PlayerModelSnapDistance",
 			name = "Player Model Snap Distance",
-			description = "Distance from the player will 'snap' directly to the location instead of lerping (in # of tiles)."
+			description = "Distance from the player will 'snap' directly to the location instead of lerping (in # of tiles).",
+			section = advancedSection
 	)
 	default int PlayerModelSnapDistance()
 	{
@@ -139,7 +173,8 @@ public interface TrueTileMovementConfig extends Config
 			keyName = "CameraObjectOrientationRotationSpeed",
 			name = "Camera Object Orientation Rotation Speed",
 			description = "Speed for rotating our optional camera",
-			hidden = true // Camera model stuff isn't that great right now
+			hidden = true, // Camera model stuff isn't that great right now
+			section = advancedSection
 	)
 	default int CameraObjectOrientationRotationSpeed()
 	{
@@ -149,7 +184,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "StopEngagingInCombatTime",
 			name = "Stop Engaging In Combat Time",
-			description = "Amount of time to de-agro when over 4 tiles from the enemy (1 tick = 60 units);\""
+			description = "Amount of time to de-agro when over 4 tiles from the enemy (1 tick = 60 units);\"",
+			section = advancedSection
 	)
 	default int StopEngagingInCombatTime()
 	{
@@ -159,7 +195,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "StopEngagingInCombatTimeFromCloseDistance",
 			name = "Stop Engaging In Combat Time From Close Distance",
-			description = "Amount of time to de-agro when under 4 tiles from the enemy (1 tick = 60 units);"
+			description = "Amount of time to de-agro when under 4 tiles from the enemy (1 tick = 60 units);",
+			section = advancedSection
 	)
 	default int StopEngagingInCombatTimeFromCloseDistance()
 	{
@@ -170,7 +207,8 @@ public interface TrueTileMovementConfig extends Config
 			keyName = "SpawnModelAtCameraTile",
 			name = " Spawn Camera Model at Original Location",
 			description = "Whether or not to spawn a camera model for the original location",
-			hidden = true // Camera model stuff isn't that great right now
+			hidden = true, // Camera model stuff isn't that great right now
+			section = advancedSection
 	)
 	default boolean SpawnModelAtCameraTile()
 	{
@@ -180,7 +218,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "CombatModeEnabled",
 			name = "  Enhanced Combat Mode (fun)",
-			description = "Whether or not to allow the plugin's combat mode feature."
+			description = "Whether or not to allow the plugin's combat mode feature.",
+			section = funFeatureSection
 	)
 	default boolean CombatModeEnabled()
 	{
@@ -190,7 +229,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "AlwaysHoppingMode",
 			name = "  Always Hopping Mode (fun)",
-			description = "Hop Hop Hop."
+			description = "Hop Hop Hop.",
+			section = funFeatureSection
 	)
 	default boolean AlwaysHoppingMode()
 	{
@@ -200,7 +240,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "AllowOriginalModelWhenCloseProximity",
 			name = "   Original Model When Close",
-			description = "Whether or not to allow the original model to be used directly when its close in proximity, orientation, and animation."
+			description = "Whether or not to allow the original model to be used directly when its close in proximity, orientation, and animation.",
+			section = generalSection
 	)
 	default boolean AllowOriginalModelWhenCloseProximity()
 	{
@@ -210,7 +251,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "OriginalModelProximityDistanceThreshold",
 			name = "Original Model Proximity Distance Threshold",
-			description = "Original Model Proximity Distance Threshold (128 units = 1 tile)"
+			description = "Original Model Proximity Distance Threshold (128 units = 1 tile)",
+			section = advancedSection
 	)
 	default int OriginalModelProximityDistanceThreshold()
 	{
@@ -220,7 +262,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "OriginalModelProximityOrientationThreshold",
 			name = "Original Model Proximity Orientation Threshold",
-			description = "Original Model Proximity Orientation Threshold (2047 = full rotation)"
+			description = "Original Model Proximity Orientation Threshold (2047 = full rotation)",
+			section = advancedSection
 	)
 	default int OriginalModelProximityOrientationThreshold()
 	{
@@ -232,7 +275,8 @@ public interface TrueTileMovementConfig extends Config
 			keyName = "StationaryCameraModelIndex",
 			name = "Stationary Camera Model",
 			description = "Index of what geometry to render the camera when stationary",
-			hidden = true // Camera model stuff isn't that great right now
+			hidden = true, // Camera model stuff isn't that great right now
+			section = advancedSection
 	)
 	default int StationaryCameraModelIndex()
 	{
@@ -243,7 +287,8 @@ public interface TrueTileMovementConfig extends Config
 			keyName = "MovingCameraModelIndex",
 			name = "Moving Camera Model",
 			description = "Index of what geometry to render the camera when moving",
-			hidden = true // Camera model stuff isn't that great right now
+			hidden = true, // Camera model stuff isn't that great right now
+			section = advancedSection
 	)
 	default int MovingCameraModelIndex()
 	{
@@ -254,7 +299,8 @@ public interface TrueTileMovementConfig extends Config
 			keyName = "ArrowPointingAnimationSpeed",
 			name = "Camera Model Animation Speed",
 			description = "The speed the camera model moves back and forth",
-			hidden = true // Camera model stuff isn't that great right now
+			hidden = true, // Camera model stuff isn't that great right now
+			section = advancedSection
 	)
 	default double ArrowPointingAnimationSpeed()
 	{
@@ -265,7 +311,8 @@ public interface TrueTileMovementConfig extends Config
 			keyName = "ArrowPointingAnimationStrength",
 			name = "Camera Model Animation Strength",
 			description = "The distance the camera model will move when oscillating",
-			hidden = true // Camera model stuff isn't that great right now
+			hidden = true, // Camera model stuff isn't that great right now
+			section = advancedSection
 	)
 	default double ArrowPointingAnimationStrength()
 	{
@@ -276,7 +323,8 @@ public interface TrueTileMovementConfig extends Config
 			keyName = "CameraModelHeight",
 			name = "Camera Model Height",
 			description = "The height to render the camera model",
-			hidden = true // Camera model stuff isn't that great right now
+			hidden = true, // Camera model stuff isn't that great right now
+			section = advancedSection
 	)
 	default int CameraModelHeight()
 	{
@@ -286,7 +334,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "OnlyEnabledInCombat",
 			name = "   Disable Plugin outside Combat",
-			description = "Whether or not to only enable the plugin movement in combat"
+			description = "Whether or not to only enable the plugin movement in combat",
+			section = generalSection
 	)
 	default boolean OnlyEnabledInCombat()
 	{
@@ -296,7 +345,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "AllowNPCKilledCelebrationEmote",
 			name = "  Enemy Killed Celebration (fun)",
-			description = "Whether or not to enable the 'automatic celebration' emote on enemy kill"
+			description = "Whether or not to enable the 'automatic celebration' emote on enemy kill",
+			section = funFeatureSection
 	)
 	default boolean AllowNPCKilledCelebrationEmote()
 	{
@@ -306,7 +356,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "AllowWooxWalkDetection",
 			name = "  Woox Walk Jump Animation (fun)",
-			description = "Whether or not to enable the 'jump' behavior when detecting a woox walk"
+			description = "Whether or not to enable the 'jump' behavior when detecting a woox walk",
+			section = funFeatureSection
 	)
 	default boolean AllowWooxWalkDetection()
 	{
@@ -316,7 +367,8 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "TickPerfectMovesUntilJumping",
 			name = "Tick Perfect Movement Animation Combo Start (Disabled by default, change to a value like 3 to use)",
-			description = "Amount of perfect moves before activating tick perfect animation jumps (turn off feature by making this value really large)"
+			description = "Amount of perfect moves before activating tick perfect animation jumps (turn off feature by making this value really large)",
+			section = funFeatureSection
 	)
 	default int TickPerfectMovesUntilJumping()
 	{
