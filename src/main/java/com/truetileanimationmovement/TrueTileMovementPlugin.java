@@ -111,7 +111,6 @@ public class TrueTileMovementPlugin extends Plugin
 	public boolean bForceEarlyOut = false;
 
 	public boolean bForceAdaptiveCameraOff = false;
-	public boolean bNonAdaptiveCameraActionActive = false;
 
 	private float CurrentCameraPositionX = -1; // Offset in "sudo world space" (see adaptive camera function)
 	private float CurrentCameraPositionZ = -1;
@@ -140,7 +139,7 @@ public class TrueTileMovementPlugin extends Plugin
 
 	private boolean IsAdaptiveCameraOn()
 	{
-		return !bForceAdaptiveCameraOff && config.AdaptiveCameraOn() && !bNonAdaptiveCameraActionActive;
+		return !bForceAdaptiveCameraOff && config.AdaptiveCameraOn();
 	}
 
 	private float GetAdaptiveCameraFrameDeltaMilliseconds()
@@ -689,16 +688,6 @@ public class TrueTileMovementPlugin extends Plugin
 		if (bForceEarlyOut || !bIsPluginSupportedCurrently)
 		{
 			return;
-		}
-
-		// These actions disable the adaptive camera
-		if (event.getMenuAction() == WIDGET_TARGET && (event.getMenuOption().equals("Use") || event.getMenuOption().equals("Cast") ))
-		{
-			bNonAdaptiveCameraActionActive = true;
-		}
-		else
-		{
-			bNonAdaptiveCameraActionActive = false;
 		}
 
 		// TODO make less manual
