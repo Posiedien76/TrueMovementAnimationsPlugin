@@ -87,10 +87,12 @@ public class TrueTileMovementPlugin extends Plugin
 					{
 						if (player != null && renderable.toString().equals(player.toString()))
 						{
+							String ChatOverhead = player.getOverheadText();
+
 							// hide player UI if needed
 							int PlayerID = client.getLocalPlayer().getId();
 							CustomMovementHandler PlayerHandler = OverlayRenderer.MovementHandlerCache.get(PlayerID);
-							if (PlayerHandler != null && PlayerHandler.Model != null)
+							if (PlayerHandler != null && PlayerHandler.Model != null && ChatOverhead == null)
 							{
 								LocalPoint CurrentModelPoint = PlayerHandler.Model.getLocation();
 								LocalPoint TileLocation = player.getLocalLocation();
