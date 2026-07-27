@@ -601,7 +601,6 @@ public class CustomMovementHandler
             }
 
             LocalPoint RequestedLerpPoint = LocalPoint.fromWorld(client, CurrentWorldPoint);
-            int RequestedLerpPlane = CurrentWorldPoint.getPlane();
             if (LastLerpPosition == null)
             {
                 NextLerpPosition = RequestedLerpPoint;
@@ -625,7 +624,6 @@ public class CustomMovementHandler
                 // Try all planes and use whichever one is the closest
                 double ClosestPlaneDistance = 10000000;
                 LocalPoint NextLerpPoint = null;
-                int NextLerpPlane = 0;
                 for (int PlaneIter = CurrentWorldPoint.getPlane(); PlaneIter < CurrentWorldPoint.getPlane() + 4; ++PlaneIter)
                 {
                     int CurrentIndex = PlaneIter % 4;
@@ -640,7 +638,6 @@ public class CustomMovementHandler
                         {
                             ClosestPlaneDistance = DistToPoint;
                             NextLerpPoint = TempNextLerpPoint;
-                            NextLerpPlane = CurrentIndex;
                         }
                     }
                 }
@@ -669,29 +666,11 @@ public class CustomMovementHandler
                 int DistanceInTilesToLast = 0;
                 int DistanceInTilesToNextLerp = 0;
 
-                int LastLerpPlane = NextLerpPlane;
-                if (LastLerpPositionWorldPoint != null)
-                {
-                    LastLerpPlane = LastLerpPositionWorldPoint.getPlane();
-                }
-
                 if (NextLerpPoint != null)
                 {
 
                     DistanceInTilesToLast = (int) (euclideanDistance(NextLerpPoint.getX(), NextLerpPoint.getY(), LastLerpPosition.getX(), LastLerpPosition.getY()) / 128);
                     DistanceInTilesToNextLerp = (int) (euclideanDistance(NextLerpPoint.getX(), NextLerpPoint.getY(), RequestedLerpPoint.getX(), RequestedLerpPoint.getY()) / 128);
-
-                    // Different planes, huge distance
-                    if (LastLerpPlane != NextLerpPlane)
-                    {
-                        DistanceInTilesToLast += 1000;
-                    }
-
-                    // Different planes, huge distance
-                    if (RequestedLerpPlane != NextLerpPlane)
-                    {
-                        DistanceInTilesToNextLerp += 1000;
-                    }
                 }
 
                 if (NextLerpPoint != null &&
