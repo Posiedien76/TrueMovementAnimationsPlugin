@@ -59,6 +59,7 @@ public class TrueTileMovementPlugin extends Plugin
 	@Inject
 	private DrawManager drawManager;
 
+	private Set<Integer> CharacterIDs = new HashSet<>();
 	public List<Hitsplat> CurrentHitsplats = new ArrayList<>();
 	public boolean bIsPluginSupportedCurrently = true;
 	public int TicksSincePluginWasSupport = 0;
@@ -73,12 +74,40 @@ public class TrueTileMovementPlugin extends Plugin
 			}
 
 			CustomMovementHandler FoundHandler = OverlayRenderer.MovementHandlerCache.get(client.getLocalPlayer().getId());
-			if (FoundHandler != null && !FoundHandler.bShouldRenderOwner)
+			if (ui && FoundHandler != null && !FoundHandler.bShouldRenderOwner && renderable != null)
 			{
-
-				if (ui && Objects.equals(renderable.toString(), client.getLocalPlayer().toString()))
+				if (Objects.equals(renderable.toString(), client.getLocalPlayer().toString()))
 				{
 					return !(renderable instanceof Player);
+				}
+				else
+				{
+					// Other player's UI
+					for (Player player : client.getPlayers())
+					{
+						if (player != null && renderable.toString().equals(player.toString()))
+						{
+							// hide player UI if needed
+							int PlayerID = client.getLocalPlayer().getId();
+							CustomMovementHandler PlayerHandler = OverlayRenderer.MovementHandlerCache.get(PlayerID);
+							if (PlayerHandler != null && PlayerHandler.Model != null)
+							{
+								LocalPoint CurrentModelPoint = PlayerHandler.Model.getLocation();
+								LocalPoint TileLocation = player.getLocalLocation();
+								int Tolerance = config.HideUnderPlayerDistanceTolerance();
+
+								if (CurrentModelPoint != null &&
+										TileLocation != null &&
+										(Math.abs(CurrentModelPoint.getX() - TileLocation.getX()) < Tolerance) &&
+										(Math.abs(CurrentModelPoint.getY() - TileLocation.getY()) < Tolerance))
+								{
+									return false;
+								}
+							}
+
+							break;
+						}
+					}
 				}
 			}
 
@@ -88,7 +117,7 @@ public class TrueTileMovementPlugin extends Plugin
 		@Override
 		public boolean drawObject(Scene scene, TileObject object)
 		{
-			if (bForceEarlyOut)
+			if (bForceEarlyOut || client.getLocalPlayer() == null)
 			{
 				return true;
 			}
@@ -98,10 +127,34 @@ public class TrueTileMovementPlugin extends Plugin
 			bIsPluginSupportedCurrently = true;
 
 			// hide player
-			CustomMovementHandler FoundHandler = OverlayRenderer.MovementHandlerCache.get(object.getId());
-			if (FoundHandler != null && !FoundHandler.bShouldRenderOwner && !FoundHandler.bRenderOriginalOwnerDueToProximity)
+			int ObjectID = object.getId();
+			int PlayerID = client.getLocalPlayer().getId();
+			CustomMovementHandler FoundHandler = OverlayRenderer.MovementHandlerCache.get(ObjectID);
+			CustomMovementHandler PlayerHandler = OverlayRenderer.MovementHandlerCache.get(PlayerID);
+			if (PlayerHandler != null)
+
 			{
-				return false;
+				if (FoundHandler != null &&
+						!FoundHandler.bShouldRenderOwner && !FoundHandler.bRenderOriginalOwnerDueToProximity)
+				{
+					return false;
+				}
+
+				if (PlayerHandler.Model != null)
+				{
+					LocalPoint CurrentModelPoint = PlayerHandler.Model.getLocation();
+					LocalPoint TileLocation = object.getLocalLocation();
+					int Tolerance = config.HideUnderPlayerDistanceTolerance();
+
+					if (CurrentModelPoint != null &&
+							ObjectID != -1 /* -1 = Runelite object */ &&
+							CharacterIDs.contains(ObjectID) &&
+							(Math.abs(CurrentModelPoint.getX() - TileLocation.getX()) < Tolerance) &&
+							(Math.abs(CurrentModelPoint.getY() - TileLocation.getY()) < Tolerance) &&
+							!PlayerHandler.bShouldRenderOwner && !PlayerHandler.bRenderOriginalOwnerDueToProximity) {
+						return false;
+					}
+				}
 			}
 
 			return true;
@@ -416,6 +469,22 @@ public class TrueTileMovementPlugin extends Plugin
 		{
 			LastAdaptiveCameraUpdateNanos = 0;
 			return;
+		}
+
+		CharacterIDs.clear();
+		for (Player player : client.getPlayers())
+		{
+			if (player != null)
+			{
+				CharacterIDs.add(player.getId());
+			}
+		}
+		for (NPC npc : client.getNpcs())
+		{
+			if (npc != null && npc.getComposition().getSize() == 1)
+			{
+				CharacterIDs.add(npc.getId());
+			}
 		}
 
 		Player player = client.getLocalPlayer();

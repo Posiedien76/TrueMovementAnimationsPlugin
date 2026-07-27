@@ -270,6 +270,18 @@ public interface TrueTileMovementConfig extends Config
 		return 10;
 	}
 
+	@ConfigItem(
+			keyName = "HideUnderPlayerDistanceTolerance",
+			name = "Hide Under Player Distance Tolerance",
+			description = "Hide Under Player Distance Tolerance (1 tile = 128, distance to hide objects under player)",
+			section = advancedSection
+	)
+	default int HideUnderPlayerDistanceTolerance()
+	{
+		return 20;
+	}
+
+
 
 	@ConfigItem(
 			keyName = "StationaryCameraModelIndex",
