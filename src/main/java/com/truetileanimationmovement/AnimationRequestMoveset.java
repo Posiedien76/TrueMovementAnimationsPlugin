@@ -53,6 +53,8 @@ public class AnimationRequestMoveset
 // 4,003->land on your butt
 // 4,772->tight rope walk
 // 6529->shrinking animation from grim tales
+// 10429->biggg push
+// 9799->moons of peril, hit back
 // REMEMBER YOU CAN ALSO PLAY THESE BACKWARDS
 
     // 2D grid array
