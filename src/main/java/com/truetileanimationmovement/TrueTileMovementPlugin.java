@@ -555,7 +555,10 @@ public class TrueTileMovementPlugin extends Plugin
 		if (event.getActor() == client.getLocalPlayer())
 		{
 			LastTimeHitSplatApplied = System.currentTimeMillis();
-			CurrentHitsplats.add(event.getHitsplat());
+			if (!CurrentHitsplats.contains(event.getHitsplat()))
+			{
+				CurrentHitsplats.add(event.getHitsplat());
+			}
 		}
 	}
 
