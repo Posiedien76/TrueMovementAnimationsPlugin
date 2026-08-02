@@ -3,6 +3,7 @@ package com.truetileanimationmovement;
 import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.gameval.AnimationID;
 import net.runelite.client.config.ConfigItem;
 
 import javax.inject.Inject;
@@ -101,40 +102,40 @@ public class CustomMovementHandler
         this.Owner = Owner;
 
         // Initialize all animations we do want to lerp
-        UniqueAnimationExceptionList.add(2588); // Agility
-        UniqueAnimationExceptionList.add(2586); // Agility
-        UniqueAnimationExceptionList.add(2583); // Agility
-        UniqueAnimationExceptionList.add(714); // Teleport
-        UniqueAnimationExceptionList.add(878); // Teleport
-        UniqueAnimationExceptionList.add(1816); // Teleport
-        UniqueAnimationExceptionList.add(1979); // Teleport
-        UniqueAnimationExceptionList.add(3872); // Teleport
-        UniqueAnimationExceptionList.add(13811); // Teleport
-        UniqueAnimationExceptionList.add(4069); // Teleport
-        UniqueAnimationExceptionList.add(4071); // Teleport
-        UniqueAnimationExceptionList.add(3869); // Teleport
-        UniqueAnimationExceptionList.add(3865); // Teleport
-        UniqueAnimationExceptionList.add(2881); // Teleport
+        UniqueAnimationExceptionList.add(AnimationID.AGILITY_SHORTCUT_WALL_JUMPDOWN2); // Agility. 2588
+        UniqueAnimationExceptionList.add(AnimationID.AGILITY_SHORTCUT_WALL_JUMPDOWN); // Agility. 2586
+        UniqueAnimationExceptionList.add(AnimationID.AGILITY_SHORTCUT_WALL_JUMP); // Agility. 2583
+        UniqueAnimationExceptionList.add(AnimationID.HUMAN_CASTTELEPORT); // Teleport. 714
+        UniqueAnimationExceptionList.add(AnimationID.AHOY_ECTO_TELEPORT); // Teleport. 878
+        UniqueAnimationExceptionList.add(AnimationID.HUMAN_TELEPORT_OTHER_IMPACT); // Teleport. 1816
+        UniqueAnimationExceptionList.add(AnimationID.ZAROS_VERTICAL_CASTING); // Teleport. 1979
+        UniqueAnimationExceptionList.add(AnimationID.TELEPORT_NARDAH_HUMAN); // Teleport. 3872
+        UniqueAnimationExceptionList.add(AnimationID.HUMAN_COWBOSS_TELEPORT); // Teleport. 13811
+        UniqueAnimationExceptionList.add(AnimationID.POH_SMASH_MAGIC_TABLET); // Teleport. 4069
+        UniqueAnimationExceptionList.add(AnimationID.POH_ABSORB_TABLET_TELEPORT); // Teleport. 4071
+        UniqueAnimationExceptionList.add(AnimationID.TELEPORT_CABBAGE_HUMAN); // Teleport. 3869
+        UniqueAnimationExceptionList.add(AnimationID.ARCEUUS_NECROMANCY_ANIM); // Teleport. 3865
+        UniqueAnimationExceptionList.add(AnimationID.NTK_HUMAN_TELE); // Teleport. 2881
 
-        UniqueAnimationLocationAndOrientationExceptionList.add(749); // crawl pipe
-        UniqueAnimationLocationAndOrientationExceptionList.add(751); // rope swing
-        UniqueAnimationLocationAndOrientationExceptionList.add(840); // climb over
-        UniqueAnimationLocationAndOrientationExceptionList.add(839); // climb over
-        UniqueAnimationLocationAndOrientationExceptionList.add(1252); // climb over
-        UniqueAnimationLocationAndOrientationExceptionList.add(828); // climb up
-        UniqueAnimationLocationAndOrientationExceptionList.add(740); // climb up
-        UniqueAnimationLocationAndOrientationExceptionList.add(7134); // slide down
-        UniqueAnimationLocationAndOrientationExceptionList.add(844); // crawl
-        UniqueAnimationLocationAndOrientationExceptionList.add(769); // long hop
-        UniqueAnimationLocationAndOrientationExceptionList.add(3057); // Wall climb
-        UniqueAnimationLocationAndOrientationExceptionList.add(3058); // Wall climb
-        UniqueAnimationLocationAndOrientationExceptionList.add(3067); // long jump
-        UniqueAnimationLocationAndOrientationExceptionList.add(3068); // long jump
-        UniqueAnimationLocationAndOrientationExceptionList.add(1115); // jump and cover
-        UniqueAnimationLocationAndOrientationExceptionList.add(5708); // penguin
-        UniqueAnimationLocationAndOrientationExceptionList.add(5709); // penguin
-        UniqueAnimationLocationAndOrientationExceptionList.add(3844); // fence shuffle
-        UniqueAnimationLocationAndOrientationExceptionList.add(1237); // tir obstacles
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.HUMAN_DOUBLEPIPESQUEEZE); // crawl pipe. 749
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.HUMAN_ROPESWING_LONG); // rope swing. 751
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.HUMAN_WALK_CRUMBLEDWALL); // climb over. 840
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.HUMAN_WALK_STYLE); // climb over. 839
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.HUMAN_LOWWALL); // climb over. 1252
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.HUMAN_REACHFORLADDER); // climb up. 828
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.HUMAN_CLIMBING_DOWN); // climb up. 740
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.HUMAN_WALK_LOGBALANCE_LOOP); // slide down. 7134
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.HUMAN_CRAWLING); // crawl. 844
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.HUMAN_STEPPINGSTONEJUMP); // long hop. 769
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.AGILITY_PYRAMID_LEDGE_ON_RIGHT); // Wall climb. 3057
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.AGILITY_PYRAMID_LEDGE_OFF_RIGHT); // Wall climb. 3058
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.AGILITY_PYRAMID_GAP_JUMP); // long jump. 3067
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.AGILITY_PYRAMID_GAP_JUMP_FALL); // long jump. 3068
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.AGILITYARENA_DIVE_PLAYER); // jump and cover. 1115
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.PENG_JUMP_A); // penguin. 5708
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.PENG_JUMP_B); // penguin. 5709
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.RAILING_SQUEEZE); // fence shuffle. 3844
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.REGICIDE_TIGHTFIT); // tir obstacles. 1237
     }
 
     double quadraticTween(long startTime, long endTime, long currentTime)
@@ -402,10 +403,11 @@ public class CustomMovementHandler
             OldAnimationHeight = Owner.getAnimationHeightOffset();
 
             // Monkey or penguin
-            if (OldAnimationSet.IdlePoseAnimation == 1386 ||
-                    OldAnimationSet.IdlePoseAnimation == 222 ||
-                    OldAnimationSet.IdlePoseAnimation == 1401 ||
-                    OldAnimationSet.IdlePoseAnimation == 5668)
+            // 1386, 222, 1401, 5668
+            if (OldAnimationSet.IdlePoseAnimation == AnimationID.M_MONKEY_READY ||
+                    OldAnimationSet.IdlePoseAnimation == AnimationID.MONKEY_READY ||
+                    OldAnimationSet.IdlePoseAnimation == AnimationID.M_GORILLA_READY ||
+                    OldAnimationSet.IdlePoseAnimation == AnimationID.PENG_GENTOO_READY)
             {
                 bIsDefaultHumanAnimationSet = false;
             }
@@ -824,7 +826,7 @@ public class CustomMovementHandler
                     else
                     {
                         CurrentAnimationRequest.bShouldTeleportToLocation = true;
-                        CurrentAnimationRequest.AnimationToPlay = 715; // Teleport in
+                        CurrentAnimationRequest.AnimationToPlay = AnimationID.HUMAN_CASTTELEPORT_REVERSE; // Teleport in. 715
 
                         ChangeLastLerpPointForRotation();
                     }
@@ -908,22 +910,22 @@ public class CustomMovementHandler
             if (LastNPCCombatLevel > 300)
             {
                 // 2,387->Fist pump
-                CurrentAnimationRequest.AnimationToPlay = 2106; // Jig
+                CurrentAnimationRequest.AnimationToPlay = AnimationID.EMOTE_DANCE_SCOTTISH; // Jig. 2106
             }
             else if (LastNPCCombatLevel > 200)
             {
                 // 2,387->Fist pump
-                CurrentAnimationRequest.AnimationToPlay = 866; // Dance
+                CurrentAnimationRequest.AnimationToPlay = AnimationID.EMOTE_DANCE; // Dance. 866
             }
             else if (LastNPCCombatLevel > 150)
             {
                 // 2,387->Fist pump
-                CurrentAnimationRequest.AnimationToPlay = 8917; // Flex
+                CurrentAnimationRequest.AnimationToPlay = AnimationID.EMOTE_FLEX; // Flex. 8917
             }
             else if (LastNPCCombatLevel > 100)
             {
                 // 2,387->Fist pump
-                CurrentAnimationRequest.AnimationToPlay = 862; // Cheer
+                CurrentAnimationRequest.AnimationToPlay = AnimationID.EMOTE_CHEER; // Cheer. 862
             }
             // > 50
             else

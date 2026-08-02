@@ -8,6 +8,7 @@ import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
+import net.runelite.api.gameval.AnimationID;
 import net.runelite.api.gameval.VarClientID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
@@ -591,17 +592,17 @@ public class TrueTileMovementPlugin extends Plugin
 		}
 
 		// Teleports
-		if (client.getLocalPlayer().getAnimation() == 714 ||
-				client.getLocalPlayer().getAnimation() == 878 ||
-				client.getLocalPlayer().getAnimation() == 1816 ||
-				client.getLocalPlayer().getAnimation() == 1979 ||
-				client.getLocalPlayer().getAnimation() == 3872 ||
-				client.getLocalPlayer().getAnimation() == 13811 ||
-				client.getLocalPlayer().getAnimation() == 4069 ||
-				client.getLocalPlayer().getAnimation() == 4071 ||
-				client.getLocalPlayer().getAnimation() == 3869 ||
-				client.getLocalPlayer().getAnimation() == 3865 ||
-				client.getLocalPlayer().getAnimation() == 2881
+		if (client.getLocalPlayer().getAnimation() == AnimationID.HUMAN_CASTTELEPORT || // 714
+				client.getLocalPlayer().getAnimation() == AnimationID.AHOY_ECTO_TELEPORT || // 878
+				client.getLocalPlayer().getAnimation() == AnimationID.HUMAN_TELEPORT_OTHER_IMPACT || // 1816
+				client.getLocalPlayer().getAnimation() == AnimationID.ZAROS_VERTICAL_CASTING || // 1979
+				client.getLocalPlayer().getAnimation() == AnimationID.TELEPORT_NARDAH_HUMAN || // 3872
+				client.getLocalPlayer().getAnimation() == AnimationID.HUMAN_COWBOSS_TELEPORT || // 13811
+				client.getLocalPlayer().getAnimation() == AnimationID.POH_SMASH_MAGIC_TABLET || // 4069
+				client.getLocalPlayer().getAnimation() == AnimationID.POH_ABSORB_TABLET_TELEPORT || // 4071
+				client.getLocalPlayer().getAnimation() == AnimationID.TELEPORT_CABBAGE_HUMAN || // 3869
+				client.getLocalPlayer().getAnimation() == AnimationID.ARCEUUS_NECROMANCY_ANIM || // 3865
+				client.getLocalPlayer().getAnimation() == AnimationID.NTK_HUMAN_TELE // 2881
 		)
 		{
 			OverlayRenderer.LastTimeTeleport = System.currentTimeMillis();
