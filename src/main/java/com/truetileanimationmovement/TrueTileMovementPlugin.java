@@ -59,6 +59,9 @@ public class TrueTileMovementPlugin extends Plugin
 	@Inject
 	private DrawManager drawManager;
 
+	public boolean bDelayedStartup = false;
+	private boolean bStartupComplete = false;
+
 	private Set<Integer> CharacterIDs = new HashSet<>();
 	public List<Hitsplat> CurrentHitsplats = new ArrayList<>();
 	public boolean bIsPluginSupportedCurrently = true;
@@ -709,23 +712,38 @@ public class TrueTileMovementPlugin extends Plugin
 		);
 	}
 
-
-
-	@Override
-	protected void startUp() throws Exception
+	private void DoStartUp()
 	{
+		bDelayedStartup = false;
+		bStartupComplete = true;
 		InitializePrayerImages();
 		InitializeSkullImages();
 		InitializeHitsplatImages();
 
 		renderCallbackManager.register(renderCallback);
 		drawManager.registerEveryFrameListener(PostDrawCameraModeHandoff);
-		overlayManager.add(OverlayRenderer);
 		bForceEarlyOut = false;
 		CurrentCameraPositionX = -1;
 		CurrentCameraPositionZ = -1;
 		LastAdaptiveCameraUpdateNanos = 0;
 		bAdaptiveCameraRenderedThisFrame = false;
+	}
+
+
+	@Override
+	protected void startUp() throws Exception
+	{
+		overlayManager.add(OverlayRenderer);
+		if (client.getGameState() == GameState.LOGIN_SCREEN)
+		{
+			DoStartUp();
+		}
+		else
+		{
+			bDelayedStartup = true;
+			bStartupComplete = false;
+			bForceEarlyOut = true;
+		}
 	}
 
 	public BufferedImage GetPrayerIcon(HeadIcon currentHeadIcon)
@@ -741,6 +759,8 @@ public class TrueTileMovementPlugin extends Plugin
 	@Override
 	protected void shutDown() throws Exception
 	{
+		bDelayedStartup = false;
+		bStartupComplete = false;
 		CurrentCameraPositionX = -1;
 		CurrentCameraPositionZ = -1;
 		LastAdaptiveCameraUpdateNanos = 0;
@@ -779,9 +799,13 @@ public class TrueTileMovementPlugin extends Plugin
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
 	{
-		if (bForceEarlyOut || !bIsPluginSupportedCurrently)
+		if (gameStateChanged.getGameState() == GameState.LOGIN_SCREEN)
 		{
-			return;
+			if (bDelayedStartup)
+			{
+				DoStartUp();
+			}
+
 		}
 
 		// Runelite objects are stale

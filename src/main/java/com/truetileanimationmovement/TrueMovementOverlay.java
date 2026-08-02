@@ -313,6 +313,21 @@ public class TrueMovementOverlay extends OverlayPanel
     @Override
     public Dimension render(Graphics2D graphics)
     {
+        if (plugin.bDelayedStartup)
+        {
+            Cleanup();
+
+            // On screen message for requiring re-log
+            panelComponent.getChildren().clear();
+            panelComponent.getChildren().add(
+                    LineComponent.builder()
+                            .left("True Tile Animation Movement Plugin: PENDING ENABLE (Requires logout)")
+                            .build()
+            );
+
+            return super.render(graphics);
+        }
+
         if (plugin.bForceEarlyOut || !plugin.bIsPluginSupportedCurrently)
         {
             Cleanup();
