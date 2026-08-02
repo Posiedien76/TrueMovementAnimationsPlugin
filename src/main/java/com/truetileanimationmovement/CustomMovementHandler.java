@@ -818,7 +818,7 @@ public class CustomMovementHandler
                     if (CurrentTime - overlay.LastTimeTeleport < 600) // Blend with the first tick
                     {
                         // Handle normal walking
-                        CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.GetAnimationRequestMovesetFromAnimationSet(OldAnimationSet, config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
+                        CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromAnimationSet(OldAnimationSet, config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
                         CurrentAnimationRequest.bShouldTeleportToLocation = false;
                     }
                     else
@@ -852,7 +852,7 @@ public class CustomMovementHandler
                         int TempRotatedDirectionX = Math.max(-2, Math.min(2, Math.toIntExact(Math.round((DirectionX * cos - DirectionY * sin) / 128.0))));
                         int TempRotatedDirectionY = Math.max(-2, Math.min(2, Math.toIntExact(Math.round((DirectionX * sin + DirectionY * cos) / 128.0))));
 
-                        CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.GetAnimationRequestMovesetFromAnimationSet(OldAnimationSet, config).MovesetArray[2 + TempRotatedDirectionX][2 + TempRotatedDirectionY]);
+                        CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromAnimationSet(OldAnimationSet, config).MovesetArray[2 + TempRotatedDirectionX][2 + TempRotatedDirectionY]);
                     }
                     bShouldUseTrueLocationOrientation = true;
                     CurrentAnimationRequest.bShouldTeleportToLocation = true;
@@ -867,7 +867,7 @@ public class CustomMovementHandler
             else if (bCurrentlyWooxWalking && config.AllowWooxWalkDetection() && bIsDefaultHumanAnimationSet)
             {
                 // Handle woox walking
-                CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.GetAnimationRequestMovesetFromUniqueKey(OldAnimationSet,"WooxWalk", config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
+                CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,"WooxWalk", config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
 
                 // No turning if no target
                 if (currentTarget == null)
@@ -883,7 +883,7 @@ public class CustomMovementHandler
             else if ((config.AlwaysHoppingMode() || FramesSinceIdle > config.TickPerfectMovesUntilJumping()) && bIsDefaultHumanAnimationSet)
             {
                 // Handle tick perfect moving
-                CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.GetAnimationRequestMovesetFromUniqueKey(OldAnimationSet,"TickPerfectMovement", config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
+                CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,"TickPerfectMovement", config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
             }
             else
             {
@@ -891,12 +891,12 @@ public class CustomMovementHandler
                 if (bSpecialMoveAnimation && bIsDefaultHumanAnimationSet)
                 {
                     // Handle normal walking
-                    CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.GetAnimationRequestMovesetFromUniqueKey(OldAnimationSet,"SpecialMoves", config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
+                    CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,"SpecialMoves", config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
                 }
                 else
                 {
                     // Handle normal walking
-                    CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.GetAnimationRequestMovesetFromAnimationSet(OldAnimationSet, config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
+                    CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromAnimationSet(OldAnimationSet, config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
                 }
             }
         }
