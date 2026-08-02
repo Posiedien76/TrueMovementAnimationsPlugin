@@ -50,8 +50,7 @@ public class CustomMovementHandler
     private WorldPoint LastLerpPositionWorldPoint;
 
     // Animation Handling
-    private int NO_ANIMATION = -1;
-    private int CurrentAnimation = 0;
+    private final int NO_ANIMATION = -1;
     private int CurrentPoseAnimation = 0;
     private boolean bResetCurrentAnimation = true;
     Set<Integer> UniqueAnimationExceptionList = new HashSet<Integer>();
@@ -61,7 +60,7 @@ public class CustomMovementHandler
 
     // Original true animations
     private AnimationRequestDetails CurrentAnimationRequest;
-    private IdleAnimationSet OldAnimationSet = new IdleAnimationSet();
+    private final IdleAnimationSet OldAnimationSet = new IdleAnimationSet();
     public int OldAnimationHeight = 0;
     private boolean bIsDefaultHumanAnimationSet = true;
 
@@ -212,7 +211,6 @@ public class CustomMovementHandler
         {
             RuneLiteObject OldModel = Model;
             Model = client.createRuneLiteObject();
-
             if (OldModel != null)
             {
                 Model.setLocation(OldModel.getLocation(), OldModel.getLevel());
@@ -433,7 +431,7 @@ public class CustomMovementHandler
         CurrentWorldPoint = Owner.getWorldLocation();
 
         LocalPoint LocalCurrentTrueTilePosition = LocalPoint.fromWorld(client, CurrentWorldPoint);
-        if (!LocalCurrentTrueTilePosition.equals(CurrentTrueTilePosition))
+        if (LocalCurrentTrueTilePosition != null && !LocalCurrentTrueTilePosition.equals(CurrentTrueTilePosition))
         {
             // Also record the last one
             LastTrueTilePosition = CurrentTrueTilePosition;
@@ -601,7 +599,13 @@ public class CustomMovementHandler
             }
 
             LocalPoint RequestedLerpPoint = LocalPoint.fromWorld(client, CurrentWorldPoint);
-            if (LastLerpPosition == null)
+            int RequestedLerpPlane = CurrentWorldPoint.getPlane();
+            if (RequestedLerpPoint != null && NextLerpPosition == null)
+            {
+                NextLerpPosition = RequestedLerpPoint;
+            }
+
+            if (RequestedLerpPoint != null && LastLerpPosition == null)
             {
                 NextLerpPosition = RequestedLerpPoint;
 
@@ -610,20 +614,17 @@ public class CustomMovementHandler
 
                 NextLerpPositionWorldPoint = CurrentWorldPoint;
             }
-            if (NextLerpPosition == null)
-            {
-                NextLerpPosition = RequestedLerpPoint;
-            }
 
             if (NextLerpPositionWorldPoint == null)
             {
                 NextLerpPositionWorldPoint = CurrentWorldPoint;
             }
-            if (!NextLerpPosition.equals(RequestedLerpPoint))
+            if (RequestedLerpPoint != null && !NextLerpPosition.equals(RequestedLerpPoint))
             {
                 // Try all planes and use whichever one is the closest
                 double ClosestPlaneDistance = 10000000;
                 LocalPoint NextLerpPoint = null;
+                int NextLerpPlane = 0;
                 for (int PlaneIter = CurrentWorldPoint.getPlane(); PlaneIter < CurrentWorldPoint.getPlane() + 4; ++PlaneIter)
                 {
                     int CurrentIndex = PlaneIter % 4;
@@ -638,6 +639,7 @@ public class CustomMovementHandler
                         {
                             ClosestPlaneDistance = DistToPoint;
                             NextLerpPoint = TempNextLerpPoint;
+                            NextLerpPlane = CurrentIndex;
                         }
                     }
                 }
@@ -666,11 +668,29 @@ public class CustomMovementHandler
                 int DistanceInTilesToLast = 0;
                 int DistanceInTilesToNextLerp = 0;
 
+                int LastLerpPlane = NextLerpPlane;
+                if (LastLerpPositionWorldPoint != null)
+                {
+                    LastLerpPlane = LastLerpPositionWorldPoint.getPlane();
+                }
+
                 if (NextLerpPoint != null)
                 {
 
                     DistanceInTilesToLast = (int) (euclideanDistance(NextLerpPoint.getX(), NextLerpPoint.getY(), LastLerpPosition.getX(), LastLerpPosition.getY()) / 128);
                     DistanceInTilesToNextLerp = (int) (euclideanDistance(NextLerpPoint.getX(), NextLerpPoint.getY(), RequestedLerpPoint.getX(), RequestedLerpPoint.getY()) / 128);
+
+                    // Different planes, huge distance
+                    if (LastLerpPlane != NextLerpPlane)
+                    {
+                        DistanceInTilesToLast += 1000;
+                    }
+
+                    // Different planes, huge distance
+                    if (RequestedLerpPlane != NextLerpPlane)
+                    {
+                        DistanceInTilesToNextLerp += 1000;
+                    }
                 }
 
                 if (NextLerpPoint != null &&
@@ -692,7 +712,7 @@ public class CustomMovementHandler
                     LastTrueTilePosition = CurrentTrueTilePosition;
 
                     // Teleport fallback (Not covered by animation in plugin)
-                    if (IsPlayerOwner() && CurrentTime - overlay.LastTimeTeleport >= 1800)
+                    if (IsPlayerOwner() && CurrentTime - overlay.LastTimeTeleport >= 2400)
                     {
                         overlay.LastTimeTeleport = System.currentTimeMillis() - 600; // (We are at this location already, offset expected 1 tick animation time)
                         overlay.bShouldPlayTeleportAnimation = false; // Fallback, do not play animation
@@ -1289,11 +1309,11 @@ public class CustomMovementHandler
                 double AdjustedOrientationSpeed = CurrentAnimationRequest.OrientationSpeed * (CurrentFrameDelta / 16.667);// Speed value centered at 60FPS
                 if (ShortestAngle > 0)
                 {
-                    CurrentOrientation += Math.min(ShortestAngle, AdjustedOrientationSpeed);
+                    CurrentOrientation += (int) Math.min(ShortestAngle, AdjustedOrientationSpeed);
                 }
                 else if (ShortestAngle != 0)
                 {
-                    CurrentOrientation -= Math.min(-ShortestAngle, AdjustedOrientationSpeed);
+                    CurrentOrientation -= (int) Math.min(-ShortestAngle, AdjustedOrientationSpeed);
                 }
 
                 if (CurrentOrientation < 0)
@@ -1356,7 +1376,12 @@ public class CustomMovementHandler
                 {
                     LastAnimationTickTime = CurrentTime;
                     int CurrentFrame = AnimController.getFrame();
-                    if (CurrentFrame >= CurrentAnimationRequest.EndingFrame)
+
+                    if (AnimController.getFrame() < CurrentAnimationRequest.StartingFrame)
+                    {
+                        AnimController.setFrame(CurrentAnimationRequest.StartingFrame);
+                    }
+                    else if (CurrentFrame >= CurrentAnimationRequest.EndingFrame)
                     {
                         AnimController.setFrame(CurrentAnimationRequest.EndingFrame);
                     } else
@@ -1365,7 +1390,10 @@ public class CustomMovementHandler
                     }
                 }
 
-                Model.setModel(client.mergeModels(AnimController.animate(Owner.getModel())));
+                if (Owner.getModel() != null)
+                {
+                    Model.setModel(client.mergeModels(AnimController.animate(Owner.getModel())));
+                }
             }
             else
             {
@@ -1395,7 +1423,10 @@ public class CustomMovementHandler
                     CurrentPoseAnimation = NO_ANIMATION;
                     bResetCurrentAnimation = false;
                 }
-                Model.setModel(client.mergeModels(Owner.getModel()));
+                if (Owner.getModel() != null)
+                {
+                    Model.setModel(client.mergeModels(Owner.getModel()));
+                }
             }
 
             if (Model.getModel().getModelHeight() != Owner.getModel().getModelHeight())
