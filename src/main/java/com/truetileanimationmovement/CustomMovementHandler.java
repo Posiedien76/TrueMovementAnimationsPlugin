@@ -1372,7 +1372,7 @@ public class CustomMovementHandler
                 Owner.setPoseAnimation(NO_ANIMATION);
                 Owner.setPoseAnimationFrame(0);
 
-                if (CurrentTime - LastAnimationTickTime >= 17) // 17ms per frame->60FPS
+                if (CurrentTime - LastAnimationTickTime >= 16666666) // 16.6667ms per frame->60FPS
                 {
                     LastAnimationTickTime = CurrentTime;
                     int CurrentFrame = AnimController.getFrame();
