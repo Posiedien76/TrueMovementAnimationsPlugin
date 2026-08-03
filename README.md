@@ -22,6 +22,7 @@ CONTRIBUTOR LIST->
 - Posiedien (plugin owner)
 - MK677
 - JarateKing
+- dkmann
 
 
 ![Demo GIF](docs/screenshots/PluginFeatureGif.gif)
