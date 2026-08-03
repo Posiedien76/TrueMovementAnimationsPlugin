@@ -166,6 +166,8 @@ public class AnimationRequestMoveset
         NewRequest.bShouldTeleportToLocation = false;
         NewRequest.bAtDestinationLocation = false;
         NewRequest.OrientationSpeed = 60;
+        NewRequest.bAllowAnimationLoop = false;
+
         return NewRequest;
     }
 
@@ -202,6 +204,7 @@ public class AnimationRequestMoveset
             SOUTHEAST_2.MovementSpeedMultiplier = 1.5;
             SOUTHEAST_2.AnimationSpeed = 1;
             SOUTHEAST_2.StartingFrame = 0;
+            SOUTHEAST_2.bAllowAnimationLoop = false;
 
 
             // SOUTHSOUTHWEST;
@@ -210,6 +213,7 @@ public class AnimationRequestMoveset
             SOUTHWESTWEST.MovementSpeedMultiplier = 1.5;
             SOUTHWESTWEST.AnimationSpeed = 1;
             SOUTHWESTWEST.StartingFrame = 0;
+            SOUTHWESTWEST.bAllowAnimationLoop = false;
 
 
             // WEST_2;
@@ -217,12 +221,14 @@ public class AnimationRequestMoveset
             WEST_2.MovementSpeedMultiplier = 2;
             WEST_2.AnimationSpeed = 1;
             WEST_2.StartingFrame = 4;
+            WEST_2.bAllowAnimationLoop = false;
 
             // NORTHWESTWEST;
             NORTHWESTWEST.AnimationToPlay = 409; // another cool spin move
             NORTHWESTWEST.MovementSpeedMultiplier = 2;
             NORTHWESTWEST.AnimationSpeed = 1;
             NORTHWESTWEST.StartingFrame = 0;
+            NORTHWESTWEST.bAllowAnimationLoop = false;
 
 
             // NORTHEAST_2;
@@ -231,6 +237,7 @@ public class AnimationRequestMoveset
             NORTHEAST_2.MovementSpeedMultiplier = 1.5;
             NORTHEAST_2.AnimationSpeed = 1;
             NORTHEAST_2.StartingFrame = 0;
+            NORTHEAST_2.bAllowAnimationLoop = false;
 
 
             // SOUTHSOUTHEAST;
@@ -239,6 +246,7 @@ public class AnimationRequestMoveset
             SOUTHSOUTHEAST.MovementSpeedMultiplier = 1.5;
             SOUTHSOUTHEAST.AnimationSpeed = 1;
             SOUTHSOUTHEAST.StartingFrame = 0;
+            SOUTHSOUTHEAST.bAllowAnimationLoop = false;
 
 
             // SOUTHWEST_1;
@@ -247,18 +255,21 @@ public class AnimationRequestMoveset
             SOUTHWEST_1.MovementSpeedMultiplier = 1.0;
             SOUTHWEST_1.AnimationSpeed = 1;
             SOUTHWEST_1.StartingFrame = 0;
+            SOUTHWEST_1.bAllowAnimationLoop = false;
 
             // WEST_1;
             WEST_1.AnimationToPlay = 821; // SIDE STEP LEFT
             WEST_1.MovementSpeedMultiplier = 1.5;
             WEST_1.AnimationSpeed = 2;
             WEST_1.StartingFrame = 0;
+            WEST_1.bAllowAnimationLoop = false;
 
             // NORTHWEST_1;
             NORTHWEST_1.AnimationToPlay = 807; // Small hop
             NORTHWEST_1.MovementSpeedMultiplier = 3.0;
             NORTHWEST_1.StartingFrame = 7;
             NORTHWEST_1.AnimationSpeed = 1;
+            NORTHWEST_1.bAllowAnimationLoop = false;
 
 
             // NORTHNORTHEAST;
@@ -267,6 +278,7 @@ public class AnimationRequestMoveset
             NORTHNORTHEAST.MovementSpeedMultiplier = 1.6;
             NORTHNORTHEAST.AnimationSpeed = 2;
             NORTHNORTHEAST.StartingFrame = 2;
+            NORTHNORTHEAST.bAllowAnimationLoop = false;
 
             // BACK_2;
             BACK_2.AnimationToPlay = 2390; // big knockback
@@ -274,6 +286,7 @@ public class AnimationRequestMoveset
             BACK_2.MovementSpeedMultiplier = 2;
             BACK_2.AnimationSpeed = 1;
             BACK_2.StartingFrame = 0;
+            BACK_2.bAllowAnimationLoop = false;
 
             // BACK_1;
             BACK_1.AnimationToPlay = 1441; // knockback
@@ -281,6 +294,7 @@ public class AnimationRequestMoveset
             BACK_1.MovementSpeedMultiplier = 1;
             BACK_1.AnimationSpeed = 1;
             BACK_1.StartingFrame = 0;
+            BACK_1.bAllowAnimationLoop = false;
 
             CENTER.AnimationToPlay = AnimSet.IdleRotateRight; // Center
 
@@ -288,12 +302,15 @@ public class AnimationRequestMoveset
             FORWARD_1.MovementSpeedMultiplier = 2.0;
             FORWARD_1.StartingFrame = 0;
             FORWARD_1.AnimationSpeed = 1;
+            FORWARD_1.bAllowAnimationLoop = false;
 
             // FORWARD_2;
             FORWARD_2.AnimationToPlay = 3067; // Big jump forward
             FORWARD_2.MovementSpeedMultiplier = 2;
             FORWARD_2.AnimationSpeed = 2;
             FORWARD_2.StartingFrame = 2;
+            FORWARD_2.EndingFrame = 7;
+            FORWARD_2.bAllowAnimationLoop = false;
 
             // SOUTHWESTWEST;
             SOUTHSOUTHWEST.AnimationToPlay = 870; // Jumping Jack
@@ -301,6 +318,7 @@ public class AnimationRequestMoveset
             SOUTHSOUTHWEST.MovementSpeedMultiplier = 2;
             SOUTHSOUTHWEST.AnimationSpeed = 1;
             SOUTHSOUTHWEST.StartingFrame = 0;
+            SOUTHSOUTHWEST.bAllowAnimationLoop = false;
 
 
             // SOUTHEAST_1;
@@ -309,18 +327,21 @@ public class AnimationRequestMoveset
             SOUTHEAST_1.MovementSpeedMultiplier = 1.0;
             SOUTHEAST_1.AnimationSpeed = 1;
             SOUTHEAST_1.StartingFrame = 0;
+            SOUTHEAST_1.bAllowAnimationLoop = false;
 
 
             // EAST_2;
             EAST_1.AnimationToPlay = 822; // SIDE STEP RIGHT
             EAST_1.MovementSpeedMultiplier = 1.5;
             EAST_1.AnimationSpeed = 2;
+            EAST_1.bAllowAnimationLoop = false;
 
             // NORTHEAST_1;
             NORTHEAST_1.AnimationToPlay = 807; // North-east
             NORTHEAST_1.MovementSpeedMultiplier = 3.0;
             NORTHEAST_1.StartingFrame = 7;
             NORTHEAST_1.AnimationSpeed = 1;
+            NORTHEAST_1.bAllowAnimationLoop = false;
 
             // NORTHNORTHWEST;
             NORTHNORTHWEST.AnimationToPlay = 2750; // Super far jump forward
@@ -328,6 +349,7 @@ public class AnimationRequestMoveset
             NORTHNORTHWEST.MovementSpeedMultiplier = 1.6;
             NORTHNORTHWEST.AnimationSpeed = 2;
             NORTHNORTHWEST.StartingFrame = 2;
+            NORTHNORTHWEST.bAllowAnimationLoop = false;
 
             // SOUTHWEST_2;
             SOUTHWEST_2.AnimationToPlay = 1770; // lean WAY back
@@ -335,6 +357,7 @@ public class AnimationRequestMoveset
             SOUTHWEST_2.MovementSpeedMultiplier = 1.5;
             SOUTHWEST_2.AnimationSpeed = 1;
             SOUTHWEST_2.StartingFrame = 0;
+            SOUTHWEST_2.bAllowAnimationLoop = false;
 
             // SOUTHEASTEAST;
             SOUTHEASTEAST.AnimationToPlay = 870; // Jumping Jack
@@ -342,18 +365,21 @@ public class AnimationRequestMoveset
             SOUTHEASTEAST.MovementSpeedMultiplier = 2;
             SOUTHEASTEAST.AnimationSpeed = 1;
             SOUTHEASTEAST.StartingFrame = 0;
+            SOUTHEASTEAST.bAllowAnimationLoop = false;
 
             // EAST_2
             EAST_2.AnimationToPlay = 2107; // SIDE_STEP 2 - spin emote
             EAST_2.MovementSpeedMultiplier = 2;
             EAST_2.AnimationSpeed = 1;
             EAST_2.StartingFrame = 4;
+            EAST_2.bAllowAnimationLoop = false;
 
             // NORTHEASTEAST;
             NORTHEASTEAST.AnimationToPlay = 409; // another cool spin move
             NORTHEASTEAST.MovementSpeedMultiplier = 2;
             NORTHEASTEAST.AnimationSpeed = 1;
             NORTHEASTEAST.StartingFrame = 0;
+            NORTHEASTEAST.bAllowAnimationLoop = false;
 
 
             // NORTHWEST_2;
@@ -362,6 +388,7 @@ public class AnimationRequestMoveset
             NORTHWEST_2.MovementSpeedMultiplier = 1.5;
             NORTHWEST_2.AnimationSpeed = 1;
             NORTHWEST_2.StartingFrame = 0;
+            NORTHWEST_2.bAllowAnimationLoop = false;
         }
         else if (SpecialAnimationKey.equals("WooxWalk"))
         {
@@ -380,6 +407,8 @@ public class AnimationRequestMoveset
                         MovesetArray[i][j].MovementSpeedMultiplier = 1.5;
                         MovesetArray[i][j].AnimationSpeed = 1;
                         MovesetArray[i][j].StartingFrame = 2;
+                        MovesetArray[i][j].EndingFrame = 7;
+                        MovesetArray[i][j].bAllowAnimationLoop = false;
                     }
                     // 1 Tile
                     else if (i == 1 || j == 1 || i == 3 || j == 3)
@@ -389,6 +418,8 @@ public class AnimationRequestMoveset
                         MovesetArray[i][j].bUseLinearTween = false;
                         MovesetArray[i][j].StartingFrame = 2;
                         MovesetArray[i][j].AnimationSpeed = 1;
+                        MovesetArray[i][j].EndingFrame = 7;
+                        MovesetArray[i][j].bAllowAnimationLoop = false;
                     }
                 }
             }
@@ -411,6 +442,8 @@ public class AnimationRequestMoveset
                         MovesetArray[i][j].MovementSpeedMultiplier = 1.5;
                         MovesetArray[i][j].AnimationSpeed = 1;
                         MovesetArray[i][j].StartingFrame = 2;
+                        MovesetArray[i][j].EndingFrame = 7;
+                        MovesetArray[i][j].bAllowAnimationLoop = false;
                     }
                     // 1 Tile
                     else if (i == 1 || j == 1 || i == 3 || j == 3)
@@ -420,6 +453,8 @@ public class AnimationRequestMoveset
                         MovesetArray[i][j].bUseLinearTween = false;
                         MovesetArray[i][j].StartingFrame = 2;
                         MovesetArray[i][j].AnimationSpeed = 1;
+                        MovesetArray[i][j].EndingFrame = 7;
+                        MovesetArray[i][j].bAllowAnimationLoop = false;
                     }
                 }
             }

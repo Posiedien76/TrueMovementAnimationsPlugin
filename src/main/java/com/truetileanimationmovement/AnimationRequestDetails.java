@@ -13,6 +13,7 @@ public class AnimationRequestDetails
     public boolean bUseLinearTween = false;
     public boolean bShouldTeleportToLocation = false;
     public boolean bAtDestinationLocation = false;
+    public boolean bAllowAnimationLoop = true;
 
     static AnimationRequestDetails NewObject(AnimationRequestDetails InDetails)
     {
@@ -29,6 +30,7 @@ public class AnimationRequestDetails
         newObject.bUseLinearTween = InDetails.bUseLinearTween;
         newObject.bShouldTeleportToLocation = InDetails.bShouldTeleportToLocation;
         newObject.bAtDestinationLocation = InDetails.bAtDestinationLocation;
+        newObject.bAllowAnimationLoop = InDetails.bAllowAnimationLoop;
 
         return newObject;
     }

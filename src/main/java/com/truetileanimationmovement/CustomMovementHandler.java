@@ -201,8 +201,18 @@ public class CustomMovementHandler
             AnimController = new AnimationController(client, NO_ANIMATION);
             AnimController.setOnFinished((AnimationController InController) ->
             {
-                // Reset animation (loop)
-                InController.setFrame(0);
+                if (CurrentAnimationRequest != null)
+                {
+                    if (CurrentAnimationRequest.bAllowAnimationLoop)
+                    {
+                        InController.setFrame(CurrentAnimationRequest.StartingFrame);
+                    }
+                }
+                else
+                {
+                    // Reset animation (loop)
+                    InController.setFrame(0);
+                }
                 bTargetWasKilled = false;
             });
         }
@@ -1375,16 +1385,15 @@ public class CustomMovementHandler
                 if (CurrentTime - LastAnimationTickTime >= 16666666) // 16.6667ms per frame->60FPS
                 {
                     LastAnimationTickTime = CurrentTime;
-                    int CurrentFrame = AnimController.getFrame();
-
                     if (AnimController.getFrame() < CurrentAnimationRequest.StartingFrame)
                     {
                         AnimController.setFrame(CurrentAnimationRequest.StartingFrame);
                     }
-                    else if (CurrentFrame >= CurrentAnimationRequest.EndingFrame)
+                    else if (AnimController.getFrame() >= CurrentAnimationRequest.EndingFrame)
                     {
                         AnimController.setFrame(CurrentAnimationRequest.EndingFrame);
-                    } else
+                    }
+                    else
                     {
                         AnimController.tick(CurrentAnimationRequest.AnimationSpeed);
                     }
