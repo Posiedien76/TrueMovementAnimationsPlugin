@@ -27,6 +27,9 @@ public class CustomMovementHandler
     // Runelite object management
     public Actor Owner = null;
     public AnimationController AnimController = null; // Used to blend additional animations
+    private AnimationController WalkStopIdleController = null;
+    private int LastWalkStopIdleGameCycle = -1;
+    private boolean bUsingWalkStopIdleController = false;
     public RuneLiteObject Model = null;
 
     // Targeting
@@ -67,6 +70,11 @@ public class CustomMovementHandler
     // Rotation
     private int TargetOrientation = 0;
     private int CurrentOrientation = 0;
+    private boolean bWalkStopFacingHoldArmed = false;
+    private boolean bWalkMovementObserved = false;
+    private boolean bPreserveReleasedWalkFacing = false;
+    private boolean bHoldWalkStopFacingThisFrame = false;
+    private int NativeOrientationAtWalkFacingRelease = 0;
 
 
     // Player only
@@ -270,6 +278,9 @@ public class CustomMovementHandler
         // Render once with should render owner back on
         bShouldRenderOwner = true;
         bAttemptToRenderOwner = true;
+        CancelWalkStopFacingHold();
+        ReleaseWalkStopIdleController(false);
+        WalkStopIdleController = null;
 
         if (AnimController != null)
         {
@@ -327,6 +338,102 @@ public class CustomMovementHandler
             cameraModel.setActive(false);
             client.removeRuneLiteObject(cameraModel);
         }
+    }
+    void ArmWalkStopFacingHold()
+    {
+        if (!IsPlayerOwner())
+        {
+            return;
+        }
+
+        bWalkStopFacingHoldArmed = true;
+        bWalkMovementObserved = false;
+        // If the previous route is already preserving its released facing,
+        // keep that stable during the short click-to-movement delay. The new
+        // route clears it as soon as visible movement actually begins.
+    }
+
+    void CancelWalkStopFacingHold()
+    {
+        bWalkStopFacingHoldArmed = false;
+        bWalkMovementObserved = false;
+        bPreserveReleasedWalkFacing = false;
+        bHoldWalkStopFacingThisFrame = false;
+    }
+
+    private void UpdateWalkStopFacingHold()
+    {
+        bHoldWalkStopFacingThisFrame = false;
+        if (!IsPlayerOwner())
+        {
+            return;
+        }
+
+        boolean VisibleModelIsMoving = MillisecondsSinceTileChange < 600;
+        if (VisibleModelIsMoving)
+        {
+            if (bWalkStopFacingHoldArmed)
+            {
+                bWalkMovementObserved = true;
+            }
+
+            // Forced movement or another route can begin without a fresh
+            // yellow click. It must not inherit a completed route's facing.
+            bPreserveReleasedWalkFacing = false;
+            return;
+        }
+
+        if (bPreserveReleasedWalkFacing)
+        {
+            // The catch-up block itself has ended. Ignore only the exact stale
+            // native target which existed at release; any later native facing
+            // command restores ordinary turning.
+            if (Owner.getOrientation() == NativeOrientationAtWalkFacingRelease)
+            {
+                bHoldWalkStopFacingThisFrame = true;
+            }
+            else
+            {
+                bPreserveReleasedWalkFacing = false;
+            }
+            return;
+        }
+
+        if (!bWalkStopFacingHoldArmed ||
+                !bWalkMovementObserved ||
+                !IsAtFinalWalkDestination())
+        {
+            return;
+        }
+
+        bHoldWalkStopFacingThisFrame = true;
+        if (HasHiddenOwnerCaughtUp(
+                Owner.getLocalLocation(),
+                NextLerpPosition))
+        {
+            // Release the temporary catch-up block without immediately
+            // reapplying the stale native orientation on the next frame.
+            bWalkStopFacingHoldArmed = false;
+            bWalkMovementObserved = false;
+            bPreserveReleasedWalkFacing = true;
+            NativeOrientationAtWalkFacingRelease = Owner.getOrientation();
+        }
+    }
+
+    private boolean IsAtFinalWalkDestination()
+    {
+        LocalPoint WalkDestination = client.getLocalDestinationLocation();
+        return WalkDestination == null ||
+                (NextLerpPosition != null &&
+                        NextLerpPosition.equals(WalkDestination));
+    }
+
+    static boolean HasHiddenOwnerCaughtUp(
+            LocalPoint OwnerLocation,
+            LocalPoint RenderDestination)
+    {
+        return OwnerLocation != null &&
+                OwnerLocation.equals(RenderDestination);
     }
 
     private void UpdateOldIdleAnimations()
@@ -415,6 +522,126 @@ public class CustomMovementHandler
             }
         }
     }
+
+    static boolean ShouldUseWalkStopIdleController(
+            boolean HoldFacingThisFrame,
+            boolean CatchUpStillActive,
+            boolean MovementWasObserved,
+            int OwnerActionAnimation,
+            int IdlePoseAnimation)
+    {
+        // Idle smoothing is valid only during the actual catch-up interval.
+        // In particular, Preserve/Armed without MovementWasObserved means a
+        // new click is waiting to start and must remain on the native idle
+        // animation instead of reviving an old controller frame.
+        return HoldFacingThisFrame &&
+                CatchUpStillActive &&
+                MovementWasObserved &&
+                OwnerActionAnimation == -1 &&
+                IdlePoseAnimation != -1;
+    }
+
+    private boolean RenderWalkStopIdleAnimation()
+    {
+        int IdlePoseAnimation = OldAnimationSet.IdlePoseAnimation;
+        if (!ShouldUseWalkStopIdleController(
+                bHoldWalkStopFacingThisFrame,
+                bWalkStopFacingHoldArmed,
+                bWalkMovementObserved,
+                Owner.getAnimation(),
+                IdlePoseAnimation))
+        {
+            ReleaseWalkStopIdleController(true);
+            return false;
+        }
+
+        Animation IdleAnimation = client.loadAnimation(IdlePoseAnimation);
+        if (IdleAnimation == null)
+        {
+            ReleaseWalkStopIdleController(false);
+            return false;
+        }
+
+        int CurrentGameCycle = client.getGameCycle();
+        if (!bUsingWalkStopIdleController ||
+                WalkStopIdleController == null ||
+                WalkStopIdleController.getAnimation() == null ||
+                WalkStopIdleController.getAnimation().getId() != IdlePoseAnimation)
+        {
+            // Each genuine stop gets its own idle clock.
+            // Reusing the previous stop's controller made the model snap back
+            // to an unrelated old frame when catch-up began again.
+            WalkStopIdleController =
+                    new AnimationController(client, IdleAnimation);
+            int NativeIdleFrame =
+                    Owner.getPoseAnimation() == IdlePoseAnimation
+                            ? Owner.getPoseAnimationFrame()
+                            : 0;
+            if (NativeIdleFrame >= 0 &&
+                    NativeIdleFrame < IdleAnimation.getNumFrames())
+            {
+                WalkStopIdleController.setFrame(NativeIdleFrame);
+            }
+            LastWalkStopIdleGameCycle = CurrentGameCycle;
+        }
+        else if (LastWalkStopIdleGameCycle >= 0 &&
+                CurrentGameCycle >= LastWalkStopIdleGameCycle)
+        {
+            WalkStopIdleController.tick(
+                    CurrentGameCycle - LastWalkStopIdleGameCycle);
+            LastWalkStopIdleGameCycle = CurrentGameCycle;
+        }
+        else
+        {
+            LastWalkStopIdleGameCycle = CurrentGameCycle;
+        }
+
+        // Build an unposed equipment model, then apply the independent idle
+        // controller. AnimationController supplies RuneLite's packed
+        // interpolation frame whenever Animation Smoothing is enabled. The
+        // hidden actor can continue advancing its locomotion animation while
+        // it catches up, so its pose is deliberately not used as the source.
+        SetAllIdlePosesNoAnimation();
+        Owner.setPoseAnimation(NO_ANIMATION);
+        Owner.setPoseAnimationFrame(0);
+        Model.setModel(client.mergeModels(
+                WalkStopIdleController.animate(Owner.getModel())));
+
+        bUsingWalkStopIdleController = true;
+        bResetCurrentAnimation = false;
+        CurrentPoseAnimation = NO_ANIMATION;
+        return true;
+    }
+
+    private void ReleaseWalkStopIdleController(
+            boolean PreserveIdlePhase)
+    {
+        if (!bUsingWalkStopIdleController)
+        {
+            return;
+        }
+
+        // Hand the final idle frame back to RuneLite once
+        // the hidden actor reaches the rendered tile. This preserves breathing
+        // and head-turn phase without leaving the custom controller active.
+        if (PreserveIdlePhase &&
+                WalkStopIdleController != null &&
+                WalkStopIdleController.getAnimation() != null &&
+                !bMovingThisAction &&
+                CurrentAnimationRequest != null &&
+                CurrentAnimationRequest.PoseAnimationToPlay ==
+                        OldAnimationSet.IdlePoseAnimation)
+        {
+            Owner.setPoseAnimation(
+                    WalkStopIdleController.getAnimation().getId());
+            Owner.setPoseAnimationFrame(
+                    WalkStopIdleController.getFrame());
+        }
+
+        bUsingWalkStopIdleController = false;
+        LastWalkStopIdleGameCycle = -1;
+    }
+
     private void UpdateFrameTimer()
     {
         CurrentTime = System.currentTimeMillis();
@@ -950,19 +1177,27 @@ public class CustomMovementHandler
             CurrentAnimationRequest.MovementSpeedMultiplier = 1.0;
             CurrentAnimationRequest.AnimationSpeed = 1;
             CurrentAnimationRequest.StartingFrame = 0;
-            ChangeLastLerpPointForRotation();
-            int ShortestAngle = ShortestAngleDifference(CurrentOrientation, TargetOrientation);
-            if (ShortestAngle >= 10)
-            {;
-                CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdleRotateRight;
-            }
-            else if (ShortestAngle <= -10)
+
+            if (bHoldWalkStopFacingThisFrame)
             {
-                CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdleRotateLeft;
+                CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdlePoseAnimation;
             }
             else
-            {;
-                CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdlePoseAnimation;
+            {
+                ChangeLastLerpPointForRotation();
+                int ShortestAngle = ShortestAngleDifference(CurrentOrientation, TargetOrientation);
+                if (ShortestAngle >= 10)
+                {
+                    CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdleRotateRight;
+                }
+                else if (ShortestAngle <= -10)
+                {
+                    CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdleRotateLeft;
+                }
+                else
+                {
+                    CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdlePoseAnimation;
+                }
             }
 
             bWooxWalkBroken = true;
@@ -1082,6 +1317,11 @@ public class CustomMovementHandler
         else if (!LastLerpPosition.equals(NextLerpPosition))
         {
             TargetOrientation = (getOrientationBetweenPoints(LastLerpPosition.getX(), LastLerpPosition.getY(), NextLerpPosition.getX(), NextLerpPosition.getY(), 90));
+        }
+
+        if (bHoldWalkStopFacingThisFrame)
+        {
+            TargetOrientation = CurrentOrientation;
         }
     }
 
@@ -1333,9 +1573,12 @@ public class CustomMovementHandler
             }
 
             // Custom handler
-            boolean bUsedCustomAnimation = false;
-            if ((UniqueAnimationExceptionList.contains(Owner.getAnimation()) && bMovingThisAction) ||
-                    CurrentAnimationRequest.AnimationToPlay != -1)
+            boolean bUsedCustomAnimation =
+                    RenderWalkStopIdleAnimation();
+            if (!bUsedCustomAnimation &&
+                    ((UniqueAnimationExceptionList.contains(Owner.getAnimation()) &&
+                            bMovingThisAction) ||
+                            CurrentAnimationRequest.AnimationToPlay != -1))
             {
                 bUsedCustomAnimation = true;
                 // Anim controller takes control over the pose animation or custom anim
@@ -1395,7 +1638,7 @@ public class CustomMovementHandler
                     Model.setModel(client.mergeModels(AnimController.animate(Owner.getModel())));
                 }
             }
-            else
+            else if (!bUsedCustomAnimation)
             {
                 // Normal controller takes back over
                 bTargetWasKilled = false; // If normal controller is taking it, cancel target killed animation
@@ -1465,7 +1708,9 @@ public class CustomMovementHandler
             }
 
             // If the actual owner is extremely close to what we decided (and not custom animation), just render the owner
-            if (!bUsedCustomAnimation && IsOwnerCloseEnoughToModel())
+            if (!bHoldWalkStopFacingThisFrame &&
+                    !bUsedCustomAnimation &&
+                    IsOwnerCloseEnoughToModel())
             {
                 if (Model.isActive())
                 {
@@ -1506,6 +1751,8 @@ public class CustomMovementHandler
         UpdateTrueTileLocation();
 
         UpdateLerpDestinations();
+
+        UpdateWalkStopFacingHold();
 
         UpdateAnimationSelection();
 

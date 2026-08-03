@@ -63,6 +63,45 @@ public class TrueTileMovementPlugin extends Plugin
 	private boolean bStartupComplete = false;
 
 	private Set<Integer> CharacterIDs = new HashSet<>();
+
+	private static final Set<MenuAction> RED_WORLD_INTERACTION_ACTIONS = EnumSet.of(
+			ITEM_USE_ON_GAME_OBJECT,
+			WIDGET_TARGET_ON_GAME_OBJECT,
+			GAME_OBJECT_FIRST_OPTION,
+			GAME_OBJECT_SECOND_OPTION,
+			GAME_OBJECT_THIRD_OPTION,
+			GAME_OBJECT_FOURTH_OPTION,
+			GAME_OBJECT_FIFTH_OPTION,
+			ITEM_USE_ON_NPC,
+			WIDGET_TARGET_ON_NPC,
+			NPC_FIRST_OPTION,
+			NPC_SECOND_OPTION,
+			NPC_THIRD_OPTION,
+			NPC_FOURTH_OPTION,
+			NPC_FIFTH_OPTION,
+			ITEM_USE_ON_PLAYER,
+			WIDGET_TARGET_ON_PLAYER,
+			PLAYER_FIRST_OPTION,
+			PLAYER_SECOND_OPTION,
+			PLAYER_THIRD_OPTION,
+			PLAYER_FOURTH_OPTION,
+			PLAYER_FIFTH_OPTION,
+			PLAYER_SIXTH_OPTION,
+			PLAYER_SEVENTH_OPTION,
+			PLAYER_EIGHTH_OPTION,
+			ITEM_USE_ON_GROUND_ITEM,
+			WIDGET_TARGET_ON_GROUND_ITEM,
+			GROUND_ITEM_FIRST_OPTION,
+			GROUND_ITEM_SECOND_OPTION,
+			GROUND_ITEM_THIRD_OPTION,
+			GROUND_ITEM_FOURTH_OPTION,
+			GROUND_ITEM_FIFTH_OPTION,
+			WORLD_ENTITY_FIRST_OPTION,
+			WORLD_ENTITY_SECOND_OPTION,
+			WORLD_ENTITY_THIRD_OPTION,
+			WORLD_ENTITY_FOURTH_OPTION,
+			WORLD_ENTITY_FIFTH_OPTION);
+
 	public List<Hitsplat> CurrentHitsplats = new ArrayList<>();
 	public boolean bIsPluginSupportedCurrently = true;
 	public int TicksSincePluginWasSupport = 0;
@@ -734,7 +773,9 @@ public class TrueTileMovementPlugin extends Plugin
 	protected void startUp() throws Exception
 	{
 		overlayManager.add(OverlayRenderer);
-		if (client.getGameState() == GameState.LOGIN_SCREEN)
+		if (client.getGameState() == GameState.STARTING ||
+				client.getGameState() == GameState.LOGIN_SCREEN ||
+				client.getGameState() == GameState.LOGIN_SCREEN_AUTHENTICATOR)
 		{
 			DoStartUp();
 		}
@@ -785,6 +826,22 @@ public class TrueTileMovementPlugin extends Plugin
 			return;
 		}
 
+		// [TMA-STOP-FACING] A yellow Walk click arms the hold. A red world
+		// interaction cancels it immediately so NPC/object/player facing keeps
+		// using RuneScape's normal orientation changes.
+		CustomMovementHandler LocalPlayerHandler = GetLocalPlayerMovementHandler();
+		if (LocalPlayerHandler != null)
+		{
+			if (event.getMenuAction() == WALK)
+			{
+				LocalPlayerHandler.ArmWalkStopFacingHold();
+			}
+			else if (IsRedWorldInteraction(event.getMenuAction()))
+			{
+				LocalPlayerHandler.CancelWalkStopFacingHold();
+			}
+		}
+
 		// TODO make less manual
 		if (event.getMenuOption().equals("Walk here") ||
 				event.getMenuOption().equals("Attack") ||
@@ -794,6 +851,19 @@ public class TrueTileMovementPlugin extends Plugin
 		{
 			OverlayRenderer.bRecentlyClickedEvent = true;
 		}
+	}
+
+	private CustomMovementHandler GetLocalPlayerMovementHandler()
+	{
+		Player LocalPlayer = client.getLocalPlayer();
+		return LocalPlayer == null
+				? null
+				: OverlayRenderer.MovementHandlerCache.get(LocalPlayer.getId());
+	}
+
+	static boolean IsRedWorldInteraction(MenuAction Action)
+	{
+		return Action != null && RED_WORLD_INTERACTION_ACTIONS.contains(Action);
 	}
 
 	@Subscribe
