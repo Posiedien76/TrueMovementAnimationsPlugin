@@ -172,8 +172,8 @@ public class TrueTileMovementPlugin extends Plugin
 
 	private float CurrentCameraPositionX = -1; // Offset in "sudo world space" (see adaptive camera function)
 	private float CurrentCameraPositionZ = -1;
-	private static final float ADAPTIVE_CAMERA_REFERENCE_FRAME_MILLISECONDS = 16.667f;
-	private static final float MAX_ADAPTIVE_CAMERA_FRAME_DELTA_MILLISECONDS = 100.0f;
+	private static final double ADAPTIVE_CAMERA_REFERENCE_FRAME_NANOSECONDS = 16667000;
+	private static final double MAX_ADAPTIVE_CAMERA_FRAME_DELTA_NANOSECONDS = 1e+8f;
 	private long LastAdaptiveCameraUpdateNanos = 0;
 	private volatile boolean bAdaptiveCameraRenderedThisFrame = false;
 	private final Runnable PostDrawCameraModeHandoff = () ->
@@ -200,20 +200,20 @@ public class TrueTileMovementPlugin extends Plugin
 		return !bForceAdaptiveCameraOff && config.AdaptiveCameraOn();
 	}
 
-	private float GetAdaptiveCameraFrameDeltaMilliseconds()
+	private double GetAdaptiveCameraFrameDeltaNanoseconds()
 	{
 		long CurrentUpdateNanos = System.nanoTime();
-		float FrameDeltaMilliseconds = ADAPTIVE_CAMERA_REFERENCE_FRAME_MILLISECONDS;
+		double FrameDeltaNanoseconds = ADAPTIVE_CAMERA_REFERENCE_FRAME_NANOSECONDS;
 
 		if (LastAdaptiveCameraUpdateNanos != 0 && CurrentUpdateNanos > LastAdaptiveCameraUpdateNanos)
 		{
-			FrameDeltaMilliseconds = Math.min(
-					(CurrentUpdateNanos - LastAdaptiveCameraUpdateNanos) / 1_000_000.0f,
-					MAX_ADAPTIVE_CAMERA_FRAME_DELTA_MILLISECONDS);
+			FrameDeltaNanoseconds = Math.min(
+					(CurrentUpdateNanos - LastAdaptiveCameraUpdateNanos),
+					MAX_ADAPTIVE_CAMERA_FRAME_DELTA_NANOSECONDS);
 		}
 
 		LastAdaptiveCameraUpdateNanos = CurrentUpdateNanos;
-		return FrameDeltaMilliseconds;
+		return FrameDeltaNanoseconds;
 	}
 
 	@Subscribe
@@ -259,7 +259,7 @@ public class TrueTileMovementPlugin extends Plugin
 			LastAdaptiveCameraUpdateNanos = 0;
 			return;
 		}
-		float CameraFrameDeltaMilliseconds = GetAdaptiveCameraFrameDeltaMilliseconds();
+		double CameraFrameDeltaNanoseconds = GetAdaptiveCameraFrameDeltaNanoseconds();
 
 		// Store in sudo world space to prevent jumps when loading new chunks
 		double CalculationOffsetVectorX = trueLocalTile.getX() - trueWorldTile.getX() * 128;
@@ -300,7 +300,7 @@ public class TrueTileMovementPlugin extends Plugin
 
 		// Scale with the interval for this rendered camera frame. The movement handler is
 		// updated later in overlay rendering, so its CurrentFrameDelta belongs to the prior frame.
-		Velocity *= CameraFrameDeltaMilliseconds / ADAPTIVE_CAMERA_REFERENCE_FRAME_MILLISECONDS;
+		Velocity *= CameraFrameDeltaNanoseconds / ADAPTIVE_CAMERA_REFERENCE_FRAME_NANOSECONDS;
 
 		if (DistanceToTarget != 0)
 		{
@@ -557,7 +557,7 @@ public class TrueTileMovementPlugin extends Plugin
 	{
 		if (event.getActor() == client.getLocalPlayer())
 		{
-			LastTimeHitSplatApplied = System.currentTimeMillis();
+			LastTimeHitSplatApplied = System.nanoTime();
 			if (!CurrentHitsplats.contains(event.getHitsplat()))
 			{
 				CurrentHitsplats.add(event.getHitsplat());
@@ -580,7 +580,7 @@ public class TrueTileMovementPlugin extends Plugin
         CurrentHitsplats.removeIf(hitsplat -> client.getGameCycle() >= hitsplat.getDisappearsOnGameCycle());
 
 		// Recently been in combat
-		if (System.currentTimeMillis() - LastTimeHitSplatApplied < 6000) // 6 seconds
+		if (System.nanoTime() - LastTimeHitSplatApplied < 6e+9) // 6 seconds
 		{
 			// Show this one
 			OverlayRenderer.bShowHPBar = true;
@@ -604,7 +604,7 @@ public class TrueTileMovementPlugin extends Plugin
 				client.getLocalPlayer().getAnimation() == 2881
 		)
 		{
-			OverlayRenderer.LastTimeTeleport = System.currentTimeMillis();
+			OverlayRenderer.LastTimeTeleport = System.nanoTime();
 			OverlayRenderer.bShouldPlayTeleportAnimation = true;
 			OverlayRenderer.bTeleportInterrupted = false;
 		}

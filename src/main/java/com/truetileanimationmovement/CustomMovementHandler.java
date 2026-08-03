@@ -19,10 +19,10 @@ public class CustomMovementHandler
 
     // Time management
     private long CurrentTime;
-    public int CurrentFrameDelta;
-    private long LastTimeMilliseconds = 0;
+    public long CurrentFrameDelta;
+    private long LastTimeNanoseconds = 0;
     private long LastAnimationTickTime = 0;
-    private int MillisecondsSinceTileChange = 1000;
+    private long NanosecondsSinceTileChange = (long) 1e+9;
 
     // Runelite object management
     public Actor Owner = null;
@@ -417,12 +417,12 @@ public class CustomMovementHandler
     }
     private void UpdateFrameTimer()
     {
-        CurrentTime = System.currentTimeMillis();
-        CurrentFrameDelta = (int) (CurrentTime - LastTimeMilliseconds);
-        LastTimeMilliseconds = CurrentTime;
+        CurrentTime = System.nanoTime();
+        CurrentFrameDelta = (int) (CurrentTime - LastTimeNanoseconds);
+        LastTimeNanoseconds = CurrentTime;
         if (CurrentFrameDelta > 0)
         {
-            MillisecondsSinceTileChange += CurrentFrameDelta;
+            NanosecondsSinceTileChange += CurrentFrameDelta;
         }
     }
 
@@ -576,7 +576,7 @@ public class CustomMovementHandler
                 LastLerpPosition = Model.getLocation();
                 LastLerpPositionWorldPoint = WorldPoint.fromLocal(client, LastLerpPosition);
 
-                MillisecondsSinceTileChange = 0;
+                NanosecondsSinceTileChange = 0;
                 bNewTileMovementStarted = true;
                 bLastMovementDestinationPotentiallyDirty = true;
             }
@@ -712,9 +712,9 @@ public class CustomMovementHandler
                     LastTrueTilePosition = CurrentTrueTilePosition;
 
                     // Teleport fallback (Not covered by animation in plugin)
-                    if (IsPlayerOwner() && CurrentTime - overlay.LastTimeTeleport >= 2400)
+                    if (IsPlayerOwner() && CurrentTime - overlay.LastTimeTeleport >= 2.4e+9)
                     {
-                        overlay.LastTimeTeleport = System.currentTimeMillis() - 600; // (We are at this location already, offset expected 1 tick animation time)
+                        overlay.LastTimeTeleport = (long) (System.nanoTime() - 6e+8); // (We are at this location already, offset expected 1 tick animation time)
                         overlay.bShouldPlayTeleportAnimation = false; // Fallback, do not play animation
                         overlay.bTeleportInterrupted = false;
                     }
@@ -724,13 +724,13 @@ public class CustomMovementHandler
 
                 NextLerpPositionWorldPoint = CurrentWorldPoint;
 
-                MillisecondsSinceTileChange = 0;
+                NanosecondsSinceTileChange = 0;
                 bNewTileMovementStarted = true;
                 bLastMovementDestinationPotentiallyDirty = true;
             }
 
             // Decay bLastMovementDestinationPotentiallyDirty flag
-            if (MillisecondsSinceTileChange > 5)
+            if (NanosecondsSinceTileChange > 5e+6)
             {
                 bLastMovementDestinationPotentiallyDirty = false;
             }
@@ -793,7 +793,7 @@ public class CustomMovementHandler
         //else
 
         // Currently moving
-        if (MillisecondsSinceTileChange < 600 ) // 1 tick
+        if (NanosecondsSinceTileChange < 6e+8 ) // 1 tick
         {
             bMovingThisAction = true;
 
@@ -805,17 +805,17 @@ public class CustomMovementHandler
             boolean bSpecialMoveAnimation = false;// IsPlayerOwner() && !(bTooFarToSpecialMove || (devConfig.SpecialMovesOnlyInCombat() && currentTarget == null));
 
             // Did not click within the last time
-            if (CurrentTime - LastTimeRecentlyClicked > 1199)
+            if (CurrentTime - LastTimeRecentlyClicked > 1.199e+9)
             {
                 FramesSinceIdle = 0;
             }
 
             // Just teleported
-            if (IsPlayerOwner() && CurrentTime - overlay.LastTimeTeleport < 1800 && !overlay.bTeleportInterrupted)
+            if (IsPlayerOwner() && CurrentTime - overlay.LastTimeTeleport < 1.8e+9 && !overlay.bTeleportInterrupted)
             {
                 if (overlay.bShouldPlayTeleportAnimation && bIsDefaultHumanAnimationSet)
                 {
-                    if (CurrentTime - overlay.LastTimeTeleport < 600) // Blend with the first tick
+                    if (CurrentTime - overlay.LastTimeTeleport < 6e+8) // Blend with the first tick
                     {
                         // Handle normal walking
                         CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.GetAnimationRequestMovesetFromAnimationSet(OldAnimationSet, config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
@@ -1057,11 +1057,11 @@ public class CustomMovementHandler
         }
         else if (CurrentAnimationRequest.bUseLinearTween)
         {
-            TweenValue = linearTween(0L, (long) (600 / MovementSpeedMultiplier), MillisecondsSinceTileChange);
+            TweenValue = linearTween(0L, (long) (6e+8 / MovementSpeedMultiplier), NanosecondsSinceTileChange);
         }
         else
         {
-            TweenValue = quadraticTween(0L, (long) (600 / MovementSpeedMultiplier), MillisecondsSinceTileChange);
+            TweenValue = quadraticTween(0L, (long) (6e+8 / MovementSpeedMultiplier), NanosecondsSinceTileChange);
         }
 
         NewLocalPointToDraw = new LocalPoint((int) (LastLerpPosition.getX() + (NextLerpPosition.getX() - LastLerpPosition.getX()) * TweenValue),
@@ -1154,7 +1154,7 @@ public class CustomMovementHandler
                 double DirectionVectorX = -Math.sin(radians);
                 double DirectionVectorY = Math.cos(radians);
 
-                CurrentArrowPointingAnimationFrame += CurrentFrameDelta * config.ArrowPointingAnimationSpeed() * 0.0001;
+                CurrentArrowPointingAnimationFrame += CurrentFrameDelta * config.ArrowPointingAnimationSpeed() * 1e-10;
                 int AnimationOffsetStrength = (int) (Math.sin(CurrentArrowPointingAnimationFrame) * config.ArrowPointingAnimationStrength());
 
                 LocalPoint CameraFinalLocation = new LocalPoint(
@@ -1278,7 +1278,7 @@ public class CustomMovementHandler
                     currentTarget == null &&
                     UniqueAnimationLocationAndOrientationExceptionList.contains(OwnerAnimation));
 
-            if (bShouldUseTrueLocationOrientation || (CurrentTime - LastTimeUniqueAnimationLocationOrientationWasUsed) < 600) // A little bit of time before going to other animation
+            if (bShouldUseTrueLocationOrientation || (CurrentTime - LastTimeUniqueAnimationLocationOrientationWasUsed) < 6e+8) // A little bit of time before going to other animation
             {
                 if (Model.getLocation() != Owner.getLocalLocation())
                 {
@@ -1306,7 +1306,7 @@ public class CustomMovementHandler
                 int ShortestAngle = ShortestAngleDifference(CurrentOrientation, TargetOrientation);
 
                 // Need to rotate to our target rotation smoothly
-                double AdjustedOrientationSpeed = CurrentAnimationRequest.OrientationSpeed * (CurrentFrameDelta / 16.667);// Speed value centered at 60FPS
+                double AdjustedOrientationSpeed = CurrentAnimationRequest.OrientationSpeed * ((double) CurrentFrameDelta / 16667000);// Speed value centered at 60FPS
                 if (ShortestAngle > 0)
                 {
                     CurrentOrientation += (int) Math.min(ShortestAngle, AdjustedOrientationSpeed);
