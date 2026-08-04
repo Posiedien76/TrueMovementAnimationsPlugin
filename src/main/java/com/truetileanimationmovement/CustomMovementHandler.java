@@ -1,5 +1,6 @@
 package com.truetileanimationmovement;
 
+import com.truetileanimationmovement.movement.SpecialAnimationPreset;
 import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
@@ -879,7 +880,7 @@ public class CustomMovementHandler
             else if (bCurrentlyWooxWalking && config.AllowWooxWalkDetection() && bIsDefaultHumanAnimationSet)
             {
                 // Handle woox walking
-                CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,"WooxWalk", config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
+                CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,SpecialAnimationPreset.WOOX_WALK, config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
 
                 // No turning if no target
                 if (currentTarget == null)
@@ -895,7 +896,7 @@ public class CustomMovementHandler
             else if ((config.AlwaysHoppingMode() || FramesSinceIdle > config.TickPerfectMovesUntilJumping()) && bIsDefaultHumanAnimationSet)
             {
                 // Handle tick perfect moving
-                CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,"TickPerfectMovement", config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
+                CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,SpecialAnimationPreset.TICK_PERFECT_MOVEMENT, config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
             }
             else
             {
@@ -903,7 +904,7 @@ public class CustomMovementHandler
                 if (bSpecialMoveAnimation && bIsDefaultHumanAnimationSet)
                 {
                     // Handle normal walking
-                    CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,"SpecialMoves", config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
+                    CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,SpecialAnimationPreset.SPECIAL_MOVES, config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
                 }
                 else
                 {

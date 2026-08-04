@@ -3,6 +3,7 @@ package com.truetileanimationmovement;
 import java.lang.reflect.Array;
 
 import net.runelite.api.gameval.AnimationID;
+import com.truetileanimationmovement.movement.SpecialAnimationPreset;
 
 public class AnimationRequestMoveset
 {
@@ -191,8 +192,12 @@ public class AnimationRequestMoveset
         return NewRequest;
     }
 
-    public void ConstructFromSpecialAnimationSet(IdleAnimationSet AnimSet, String SpecialAnimationKey, TrueTileMovementConfig config) {
-        if (SpecialAnimationKey.equals("SpecialMoves")) {
+    public void ConstructFromSpecialAnimationSet(
+            final IdleAnimationSet AnimSet,
+            final SpecialAnimationPreset preset,
+            final TrueTileMovementConfig config)
+    {
+        if (preset == SpecialAnimationPreset.SPECIAL_MOVES) {
             for (int i = 0; i < 5; ++i) {
                 for (int j = 0; j < 5; ++j) {
                     MovesetArray[i][j] = GetDefaultSpecialMoveAnimationRequest();
@@ -392,7 +397,8 @@ public class AnimationRequestMoveset
             NORTHWEST_2.StartingFrame = 0;
             NORTHWEST_2.bAllowAnimationLoop = false;
         }
-        else if (SpecialAnimationKey.equals("WooxWalk"))
+        else if (preset == SpecialAnimationPreset.WOOX_WALK ||
+                preset == SpecialAnimationPreset.TICK_PERFECT_MOVEMENT)
         {
             for (int i = 0; i < 5; ++i)
             {
@@ -426,42 +432,6 @@ public class AnimationRequestMoveset
                 }
             }
             Initialize();
-        }
-        else if (SpecialAnimationKey.equals("TickPerfectMovement"))
-        {
-            for (int i = 0; i < 5; ++i)
-            {
-                for (int j = 0; j < 5; ++j)
-                {
-                    MovesetArray[i][j] = GetDefaultSpecialMoveAnimationRequest();
-
-                    // 2 Tiles
-                    if (i == 0 || j == 0 || i == 4 || j == 4)
-                    {
-                        MovesetArray[i][j].bResetAnimationOnNewTile = true;
-                        MovesetArray[i][j].AnimationToPlay = AnimationID.HUMAN_JUMP_STONES; // 1604
-                        MovesetArray[i][j].bUseLinearTween = false;
-                        MovesetArray[i][j].MovementSpeedMultiplier = 1.5;
-                        MovesetArray[i][j].AnimationSpeed = 1;
-                        MovesetArray[i][j].StartingFrame = 2;
-                        MovesetArray[i][j].EndingFrame = 7;
-                        MovesetArray[i][j].bAllowAnimationLoop = false;
-                    }
-                    // 1 Tile
-                    else if (i == 1 || j == 1 || i == 3 || j == 3)
-                    {
-                        MovesetArray[i][j].AnimationToPlay = AnimationID.HUMAN_SPOT_JUMP; // Little jump. 741
-                        MovesetArray[i][j].MovementSpeedMultiplier = 2.0;
-                        MovesetArray[i][j].bUseLinearTween = false;
-                        MovesetArray[i][j].StartingFrame = 2;
-                        MovesetArray[i][j].AnimationSpeed = 1;
-                        MovesetArray[i][j].EndingFrame = 7;
-                        MovesetArray[i][j].bAllowAnimationLoop = false;
-                    }
-                }
-            }
-            Initialize();
-
         }
     }
 

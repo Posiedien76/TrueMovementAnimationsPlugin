@@ -1,5 +1,7 @@
 package com.truetileanimationmovement;
 
+import com.truetileanimationmovement.movement.SpecialAnimationPreset;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,19 +16,20 @@ public class AnimationRequestMovesetCache
 
     public static AnimationRequestMoveset getMovesetFromUniqueKey(
             final IdleAnimationSet animSet,
-            final String uniqueLabel,
+            final SpecialAnimationPreset preset,
             final TrueTileMovementConfig config)
     {
         // TODO: BUG->Config not effecting Label, so changes to the config does not update this
-        return NAME_TO_MOVESET_REQUEST.computeIfAbsent(uniqueLabel, key ->
-        {
-            final AnimationRequestMoveset newMoveset =
-                    new AnimationRequestMoveset();
-            newMoveset.Initialize();
-            newMoveset.ConstructFromSpecialAnimationSet(
-                    animSet, uniqueLabel, config);
-            return newMoveset;
-        });
+        return NAME_TO_MOVESET_REQUEST.computeIfAbsent(preset.getUniqueLabel(),
+                key ->
+                {
+                    final AnimationRequestMoveset newMoveset =
+                            new AnimationRequestMoveset();
+                    newMoveset.Initialize();
+                    newMoveset.ConstructFromSpecialAnimationSet(
+                            animSet, preset, config);
+                    return newMoveset;
+                });
     }
 
     public static AnimationRequestMoveset getMovesetFromAnimationSet(
