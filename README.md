@@ -14,7 +14,11 @@ Features
 * Improved animation behavior overall
 * Lots of configuration options in the panel on the right.
 * Dynamic Overheads: Update overhead prayers to follow the new movement model.
-* Health Bar Sync: Adjust the player health bar to match the position of the new character model.
+* Health Bar Sync: Adjust the player health bar to match the position of the new character model, including Interface Styles high-detail health bars when enabled.
+
+For the causes, design constraints, and maintenance notes behind the movement,
+animation, scene-loading, and camera continuity fixes, see
+[Continuity implementation notes](docs/CONTINUITY_IMPLEMENTATION_NOTES.md).
 
 
 

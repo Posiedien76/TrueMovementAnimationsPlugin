@@ -3,13 +3,14 @@ package com.truetileanimationmovement;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 
-import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
 import net.runelite.api.gameval.AnimationID;
+import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.VarClientID;
+import net.runelite.api.gameval.VarbitID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.callback.RenderCallback;
@@ -18,11 +19,15 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.KeyListener;
 import net.runelite.client.input.KeyManager;
+import net.runelite.client.input.MouseAdapter;
+import net.runelite.client.input.MouseManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.DrawManager;
 import net.runelite.client.ui.overlay.OverlayManager;
 
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
@@ -33,7 +38,6 @@ import net.runelite.client.util.ImageUtil;
 import static net.runelite.api.HitsplatID.*;
 import static net.runelite.api.MenuAction.*;
 
-@Slf4j
 @PluginDescriptor(
 	name = "True Tile Movement"
 )
@@ -59,19 +63,86 @@ public class TrueTileMovementPlugin extends Plugin
 
 	@Inject
 	private DrawManager drawManager;
+	@Inject
+	private MouseManager mouseManager;
+
+	// [TMA-STOP-FACING] These are the world actions which produce a red
+	// interaction click. They deliberately exclude widgets and inventory
+	// actions: only a new world interaction should cancel a yellow-click
+	// stop-facing hold.
+	private static final Set<MenuAction> RED_WORLD_INTERACTION_ACTIONS = EnumSet.of(
+			ITEM_USE_ON_GAME_OBJECT,
+			WIDGET_TARGET_ON_GAME_OBJECT,
+			GAME_OBJECT_FIRST_OPTION,
+			GAME_OBJECT_SECOND_OPTION,
+			GAME_OBJECT_THIRD_OPTION,
+			GAME_OBJECT_FOURTH_OPTION,
+			GAME_OBJECT_FIFTH_OPTION,
+			ITEM_USE_ON_NPC,
+			WIDGET_TARGET_ON_NPC,
+			NPC_FIRST_OPTION,
+			NPC_SECOND_OPTION,
+			NPC_THIRD_OPTION,
+			NPC_FOURTH_OPTION,
+			NPC_FIFTH_OPTION,
+			ITEM_USE_ON_PLAYER,
+			WIDGET_TARGET_ON_PLAYER,
+			PLAYER_FIRST_OPTION,
+			PLAYER_SECOND_OPTION,
+			PLAYER_THIRD_OPTION,
+			PLAYER_FOURTH_OPTION,
+			PLAYER_FIFTH_OPTION,
+			PLAYER_SIXTH_OPTION,
+			PLAYER_SEVENTH_OPTION,
+			PLAYER_EIGHTH_OPTION,
+			ITEM_USE_ON_GROUND_ITEM,
+			WIDGET_TARGET_ON_GROUND_ITEM,
+			GROUND_ITEM_FIRST_OPTION,
+			GROUND_ITEM_SECOND_OPTION,
+			GROUND_ITEM_THIRD_OPTION,
+			GROUND_ITEM_FOURTH_OPTION,
+			GROUND_ITEM_FIFTH_OPTION,
+			WORLD_ENTITY_FIRST_OPTION,
+			WORLD_ENTITY_SECOND_OPTION,
+			WORLD_ENTITY_THIRD_OPTION,
+			WORLD_ENTITY_FOURTH_OPTION,
+			WORLD_ENTITY_FIFTH_OPTION);
 
 	public boolean bDelayedStartup = false;
 	private boolean bStartupComplete = false;
 
 	private Set<Integer> CharacterIDs = new HashSet<>();
 	public List<Hitsplat> CurrentHitsplats = new ArrayList<>();
-	public boolean bIsPluginSupportedCurrently = true;
-	public int TicksSincePluginWasSupport = 0;
+	public volatile boolean bIsPluginSupportedCurrently = true;
+	public volatile int TicksSincePluginWasSupport = 0;
+	// [TMA-STEADY-PRESENTATION] Render callbacks can pause briefly during an
+	// ordinary long frame. The old six-client-tick threshold treated a
+	// roughly 100 ms hitch as GPU removal and tore down the model/controller.
+	// One second still detects an unsupported renderer promptly without
+	// converting a recoverable frame hitch into a visible animation restart.
+	private static final int GPU_CALLBACK_GRACE_CLIENT_TICKS = 50;
+	// [TMA-PLAYER-ONLY-RENDER-FILTER] drawObject can run on RuneLite's
+	// map-loader thread while the client thread owns all CustomMovementHandler
+	// and RuneLiteObject state. Publish the small decision the callback needs
+	// instead of reading live client/custom-object state from that callback.
+	private static final int TILE_OBJECT_TYPE_PLAYER = 0;
+	private volatile Player hiddenLocalPlayer = null;
+	private volatile int hiddenLocalPlayerId = -1;
+	private volatile int hiddenLocalPlayerWorldViewId = -1;
+	private volatile boolean hideLocalPlayerScene = false;
+	private volatile boolean hideLocalPlayerUi = false;
 	private final RenderCallback renderCallback = new RenderCallback()
 	{
 		@Override
 		public boolean addEntity(Renderable renderable, boolean ui)
 		{
+			if (hideLocalPlayerUi &&
+					ui &&
+					renderable == hiddenLocalPlayer)
+			{
+				return false;
+			}
+
 			if (bForceEarlyOut || !bIsPluginSupportedCurrently || !config.CustomOverheadRendering() || client.getLocalPlayer() == null)
 			{
 				return true;
@@ -128,9 +199,28 @@ public class TrueTileMovementPlugin extends Plugin
 				return true;
 			}
 
-			// Only supported with GPU plugin
-			TicksSincePluginWasSupport = 0;
-			bIsPluginSupportedCurrently = true;
+			long ObjectHash = object.getHash();
+			// Unlike addEntity, drawObject is supplied by the GPU renderer. A
+			// player entry occurs every rendered player frame, so use only that
+			// entry for the heartbeat and keep even scalar writes off the static
+			// map-loader upload path.
+			if (GetTileObjectType(ObjectHash) == TILE_OBJECT_TYPE_PLAYER)
+			{
+				MarkGpuRenderCallbackObserved();
+			}
+
+			// TileObject IDs are object/player IDs from different namespaces.
+			// A hash-qualified published snapshot ensures an ordinary object can
+			// never collide with the local player's index and be suppressed.
+			if (!ShouldDrawTileObject(
+					hideLocalPlayerScene,
+					hiddenLocalPlayerId,
+					hiddenLocalPlayerWorldViewId,
+					ObjectHash,
+					object.getId()))
+			{
+				return false;
+			}
 
 			// hide player
 			int ObjectID = object.getId();
@@ -167,16 +257,93 @@ public class TrueTileMovementPlugin extends Plugin
         }
 	};
 
+	private void MarkGpuRenderCallbackObserved()
+	{
+		TicksSincePluginWasSupport = 0;
+		bIsPluginSupportedCurrently = true;
+	}
+
+	static boolean ShouldDrawTileObject(
+			boolean HideLocalPlayer,
+			int HiddenLocalPlayerId,
+			int HiddenLocalPlayerWorldViewId,
+			long ObjectHash,
+			int ObjectId)
+	{
+		int ObjectType = GetTileObjectType(ObjectHash);
+		int ObjectWorldViewId = (int) ((ObjectHash >>> 52) & 4095L);
+		return !HideLocalPlayer ||
+				ObjectType != TILE_OBJECT_TYPE_PLAYER ||
+				ObjectId != HiddenLocalPlayerId ||
+				ObjectWorldViewId != HiddenLocalPlayerWorldViewId;
+	}
+
+	private static int GetTileObjectType(long ObjectHash)
+	{
+		return (int) ((ObjectHash >>> 16) & 7L);
+	}
+
+	private void PublishLocalPlayerRenderState(
+			Player Player,
+			boolean HideLocalPlayer)
+	{
+		WorldView PlayerWorldView = Player == null
+				? null
+				: Player.getWorldView();
+		if (!HideLocalPlayer || PlayerWorldView == null)
+		{
+			// Disable both consumers before clearing the associated identity.
+			// A callback racing this client-thread publication therefore fails
+			// open and lets RuneLite draw its native content.
+			hideLocalPlayerScene = false;
+			hideLocalPlayerUi = false;
+			hiddenLocalPlayer = null;
+			hiddenLocalPlayerId = -1;
+			hiddenLocalPlayerWorldViewId = -1;
+			return;
+		}
+
+		// Publish identity first and the enable flags last. Volatile ordering
+		// guarantees callbacks which observe a true flag also observe the
+		// matching player/world-view snapshot.
+		hiddenLocalPlayer = Player;
+		hiddenLocalPlayerId = Player.getId();
+		hiddenLocalPlayerWorldViewId = PlayerWorldView.getId();
+		hideLocalPlayerUi = config.CustomOverheadRendering();
+		hideLocalPlayerScene = true;
+	}
+
 	public boolean bForceEarlyOut = false;
 
 	public boolean bForceAdaptiveCameraOff = false;
 
 	private float CurrentCameraPositionX = -1; // Offset in "sudo world space" (see adaptive camera function)
+	private float CurrentCameraPositionY = Float.NaN;
 	private float CurrentCameraPositionZ = -1;
-	private static final double ADAPTIVE_CAMERA_REFERENCE_FRAME_NANOSECONDS = 16667000;
-	private static final double MAX_ADAPTIVE_CAMERA_FRAME_DELTA_NANOSECONDS = 1e+8f;
+	private static final float ADAPTIVE_CAMERA_REFERENCE_FRAME_MILLISECONDS = 16.667f;
+	private static final float MAX_ADAPTIVE_CAMERA_FRAME_DELTA_MILLISECONDS = 100.0f;
+	private static final float ADAPTIVE_CAMERA_VERTICAL_HALF_LIFE_MILLISECONDS = 80.0f;
 	private long LastAdaptiveCameraUpdateNanos = 0;
+	// Keep free-camera mode confined to the adaptive frame: native input and menu
+	// processing run after presentation, while the normal camera is never rendered.
 	private volatile boolean bAdaptiveCameraRenderedThisFrame = false;
+	private volatile Point PendingPrimaryMousePress = null;
+	private final MouseAdapter MinimapClickListener = new MouseAdapter()
+	{
+		@Override
+		public MouseEvent mousePressed(MouseEvent InMouseEvent)
+		{
+			if (InMouseEvent.getButton() == MouseEvent.BUTTON1)
+			{
+				// Do not touch client state from the AWT event thread. The next
+				// ClientTick consumes this immutable canvas-coordinate snapshot.
+				PendingPrimaryMousePress = new Point(
+						InMouseEvent.getX(),
+						InMouseEvent.getY());
+			}
+			return InMouseEvent;
+		}
+	};
 	private final Runnable PostDrawCameraModeHandoff = () ->
 	{
 		boolean AdaptiveCameraWasRendered = bAdaptiveCameraRenderedThisFrame;
@@ -195,36 +362,128 @@ public class TrueTileMovementPlugin extends Plugin
 
 	private WorldView currentWorldView = null;
 	private int LastPrintedAnimation = 0;
+	// [TMA-SCENE-LOAD-CONTINUITY] onBeforeRender runs before the overlay can
+	// recreate and rebase scene-owned RuneLiteObjects. Keep one explicit
+	// native-player/native-camera handoff until the replacement model is ready
+	// so stale local coordinates can never be presented in the new scene.
+	private boolean bSceneLoadVisualHandoffPending = false;
+	private int SceneGeneration = 0;
+	private CustomMovementHandler PreRenderedHandler = null;
+	private boolean bPreRenderedSceneLoadFrame = false;
+
+	int GetSceneGeneration()
+	{
+		return SceneGeneration;
+	}
+
+	private void InvalidateScenePresentation()
+	{
+		// Scene upload may begin on the map-loader thread immediately after
+		// this event. Fail open until a replacement model has been prepared in
+		// the destination scene and a new client-thread snapshot is published.
+		PublishLocalPlayerRenderState(null, false);
+		++SceneGeneration;
+		PreRenderedHandler = null;
+		bPreRenderedSceneLoadFrame = false;
+		OverlayRenderer.bRuneliteObjectsStale = true;
+		bSceneLoadVisualHandoffPending = true;
+		LastAdaptiveCameraUpdateNanos = 0;
+		bAdaptiveCameraRenderedThisFrame = false;
+		client.setCameraMode(0);
+	}
+
+	// [TMA-MOTION-CONTINUITY] RuneLite can replace the WorldView wrapper while
+	// retaining the same logical scene. Pointer identity would treat that as a
+	// full world change and discard the visible player's interpolation state.
+	static boolean IsSameWorldView(WorldView First, WorldView Second)
+	{
+		return First != null && Second != null &&
+				First.getId() == Second.getId();
+	}
 
 	private boolean IsAdaptiveCameraOn()
 	{
 		return !bForceAdaptiveCameraOff && config.AdaptiveCameraOn();
 	}
 
-	private double GetAdaptiveCameraFrameDeltaNanoseconds()
+	static boolean IsGpuCallbackStillSupported(
+			GameState CurrentGameState,
+			int TicksSinceCallback)
+	{
+		return CurrentGameState != GameState.LOGGED_IN ||
+				TicksSinceCallback <=
+						GPU_CALLBACK_GRACE_CLIENT_TICKS;
+	}
+
+	private float GetAdaptiveCameraFrameDeltaMilliseconds()
 	{
 		long CurrentUpdateNanos = System.nanoTime();
-		double FrameDeltaNanoseconds = ADAPTIVE_CAMERA_REFERENCE_FRAME_NANOSECONDS;
+		float FrameDeltaMilliseconds = ADAPTIVE_CAMERA_REFERENCE_FRAME_MILLISECONDS;
 
 		if (LastAdaptiveCameraUpdateNanos != 0 && CurrentUpdateNanos > LastAdaptiveCameraUpdateNanos)
 		{
-			FrameDeltaNanoseconds = Math.min(
-					(CurrentUpdateNanos - LastAdaptiveCameraUpdateNanos),
-					MAX_ADAPTIVE_CAMERA_FRAME_DELTA_NANOSECONDS);
+			FrameDeltaMilliseconds = Math.min(
+					(CurrentUpdateNanos - LastAdaptiveCameraUpdateNanos) / 1_000_000.0f,
+					MAX_ADAPTIVE_CAMERA_FRAME_DELTA_MILLISECONDS);
 		}
 
 		LastAdaptiveCameraUpdateNanos = CurrentUpdateNanos;
-		return FrameDeltaNanoseconds;
+		return FrameDeltaMilliseconds;
+	}
+
+	// [TMA-ADAPTIVE-CAMERA-VERTICAL-CONTINUITY] X/Z already approach the
+	// visible model gradually, but focal Y used to be replaced outright every
+	// frame. Scene terrain and animation-height changes could therefore turn
+	// into a one-frame vertical camera jolt. Use a frame-rate-independent
+	// half-life so the same height change has the same visual duration at
+	// different frame rates.
+	static float EaseAdaptiveCameraHeight(
+			float CurrentHeight,
+			float TargetHeight,
+			float FrameDeltaMilliseconds)
+	{
+		if (!Float.isFinite(CurrentHeight))
+		{
+			return TargetHeight;
+		}
+		if (!Float.isFinite(TargetHeight))
+		{
+			return CurrentHeight;
+		}
+
+		float SafeFrameDelta = Math.max(
+				0,
+				Math.min(
+						FrameDeltaMilliseconds,
+						MAX_ADAPTIVE_CAMERA_FRAME_DELTA_MILLISECONDS));
+		double Blend =
+				1.0 -
+						Math.pow(
+								0.5,
+								SafeFrameDelta /
+										ADAPTIVE_CAMERA_VERTICAL_HALF_LIFE_MILLISECONDS);
+		float EasedHeight = CurrentHeight +
+				(TargetHeight - CurrentHeight) * (float) Blend;
+		return Math.abs(TargetHeight - EasedHeight) < 0.01f
+				? TargetHeight
+				: EasedHeight;
 	}
 
 	@Subscribe
 	public void onClientTick(ClientTick event)
 	{
-		// Update the minimap, it doesn't update in free cam
+		// [TMA-CAMERA-INPUT-BOUNDARY] The adaptive focal point is presentation
+		// only. RuneLite's native minimap and minimap-click conversion both use
+		// the authoritative CameraFocusableEntity, not the free-camera focal
+		// point. Keep those two meanings aligned and return to normal camera
+		// before menu sorting/click detection; visually shifting only the map
+		// would make the tile under the cursor differ from the tile acted on.
 		if (IsAdaptiveCameraOn())
 		{
 			client.setCameraMode(0);
 		}
+
+		ArmMinimapWalkBeforeInputProcessing();
 
 		if (client.getLocalPlayer() == null || client.getWorldView(-1) != client.getLocalPlayer().getWorldView())
 		{
@@ -235,16 +494,123 @@ public class TrueTileMovementPlugin extends Plugin
 			bForceAdaptiveCameraOff = false;
 		}
 
-		// Plugin no longer supported (Need GPU plugin)
-		if (TicksSincePluginWasSupport > 5)
+		// Plugin no longer supported (Need GPU plugin). Only age the callback
+		// while a scene is expected to render; LOADING/HOPPING pauses are not
+		// evidence that GPU support disappeared.
+		bIsPluginSupportedCurrently =
+				IsGpuCallbackStillSupported(
+						client.getGameState(),
+						TicksSincePluginWasSupport);
+		if (client.getGameState() == GameState.LOGGED_IN)
 		{
-			bIsPluginSupportedCurrently = false;
+			TicksSincePluginWasSupport = Math.min(
+					GPU_CALLBACK_GRACE_CLIENT_TICKS + 1,
+					TicksSincePluginWasSupport + 1);
 		}
-		else
+		if (!bIsPluginSupportedCurrently ||
+				client.getGameState() != GameState.LOGGED_IN ||
+				client.getLocalPlayer() == null)
 		{
-			bIsPluginSupportedCurrently = true;
+			PublishLocalPlayerRenderState(null, false);
 		}
-		++TicksSincePluginWasSupport;
+
+	}
+
+	static boolean IsGenuineTeleportAnimation(int Animation)
+	{
+		return Animation == AnimationID.HUMAN_CASTTELEPORT ||
+				Animation == AnimationID.AHOY_ECTO_TELEPORT ||
+				Animation == AnimationID.HUMAN_TELEPORT_OTHER_IMPACT ||
+				Animation == AnimationID.TELEPORT_NARDAH_HUMAN ||
+				Animation == AnimationID.HUMAN_COWBOSS_TELEPORT ||
+				Animation == AnimationID.POH_SMASH_MAGIC_TABLET ||
+				Animation == AnimationID.POH_ABSORB_TABLET_TELEPORT ||
+				Animation == AnimationID.TELEPORT_CABBAGE_HUMAN ||
+				Animation == AnimationID.NTK_HUMAN_TELE;
+	}
+
+	private void ArmMinimapWalkBeforeInputProcessing()
+	{
+		Point MousePosition = PendingPrimaryMousePress;
+		PendingPrimaryMousePress = null;
+		if (MousePosition == null)
+		{
+			return;
+		}
+
+		Widget Minimap = GetMinimapDrawWidget();
+		boolean bMouseInsideMinimap =
+				Minimap != null &&
+				!Minimap.isHidden() &&
+				IsInsideMinimapEllipse(
+						MousePosition,
+						Minimap.getBounds());
+		if (!bMouseInsideMinimap ||
+				bForceEarlyOut ||
+				!bIsPluginSupportedCurrently)
+		{
+			return;
+		}
+
+		InterruptTeleportPresentationForUserInteraction();
+
+		// Minimap movement is handled directly by the game client and does not
+		// emit the WALK MenuOptionClicked event used by viewport yellow clicks.
+		// Arm the same existing continuity state here, before RuneScape converts
+		// this press into a destination, so the first segment owns this click.
+		CustomMovementHandler LocalPlayerHandler =
+				GetLocalPlayerMovementHandler();
+		if (LocalPlayerHandler != null)
+		{
+			LocalPlayerHandler
+					.DisarmPohArrivalCoordinateGuardForUserInteraction();
+			LocalPlayerHandler.ArmWalkStopFacingHold();
+		}
+	}
+
+	private void InterruptTeleportPresentationForUserInteraction()
+	{
+		if (OverlayRenderer.bShouldPlayTeleportAnimation)
+		{
+			OverlayRenderer.bTeleportInterrupted = true;
+		}
+	}
+
+	private Widget GetMinimapDrawWidget()
+	{
+		if (!client.isResized())
+		{
+			return client.getWidget(InterfaceID.Toplevel.MINIMAP);
+		}
+
+		return client.getVarbitValue(
+				VarbitID.RESIZABLE_STONE_ARRANGEMENT) == 1
+				? client.getWidget(InterfaceID.ToplevelPreEoc.MINIMAP)
+				: client.getWidget(InterfaceID.ToplevelOsrsStretch.MINIMAP);
+	}
+
+	static boolean IsInsideMinimapEllipse(
+			Point MousePosition,
+			Rectangle MinimapBounds)
+	{
+		if (MousePosition == null ||
+				MinimapBounds == null ||
+				MinimapBounds.width <= 0 ||
+				MinimapBounds.height <= 0)
+		{
+			return false;
+		}
+
+		double RadiusX = MinimapBounds.width / 2.0;
+		double RadiusY = MinimapBounds.height / 2.0;
+		double NormalizedX =
+				(MousePosition.getX() - MinimapBounds.getCenterX()) /
+						RadiusX;
+		double NormalizedY =
+				(MousePosition.getY() - MinimapBounds.getCenterY()) /
+						RadiusY;
+		return NormalizedX * NormalizedX +
+				NormalizedY * NormalizedY <= 1.0;
 	}
 
 	private void UpdateAdaptiveCamera(
@@ -260,7 +626,17 @@ public class TrueTileMovementPlugin extends Plugin
 			LastAdaptiveCameraUpdateNanos = 0;
 			return;
 		}
-		double CameraFrameDeltaNanoseconds = GetAdaptiveCameraFrameDeltaNanoseconds();
+		float CameraFrameDeltaMilliseconds = GetAdaptiveCameraFrameDeltaMilliseconds();
+		if (!Float.isFinite(CurrentCameraPositionY))
+		{
+			CurrentCameraPositionY =
+					client.getCameraFocalPointY();
+		}
+		float CameraHeightTarget = FootprintHeight - CameraFollowHeight;
+		CurrentCameraPositionY = EaseAdaptiveCameraHeight(
+				CurrentCameraPositionY,
+				CameraHeightTarget,
+				CameraFrameDeltaMilliseconds);
 
 		// Store in sudo world space to prevent jumps when loading new chunks
 		double CalculationOffsetVectorX = trueLocalTile.getX() - trueWorldTile.getX() * 128;
@@ -301,7 +677,7 @@ public class TrueTileMovementPlugin extends Plugin
 
 		// Scale with the interval for this rendered camera frame. The movement handler is
 		// updated later in overlay rendering, so its CurrentFrameDelta belongs to the prior frame.
-		Velocity *= CameraFrameDeltaNanoseconds / ADAPTIVE_CAMERA_REFERENCE_FRAME_NANOSECONDS;
+		Velocity *= CameraFrameDeltaMilliseconds / ADAPTIVE_CAMERA_REFERENCE_FRAME_MILLISECONDS;
 
 		if (DistanceToTarget != 0)
 		{
@@ -334,7 +710,7 @@ public class TrueTileMovementPlugin extends Plugin
 		client.setFreeCameraSpeed(0);
 
 		client.setCameraFocalPointX(CurrentCameraPositionX);
-		client.setCameraFocalPointY(FootprintHeight - CameraFollowHeight);
+		client.setCameraFocalPointY(CurrentCameraPositionY);
 		client.setCameraFocalPointZ(CurrentCameraPositionZ);
 		bAdaptiveCameraRenderedThisFrame = true;
 
@@ -465,24 +841,166 @@ public class TrueTileMovementPlugin extends Plugin
 			boolean AdaptiveCameraOn,
 			boolean ShouldRenderOwner)
 	{
-		return AdaptiveCameraOn && !ShouldRenderOwner;
+		return ShouldRenderAdaptiveCamera(
+				AdaptiveCameraOn,
+				ShouldRenderOwner,
+				false);
+	}
+
+	static boolean ShouldRenderAdaptiveCamera(
+			boolean AdaptiveCameraOn,
+			boolean ShouldRenderOwner,
+			boolean NativeCameraHandoffPending)
+	{
+		return AdaptiveCameraOn &&
+				!ShouldRenderOwner &&
+				!NativeCameraHandoffPending;
+	}
+
+	static boolean ShouldSuppressNativeOwner(
+			boolean SceneLoadVisualHandoffPending,
+			boolean SceneObjectsStale,
+			boolean CustomModelCanReplaceOwner)
+	{
+		return !SceneLoadVisualHandoffPending &&
+				!SceneObjectsStale &&
+				CustomModelCanReplaceOwner;
+	}
+
+	void CompleteSceneLoadVisualHandoff(
+			CustomMovementHandler Handler)
+	{
+		if (!bSceneLoadVisualHandoffPending ||
+				client.getGameState() != GameState.LOGGED_IN ||
+				Handler == null ||
+				!Handler.IsSceneLoadVisualReady())
+		{
+			return;
+		}
+
+		if (Handler.DidLastSceneRebaseUseNativeHandoffAnchor())
+		{
+			// The native camera can continue moving between onBeforeRender and
+			// the overlay completing its replacement model. Capture its final
+			// focal point at the exact transfer boundary before adaptive mode
+			// resumes. An atomic custom rebase deliberately retains the prior
+			// adaptive world-space camera instead.
+			SynchronizeAdaptiveCameraToNativeCamera();
+		}
+		bSceneLoadVisualHandoffPending = false;
+	}
+
+	private boolean TryPrepareSceneLoadBeforeRender(
+			Player Player,
+			CustomMovementHandler Handler)
+	{
+		if (!bSceneLoadVisualHandoffPending ||
+				!OverlayRenderer.bRuneliteObjectsStale ||
+				OverlayRenderer.bEverythingIsStale ||
+				client.getGameState() != GameState.LOGGED_IN ||
+				client.getScene() == null ||
+				Player.getLocalLocation() == null)
+		{
+			return false;
+		}
+
+		// [TMA-SCENE-LOAD-CONTINUITY] BeforeRender is the last safe point
+		// before the destination scene is presented. Recreate, world-rebase,
+		// and fully populate the custom object here so neither the character
+		// nor adaptive camera ever consumes an old-scene local coordinate.
+		Handler.Owner = Player;
+		Handler.Initialize(
+				true,
+				SceneGeneration);
+		Handler.Update();
+		if (!Handler.IsSceneLoadVisualReady())
+		{
+			return false;
+		}
+
+		OverlayRenderer.bRuneliteObjectsStale = false;
+		PreRenderedHandler = Handler;
+		bPreRenderedSceneLoadFrame = true;
+		CompleteSceneLoadVisualHandoff(Handler);
+		return true;
+	}
+
+	boolean ConsumePreRenderUpdate(
+			CustomMovementHandler Handler)
+	{
+		boolean bPreparedForThisPresentation =
+				Handler != null &&
+						Handler == PreRenderedHandler;
+		if (bPreparedForThisPresentation &&
+				bPreRenderedSceneLoadFrame)
+		{
+			// [TMA-SCENE-PRESENTATION-CLOCK] The first drawable scene frame
+			// may finish long after BeforeRender prepared the model. Mark the
+			// moment it was actually presented so the handler can defer that
+			// time instead of applying it as one large update next frame.
+			Handler.MarkSceneLoadFramePresented();
+		}
+		PreRenderedHandler = null;
+		bPreRenderedSceneLoadFrame = false;
+		return bPreparedForThisPresentation;
 	}
 	@Subscribe
 	public void onBeforeRender(BeforeRender beforeRender)
 	{
-		bAdaptiveCameraRenderedThisFrame = false;
-		if (bForceEarlyOut || !bIsPluginSupportedCurrently || client.getLocalPlayer() == null)
+		if (!config.DebugStallTrace())
 		{
-			LastAdaptiveCameraUpdateNanos = 0;
+			OnBeforeRenderImpl(beforeRender);
 			return;
 		}
 
-		CharacterIDs.clear();
-		for (Player player : client.getPlayers())
+		long StallTraceStartNanos = System.nanoTime();
+		try
 		{
-			if (player != null)
+			OnBeforeRenderImpl(beforeRender);
+		}
+		finally
+		{
+			long ElapsedMillis =
+					(System.nanoTime() - StallTraceStartNanos) / 1_000_000L;
+			if (ElapsedMillis >=
+					DebugFileLogger.STALL_TRACE_STAGE_THRESHOLD_MILLIS)
 			{
-				CharacterIDs.add(player.getId());
+				DebugFileLogger.Append(
+						DebugFileLogger.STALL_TRACE_LOG_FILE,
+						"[TMA-STALL-TRACE] stage=plugin.onBeforeRender ms=" +
+								ElapsedMillis);
+			}
+		}
+	}
+
+	private void OnBeforeRenderImpl(BeforeRender beforeRender)
+	{
+		// A prepared snapshot belongs to exactly one render. Clear any marker
+		// left by a frame whose overlay was skipped before preparing this one.
+		PreRenderedHandler = null;
+		bPreRenderedSceneLoadFrame = false;
+		bAdaptiveCameraRenderedThisFrame = false;
+		Player player = client.getLocalPlayer();
+		if (bForceEarlyOut ||
+				!bIsPluginSupportedCurrently ||
+				player == null ||
+				client.getGameState() != GameState.LOGGED_IN)
+		{
+			PublishLocalPlayerRenderState(null, false);
+			LastAdaptiveCameraUpdateNanos = 0;
+			return;
+		}
+		// Start every prepared frame in fail-open mode. Suppression is enabled
+		// below only after the current-scene replacement has passed every
+		// readiness/handoff check.
+		PublishLocalPlayerRenderState(player, false);
+
+		CharacterIDs.clear();
+		for (Player ScenePlayer : client.getPlayers())
+		{
+			if (ScenePlayer != null)
+			{
+				CharacterIDs.add(ScenePlayer.getId());
 			}
 		}
 		for (NPC npc : client.getNpcs())
@@ -492,13 +1010,51 @@ public class TrueTileMovementPlugin extends Plugin
 				CharacterIDs.add(npc.getId());
 			}
 		}
-
-		Player player = client.getLocalPlayer();
 		CustomMovementHandler PlayerMovementHandler = OverlayRenderer.MovementHandlerCache.get(player.getId());
 		if (PlayerMovementHandler == null)
 		{
 			LastAdaptiveCameraUpdateNanos = 0;
 			return;
+		}
+		boolean bSceneLoadHandoff =
+				bSceneLoadVisualHandoffPending ||
+						OverlayRenderer.bRuneliteObjectsStale;
+		if (bSceneLoadHandoff &&
+				TryPrepareSceneLoadBeforeRender(
+						player,
+						PlayerMovementHandler))
+		{
+			bSceneLoadHandoff = false;
+		}
+		if (bSceneLoadHandoff)
+		{
+			// The old RuneLiteObject location is expressed in the previous
+			// scene's local basis. Do not even sample it for camera height or
+			// destination until the overlay has recreated and rebased it.
+			if (client.getGameState() == GameState.LOGGED_IN &&
+					client.getScene() != null &&
+					client.getLocalPlayer().getLocalLocation() != null)
+			{
+				PlayerMovementHandler
+						.MarkNativeSceneLoadHandoffPresented();
+			}
+			SynchronizeAdaptiveCameraToNativeCamera();
+			return;
+		}
+
+		if (PreRenderedHandler == null)
+		{
+			// [TMA-PRE-RENDER-SNAPSHOT] ABOVE_SCENE overlays run after 117 HD
+			// has consumed scene models. Prepare the existing movement, facing,
+			// and native-smoothed geometry here so all of them reach the same
+			// displayed frame. The overlay consumes this marker and must not
+			// advance the handler a second time.
+			PlayerMovementHandler.Owner = player;
+			PlayerMovementHandler.Initialize(
+					false,
+					SceneGeneration);
+			PlayerMovementHandler.Update();
+			PreRenderedHandler = PlayerMovementHandler;
 		}
 		LocalPoint CameraHeightLocation = PlayerMovementHandler.Model == null
 				? null
@@ -509,6 +1065,13 @@ public class TrueTileMovementPlugin extends Plugin
 			return;
 		}
 
+		PublishLocalPlayerRenderState(
+				player,
+				ShouldSuppressNativeOwner(
+						bSceneLoadVisualHandoffPending,
+						OverlayRenderer.bRuneliteObjectsStale,
+						PlayerMovementHandler
+								.CanSuppressOwnerInCurrentScene()));
 		float FootprintHeight = GetCameraFootprintTileHeight(
 				player.getWorldView(),
 				CameraHeightLocation,
@@ -524,33 +1087,87 @@ public class TrueTileMovementPlugin extends Plugin
 		}
 
 		int CameraFollowHeight = GetCameraFollowHeight();
+		boolean bPohArrivalNativeCamera =
+				PlayerMovementHandler
+						.ShouldUseNativeCameraForPohArrival();
 
+		// Input processing uses the normal camera outside the draw interval. Never
+		// expose that interaction camera during presentation: on uneven terrain its
+		// focal height belongs to the hidden owner rather than the visible model.
+		// POH arrival is the deliberate exception: Construction replaces its
+		// temporary spawn coordinate after the first drawable frame, so retain
+		// RuneScape's native camera until the arrival guard is released by the
+		// first user world interaction.
 		if (ShouldRenderAdaptiveCamera(
 				IsAdaptiveCameraOn(),
-				PlayerMovementHandler.bShouldRenderOwner))
+				PlayerMovementHandler.bShouldRenderOwner,
+				bPohArrivalNativeCamera))
 		{
-			UpdateAdaptiveCamera(PlayerMovementHandler, FootprintHeight, CameraFollowHeight);
+			if (config.DebugStallTrace())
+			{
+				long StallTraceStageStartNanos = System.nanoTime();
+				UpdateAdaptiveCamera(PlayerMovementHandler, FootprintHeight, CameraFollowHeight);
+				long ElapsedMillis =
+						(System.nanoTime() - StallTraceStageStartNanos) / 1_000_000L;
+				if (ElapsedMillis >=
+						DebugFileLogger.STALL_TRACE_STAGE_THRESHOLD_MILLIS)
+				{
+					DebugFileLogger.Append(
+							DebugFileLogger.STALL_TRACE_LOG_FILE,
+							"[TMA-STALL-TRACE] stage=UpdateAdaptiveCamera ms=" +
+									ElapsedMillis);
+				}
+			}
+			else
+			{
+				UpdateAdaptiveCamera(
+						PlayerMovementHandler,
+						FootprintHeight,
+						CameraFollowHeight);
+			}
 		}
 		else
 		{
-			LastAdaptiveCameraUpdateNanos = 0;
-			if (client.getCameraMode() == 0)
-			{
-				// Store in sudo world space
-				WorldPoint trueWorldTile = client.getLocalPlayer().getWorldLocation();
-				LocalPoint trueLocalTile = LocalPoint.fromWorld(client, trueWorldTile);
-				if (trueLocalTile == null)
-				{
-					return;
-				}
-				double CalculationOffsetVectorX = trueLocalTile.getX() - trueWorldTile.getX() * 128;
-				double CalculationOffsetVectorY = trueLocalTile.getY() - trueWorldTile.getY() * 128;
-
-				CurrentCameraPositionX = (float) (client.getCameraFocalPointX() - CalculationOffsetVectorX);
-				CurrentCameraPositionZ = (float) (client.getCameraFocalPointZ() - CalculationOffsetVectorY);
-			}
-			client.setCameraMode(0);
+			SynchronizeAdaptiveCameraToNativeCamera();
 		}
+	}
+
+	private void SynchronizeAdaptiveCameraToNativeCamera()
+	{
+		// Keep the normal camera position synchronized while adaptive
+		// rendering is paused.
+		LastAdaptiveCameraUpdateNanos = 0;
+		if (client.getCameraMode() == 0 &&
+				client.getLocalPlayer() != null)
+		{
+			// Y has no scene-local basis. Retaining the last actually presented
+			// native focal height gives adaptive rendering a continuous source
+			// value after a native-player handoff.
+			CurrentCameraPositionY = client.getCameraFocalPointY();
+			// Store in sudo world space.
+			WorldPoint TrueWorldTile =
+					client.getLocalPlayer().getWorldLocation();
+			LocalPoint TrueLocalTile = TrueWorldTile == null
+					? null
+					: LocalPoint.fromWorld(client, TrueWorldTile);
+			if (TrueLocalTile != null)
+			{
+				double CalculationOffsetVectorX =
+						TrueLocalTile.getX() -
+								TrueWorldTile.getX() * 128;
+				double CalculationOffsetVectorY =
+						TrueLocalTile.getY() -
+								TrueWorldTile.getY() * 128;
+
+				CurrentCameraPositionX = (float)
+						(client.getCameraFocalPointX() -
+								CalculationOffsetVectorX);
+				CurrentCameraPositionZ = (float)
+						(client.getCameraFocalPointZ() -
+								CalculationOffsetVectorY);
+			}
+		}
+		client.setCameraMode(0);
 	}
 	private long LastTimeHitSplatApplied = 0;
 	@Subscribe
@@ -571,7 +1188,9 @@ public class TrueTileMovementPlugin extends Plugin
 	{
 		if (bForceEarlyOut || !bIsPluginSupportedCurrently)
 		{
+			PublishLocalPlayerRenderState(null, false);
 			CurrentCameraPositionX = -1;
+			CurrentCameraPositionY = Float.NaN;
 			CurrentCameraPositionZ = -1;
 			client.setCameraMode(0);
 			return;
@@ -590,24 +1209,30 @@ public class TrueTileMovementPlugin extends Plugin
 		{
 			OverlayRenderer.bShowHPBar = false;
 		}
-
-		// Teleports
-		if (client.getLocalPlayer().getAnimation() == AnimationID.HUMAN_CASTTELEPORT || // 714
-				client.getLocalPlayer().getAnimation() == AnimationID.AHOY_ECTO_TELEPORT || // 878
-				client.getLocalPlayer().getAnimation() == AnimationID.HUMAN_TELEPORT_OTHER_IMPACT || // 1816
-				client.getLocalPlayer().getAnimation() == AnimationID.ZAROS_VERTICAL_CASTING || // 1979
-				client.getLocalPlayer().getAnimation() == AnimationID.TELEPORT_NARDAH_HUMAN || // 3872
-				client.getLocalPlayer().getAnimation() == AnimationID.HUMAN_COWBOSS_TELEPORT || // 13811
-				client.getLocalPlayer().getAnimation() == AnimationID.POH_SMASH_MAGIC_TABLET || // 4069
-				client.getLocalPlayer().getAnimation() == AnimationID.POH_ABSORB_TABLET_TELEPORT || // 4071
-				client.getLocalPlayer().getAnimation() == AnimationID.TELEPORT_CABBAGE_HUMAN || // 3869
-				client.getLocalPlayer().getAnimation() == AnimationID.ARCEUUS_NECROMANCY_ANIM || // 3865
-				client.getLocalPlayer().getAnimation() == AnimationID.NTK_HUMAN_TELE // 2881
-		)
+		// [TMA-TELEPORT] Restored original teleport detection. A genuine
+		// teleport is identified only by the teleport animation the client
+		// publishes on the player. Ordinary fast running/walking never plays
+		// these animations, so the movement-continuity path (which treats
+		// scene/region transitions as preserved interpolation) remains
+		// untouched for normal movement.
+		Player LocalPlayer = client.getLocalPlayer();
+		if (LocalPlayer != null)
 		{
-			OverlayRenderer.LastTimeTeleport = System.nanoTime();
-			OverlayRenderer.bShouldPlayTeleportAnimation = true;
-			OverlayRenderer.bTeleportInterrupted = false;
+			// [TMA-TELEPORT-CORRECT] Only arm the teleport presentation for
+			// animations that are genuinely teleport cast/tablet/arrival
+			// sequences. Several original-list entries were spell-casting
+			// animations from non-teleport spellbooks (e.g. ZAROS_VERTICAL_
+			// CASTING is an Ancient Magick cast, ARCEUUS_NECROMANCY_ANIM
+			// is an Arceuus spell). These falsely armed the position-snap
+			// teleport-in path during PvP casting, making the model skip
+			// tiles on every spell cast while moving.
+			int CurrentAnimation = LocalPlayer.getAnimation();
+			if (IsGenuineTeleportAnimation(CurrentAnimation))
+			{
+				OverlayRenderer.LastTimeTeleport = System.nanoTime();
+				OverlayRenderer.bShouldPlayTeleportAnimation = true;
+				OverlayRenderer.bTeleportInterrupted = false;
+			}
 		}
 
 		// Print recent animation for convenience
@@ -620,15 +1245,27 @@ public class TrueTileMovementPlugin extends Plugin
 		Player player = client.getLocalPlayer();
 		if (player == null)
 		{
+			PublishLocalPlayerRenderState(null, false);
 			return;
 		}
 
 		WorldView newWorldView = player.getWorldView();
-		if (newWorldView != currentWorldView)
+		if (currentWorldView == null)
 		{
-			WorldView old = currentWorldView;
+			currentWorldView = newWorldView;
+		}
+		else if (!IsSameWorldView(newWorldView, currentWorldView))
+		{
 			currentWorldView = newWorldView;
 			OverlayRenderer.bEverythingIsStale = true;
+			InvalidateScenePresentation();
+		}
+		else if (newWorldView != currentWorldView)
+		{
+			// Recreate only the scene-owned objects. The handler will rebase
+			// its retained world-space interpolation in the replacement scene.
+			currentWorldView = newWorldView;
+			InvalidateScenePresentation();
 		}
 	}
 
@@ -723,11 +1360,18 @@ public class TrueTileMovementPlugin extends Plugin
 
 		renderCallbackManager.register(renderCallback);
 		drawManager.registerEveryFrameListener(PostDrawCameraModeHandoff);
+		mouseManager.registerMouseListener(MinimapClickListener);
 		bForceEarlyOut = false;
 		CurrentCameraPositionX = -1;
+		CurrentCameraPositionY = Float.NaN;
 		CurrentCameraPositionZ = -1;
 		LastAdaptiveCameraUpdateNanos = 0;
 		bAdaptiveCameraRenderedThisFrame = false;
+		PendingPrimaryMousePress = null;
+		bSceneLoadVisualHandoffPending = false;
+		PreRenderedHandler = null;
+		bPreRenderedSceneLoadFrame = false;
+		PublishLocalPlayerRenderState(null, false);
 	}
 
 
@@ -760,12 +1404,21 @@ public class TrueTileMovementPlugin extends Plugin
 	@Override
 	protected void shutDown() throws Exception
 	{
+		// Clear the callback snapshot synchronously before unregistering is
+		// queued, so an in-flight upload can only draw the native player.
+		PublishLocalPlayerRenderState(null, false);
 		bDelayedStartup = false;
 		bStartupComplete = false;
 		CurrentCameraPositionX = -1;
+		CurrentCameraPositionY = Float.NaN;
 		CurrentCameraPositionZ = -1;
 		LastAdaptiveCameraUpdateNanos = 0;
 		bAdaptiveCameraRenderedThisFrame = false;
+		PendingPrimaryMousePress = null;
+		bSceneLoadVisualHandoffPending = false;
+		PreRenderedHandler = null;
+		bPreRenderedSceneLoadFrame = false;
+		mouseManager.unregisterMouseListener(MinimapClickListener);
 
 		clientThread.invoke(() ->
 		{
@@ -786,6 +1439,33 @@ public class TrueTileMovementPlugin extends Plugin
 			return;
 		}
 
+		// [TMA-STOP-FACING] A yellow Walk click arms the hold. A red world
+		// interaction cancels it immediately so NPC/object/player facing keeps
+		// using RuneScape's normal orientation changes.
+		CustomMovementHandler LocalPlayerHandler = GetLocalPlayerMovementHandler();
+		MenuAction Action = event.getMenuAction();
+		if (Action == WALK || IsRedWorldInteraction(Action))
+		{
+			InterruptTeleportPresentationForUserInteraction();
+		}
+		if (LocalPlayerHandler != null)
+		{
+			if (Action == WALK || IsRedWorldInteraction(Action))
+			{
+				LocalPlayerHandler
+						.DisarmPohArrivalCoordinateGuardForUserInteraction();
+			}
+
+			if (Action == WALK)
+			{
+				LocalPlayerHandler.ArmWalkStopFacingHold();
+			}
+			else if (IsRedWorldInteraction(Action))
+			{
+				LocalPlayerHandler.CancelWalkStopFacingHold();
+			}
+		}
+
 		// TODO make less manual
 		if (event.getMenuOption().equals("Walk here") ||
 				event.getMenuOption().equals("Attack") ||
@@ -797,24 +1477,53 @@ public class TrueTileMovementPlugin extends Plugin
 		}
 	}
 
+	private CustomMovementHandler GetLocalPlayerMovementHandler()
+	{
+		Player LocalPlayer = client.getLocalPlayer();
+		return LocalPlayer == null
+				? null
+				: OverlayRenderer.MovementHandlerCache.get(LocalPlayer.getId());
+	}
+
+	static boolean IsRedWorldInteraction(MenuAction Action)
+	{
+		return Action != null && RED_WORLD_INTERACTION_ACTIONS.contains(Action);
+	}
+
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged gameStateChanged)
 	{
-		if (gameStateChanged.getGameState() == GameState.LOGIN_SCREEN)
+		GameState NewState = gameStateChanged.getGameState();
+		if (NewState == GameState.LOGIN_SCREEN && bDelayedStartup)
 		{
-			if (bDelayedStartup)
-			{
-				DoStartUp();
-			}
-
+			DoStartUp();
 		}
 
-		// Runelite objects are stale
-		if (gameStateChanged.getGameState() == GameState.LOADING ||
-				gameStateChanged.getGameState() == GameState.CONNECTION_LOST ||
-				gameStateChanged.getGameState() == GameState.HOPPING)
+		// Scene ownership changes regardless of the GPU support detector. Mark
+		// this before its early-out so a coincident support pause cannot leave
+		// an old RuneLiteObject or adaptive-camera target alive indefinitely.
+		if (NewState == GameState.LOADING ||
+				NewState == GameState.CONNECTION_LOST ||
+				NewState == GameState.HOPPING)
 		{
-			OverlayRenderer.bRuneliteObjectsStale = true;
+			InvalidateScenePresentation();
+		}
+
+		if (bForceEarlyOut || !bIsPluginSupportedCurrently)
+		{
+			return;
+		}
+
+		if (NewState == GameState.LOGGED_IN)
+		{
+			Player LocalPlayer = client.getLocalPlayer();
+			if (LocalPlayer != null)
+			{
+				// LOADING already invalidated the scene generation. Adopt the
+				// destination wrapper now so onGameTick does not mistake the
+				// same transition for a second invalidation.
+				currentWorldView = LocalPlayer.getWorldView();
+			}
 		}
 	}
 

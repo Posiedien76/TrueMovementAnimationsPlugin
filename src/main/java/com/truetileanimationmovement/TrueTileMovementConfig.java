@@ -117,7 +117,7 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "MovementSpeedMultiplier",
 			name = "Movement Speed Multiplier",
-			description = "Movement speed multiplier (increase value from 1.0 to match the true tile more but increase jank)",
+			description = "Biases the visible player closer to the true tile while keeping continuous movement between authoritative route steps",
 			section = advancedSection
 	)
 	default double MovementSpeedMultiplier()
@@ -161,7 +161,7 @@ public interface TrueTileMovementConfig extends Config
 	@ConfigItem(
 			keyName = "PlayerModelSnapDistance",
 			name = "Player Model Snap Distance",
-			description = "Distance from the player will 'snap' directly to the location instead of lerping (in # of tiles).",
+			description = "Maximum tile difference on either axis before the player snaps directly to the location instead of lerping.",
 			section = advancedSection
 	)
 	default int PlayerModelSnapDistance()
@@ -238,9 +238,20 @@ public interface TrueTileMovementConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "AllowLeaping",
+			name = "  Allow Leaping",
+			description = "Allow plugin-selected hopping and leaping movement animations",
+			section = funFeatureSection
+	)
+	default boolean AllowLeaping()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 			keyName = "AllowOriginalModelWhenCloseProximity",
 			name = "   Original Model When Close",
-			description = "Whether or not to allow the original model to be used directly when its close in proximity, orientation, and animation.",
+			description = "Allows the original model while stationary and closely matched in position and orientation. Movement keeps one stable custom model.",
 			section = generalSection
 	)
 	default boolean AllowOriginalModelWhenCloseProximity()
@@ -338,6 +349,28 @@ public interface TrueTileMovementConfig extends Config
 			section = advancedSection
 	)
 	default boolean PrintCurrentAnimationIDsToChat()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+			keyName = "DebugMovementIdleFlick",
+			name = "(Debug) Log Movement Idle Flick",
+			description = "Logs a debug line when movement unexpectedly drops to idle while still en route",
+			section = advancedSection
+	)
+	default boolean DebugMovementIdleFlick()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+			keyName = "DebugStallTrace",
+			name = "(Debug) Log Render Stalls",
+			description = "Measures long render gaps and writes diagnostic stall traces",
+			section = advancedSection
+	)
+	default boolean DebugStallTrace()
 	{
 		return false;
 	}
