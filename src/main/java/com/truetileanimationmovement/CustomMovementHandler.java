@@ -689,8 +689,15 @@ public class CustomMovementHandler
 
                 if (NextLerpPoint != null)
                 {
-
-                    DistanceInTilesToLast = (int) (euclideanDistance(NextLerpPoint.getX(), NextLerpPoint.getY(), LastLerpPosition.getX(), LastLerpPosition.getY()) / 128);
+                    LocalPoint LocalTrueTileLastLerpPosition = LocalPoint.fromWorld(client, LastLerpPositionWorldPoint);
+                    if (LocalTrueTileLastLerpPosition != null)
+                    {
+                        DistanceInTilesToLast = (int) (euclideanDistance(NextLerpPoint.getX(), NextLerpPoint.getY(), LocalTrueTileLastLerpPosition.getX(), LocalTrueTileLastLerpPosition.getY()) / 128);
+                    }
+                    else
+                    {
+                        DistanceInTilesToLast += 1000;
+                    }
                     DistanceInTilesToNextLerp = (int) (euclideanDistance(NextLerpPoint.getX(), NextLerpPoint.getY(), RequestedLerpPoint.getX(), RequestedLerpPoint.getY()) / 128);
 
                     // Different planes, huge distance
@@ -710,7 +717,7 @@ public class CustomMovementHandler
                         DistanceInTilesToNextLerp <= config.PlayerModelSnapDistance() &&
                         DistanceInTilesToLast <= config.PlayerModelSnapDistance())
                 {
-                    LastLerpPosition = NextLerpPosition;
+                    LastLerpPosition = NextLerpPoint;
                     LastLerpPositionWorldPoint = WorldPoint.fromLocal(client, LastLerpPosition);
                 }
                 // Lerp point does not exist! Teleport or something like that
