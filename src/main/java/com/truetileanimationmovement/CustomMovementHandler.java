@@ -430,7 +430,7 @@ public class CustomMovementHandler
     private void UpdateFrameTimer()
     {
         CurrentTime = System.nanoTime();
-        CurrentFrameDelta = (int) (CurrentTime - LastTimeNanoseconds);
+        CurrentFrameDelta = CurrentTime - LastTimeNanoseconds;
         LastTimeNanoseconds = CurrentTime;
         if (CurrentFrameDelta > 0)
         {
@@ -519,6 +519,11 @@ public class CustomMovementHandler
     private void ChangeLastLerpPointForRotation()
     {
         int RealOrientation = Owner.getOrientation();
+
+        if (currentTarget != null && config.CombatModeEnabled())
+        {
+            return;
+        }
 
         // South
         if (RealOrientation < 256)
@@ -957,6 +962,7 @@ public class CustomMovementHandler
             bMovingThisAction = false;
 
             CurrentAnimationRequest = AnimationRequestMoveset.GetDefaultIdleMoveAnimationRequest(config);
+
             ChangeLastLerpPointForRotation();
             int ShortestAngle = ShortestAngleDifference(CurrentOrientation, TargetOrientation);
             if (ShortestAngle >= 10)
@@ -1045,7 +1051,7 @@ public class CustomMovementHandler
         if (config.AllowOriginalModelWhenCloseProximity() &&
                 Math.abs(Owner.getLocalLocation().getX() - Model.getLocation().getX()) <= config.OriginalModelProximityDistanceThreshold() &&
                 Math.abs(Owner.getLocalLocation().getY() - Model.getLocation().getY()) <= config.OriginalModelProximityDistanceThreshold() &&
-                ShortestAngleDifference(Owner.getOrientation(), Model.getOrientation()) <= config.OriginalModelProximityOrientationThreshold() &&
+                Math.abs(ShortestAngleDifference(Owner.getOrientation(), Model.getOrientation())) <= config.OriginalModelProximityOrientationThreshold() &&
                 (currentTarget == null || !config.CombatModeEnabled()))
         {
             return true;
