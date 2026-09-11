@@ -500,7 +500,7 @@ public class CustomMovementHandler
             bTargetWasKilled = false;
         } else
         {
-            NotInteractingTimer += CurrentFrameDelta;
+            NotInteractingTimer += CurrentFrameDelta / 1000000.0;
         }
 
     }
