@@ -1045,7 +1045,8 @@ public class CustomMovementHandler
         if (config.AllowOriginalModelWhenCloseProximity() &&
                 Math.abs(Owner.getLocalLocation().getX() - Model.getLocation().getX()) <= config.OriginalModelProximityDistanceThreshold() &&
                 Math.abs(Owner.getLocalLocation().getY() - Model.getLocation().getY()) <= config.OriginalModelProximityDistanceThreshold() &&
-                ShortestAngleDifference(Owner.getOrientation(), Model.getOrientation()) <= config.OriginalModelProximityOrientationThreshold())
+                ShortestAngleDifference(Owner.getOrientation(), Model.getOrientation()) <= config.OriginalModelProximityOrientationThreshold() &&
+                (currentTarget == null || !config.CombatModeEnabled()))
         {
             return true;
         }
