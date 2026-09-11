@@ -552,7 +552,7 @@ public class TrueTileMovementPlugin extends Plugin
 			client.setCameraMode(0);
 		}
 	}
-	private long LastTimeHitSplatApplied = 0;
+	private long LastTimeHitSplatApplied = 1000000;
 	@Subscribe
 	public void onHitsplatApplied(HitsplatApplied event)
 	{
