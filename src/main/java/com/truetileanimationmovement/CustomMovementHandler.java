@@ -859,13 +859,15 @@ public class CustomMovementHandler
 
                     // Get vector between true tile last and next;
                     // Rotate vector by orientation
-                    int DirectionX = Owner.getLocalLocation().getX() - LastTrueTilePosition.getX();
-                    int DirectionY = Owner.getLocalLocation().getY() - LastTrueTilePosition.getY();
+                    int DirectionX = CurrentTrueTilePosition.getX() - LastTrueTilePosition.getX();
+                    int DirectionY = CurrentTrueTilePosition.getY() - LastTrueTilePosition.getY();
 
                     if (Owner.getLocalLocation().getX() == CurrentTrueTilePosition.getX() &&
                             Owner.getLocalLocation().getY() == CurrentTrueTilePosition.getY() )
                     {
                         CurrentAnimationRequest.PoseAnimationToPlay = OldAnimationSet.IdlePoseAnimation;
+                        ChangeLastLerpPointForRotation();
+                        CurrentAnimationRequest.bShouldTeleportToLocation = true;
                     }
                     else
                     {
@@ -874,15 +876,8 @@ public class CustomMovementHandler
 
                         CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromAnimationSet(OldAnimationSet, config).MovesetArray[2 + TempRotatedDirectionX][2 + TempRotatedDirectionY]);
                     }
-                    bShouldUseTrueLocationOrientation = true;
-                    CurrentAnimationRequest.bShouldTeleportToLocation = true;
 
-                    ChangeLastLerpPointForRotation();
                 }
-                CurrentAnimationRequest.bUseLinearTween = true;
-                CurrentAnimationRequest.MovementSpeedMultiplier = 1.0;
-                CurrentAnimationRequest.StartingFrame = 0;
-                CurrentAnimationRequest.AnimationSpeed = 1;
             }
             else if (bCurrentlyWooxWalking && config.AllowWooxWalkDetection() && bIsDefaultHumanAnimationSet)
             {
@@ -952,10 +947,6 @@ public class CustomMovementHandler
                 CurrentAnimationRequest.AnimationToPlay = 2387; // Fist pump
             }
 
-            CurrentAnimationRequest.bUseLinearTween = true;
-            CurrentAnimationRequest.MovementSpeedMultiplier = 1;
-            CurrentAnimationRequest.AnimationSpeed = 1;
-            CurrentAnimationRequest.StartingFrame = 0;
             ChangeLastLerpPointForRotation();
             bWooxWalkBroken = true;
             FramesSinceIdle = 0;
@@ -966,10 +957,6 @@ public class CustomMovementHandler
             bMovingThisAction = false;
 
             CurrentAnimationRequest = AnimationRequestMoveset.GetDefaultIdleMoveAnimationRequest(config);
-            CurrentAnimationRequest.bUseLinearTween = true;
-            CurrentAnimationRequest.MovementSpeedMultiplier = 1.0;
-            CurrentAnimationRequest.AnimationSpeed = 1;
-            CurrentAnimationRequest.StartingFrame = 0;
             ChangeLastLerpPointForRotation();
             int ShortestAngle = ShortestAngleDifference(CurrentOrientation, TargetOrientation);
             if (ShortestAngle >= 10)
@@ -1294,11 +1281,10 @@ public class CustomMovementHandler
         {
             // Animation has opted to use the true location/orientation (probably agility obstacle)
             int OwnerAnimation = Owner.getAnimation();
-            bShouldUseTrueLocationOrientation |= (OwnerAnimation != -1 &&
-                    currentTarget == null &&
+            bShouldUseTrueLocationOrientation |= ( currentTarget == null &&
                     UniqueAnimationLocationAndOrientationExceptionList.contains(OwnerAnimation));
 
-            if (bShouldUseTrueLocationOrientation || (CurrentTime - LastTimeUniqueAnimationLocationOrientationWasUsed) < 6e+8) // A little bit of time before going to other animation
+            if (OwnerAnimation != -1 && (bShouldUseTrueLocationOrientation || (CurrentTime - LastTimeUniqueAnimationLocationOrientationWasUsed) < 6e+8)) // A little bit of time before going to other animation
             {
                 if (Model.getLocation() != Owner.getLocalLocation())
                 {
