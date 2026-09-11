@@ -464,11 +464,11 @@ public class CustomMovementHandler
                 (currentTarget.isDead() ||
                         currentTarget.getModel() == null ||
                         // Not interacting with the owner and the engagement timer has ran out (Also a decent distance away)
-                        (currentTarget.getInteracting() != Owner
+                        ((currentTarget.getInteracting() != Owner || config.StopEngagingInCombatWhileAgroed())
                                 && Owner.getInteracting() != currentTarget
                                 && NotInteractingTimer > config.StopEngagingInCombatTime()
                                 && TileDistanceFromTarget > 3) ||
-                        (currentTarget.getInteracting() != Owner
+                        ((currentTarget.getInteracting() != Owner || config.StopEngagingInCombatWhileAgroed())
                                 && Owner.getInteracting() != currentTarget
                                 && NotInteractingTimer > config.StopEngagingInCombatTimeFromCloseDistance()
                                 && TileDistanceFromTarget <= 3)

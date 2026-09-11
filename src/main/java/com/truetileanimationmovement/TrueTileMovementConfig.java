@@ -193,6 +193,17 @@ public interface TrueTileMovementConfig extends Config
 	} // 20 ticks
 
 	@ConfigItem(
+			keyName = "StopEngagingInCombatWhileAgroed",
+			name = "Stop Engaging In Combat Time While Agroed",
+			description = "Allow us to stop engaging in combat even while agroed by a monster\"",
+			section = advancedSection
+	)
+	default boolean StopEngagingInCombatWhileAgroed()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 			keyName = "StopEngagingInCombatTimeFromCloseDistance",
 			name = "Stop Engaging In Combat Time From Close Distance",
 			description = "Amount of time to de-agro when under 4 tiles from the enemy (1 tick = 60 units);",
@@ -200,8 +211,8 @@ public interface TrueTileMovementConfig extends Config
 	)
 	default int StopEngagingInCombatTimeFromCloseDistance()
 	{
-		return 7200;
-	} // 120 ticks
+		return 3600;
+	} // 60 ticks
 
 	@ConfigItem(
 			keyName = "SpawnModelAtCameraTile",
