@@ -189,8 +189,8 @@ public interface TrueTileMovementConfig extends Config
 	)
 	default int StopEngagingInCombatTime()
 	{
-		return 1200;
-	} // 20 ticks
+		return 520;
+	} // 9 ticks
 
 	@ConfigItem(
 			keyName = "StopEngagingInCombatWhileAgroed",
@@ -211,8 +211,8 @@ public interface TrueTileMovementConfig extends Config
 	)
 	default int StopEngagingInCombatTimeFromCloseDistance()
 	{
-		return 3600;
-	} // 60 ticks
+		return 520;
+	} // 9 ticks
 
 	@ConfigItem(
 			keyName = "SpawnModelAtCameraTile",
@@ -234,7 +234,7 @@ public interface TrueTileMovementConfig extends Config
 	)
 	default boolean CombatModeEnabled()
 	{
-		return false;
+		return true;
 	}
 
 	@ConfigItem(
