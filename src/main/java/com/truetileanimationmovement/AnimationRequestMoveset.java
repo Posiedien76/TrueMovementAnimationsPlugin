@@ -303,7 +303,7 @@ public class AnimationRequestMoveset
             BACK_1.StartingFrame = 0;
             BACK_1.bAllowAnimationLoop = false;
 
-            CENTER.AnimationToPlay = AnimSet.IdleRotateRight; // Center
+            CENTER.AnimationToPlay = AnimSet.IdlePoseAnimation; // Center
 
             FORWARD_1.AnimationToPlay = AnimationID.HUMAN_DRAGON_SWORD_SPEC; // Jab forward. 7515
             FORWARD_1.MovementSpeedMultiplier = 2.0;
@@ -461,7 +461,7 @@ public class AnimationRequestMoveset
 
         BACK_2.PoseAnimationToPlay = AnimSet.WalkRotate180; BACK_2.AnimationSpeed = 2; // Backwards 2
         BACK_1.PoseAnimationToPlay = AnimSet.WalkRotate180; // Backwards
-        CENTER.PoseAnimationToPlay = AnimSet.IdleRotateRight; // Center
+        CENTER.PoseAnimationToPlay = AnimSet.IdlePoseAnimation; // Center
         FORWARD_1.PoseAnimationToPlay = AnimSet.WalkAnimation; // Forward
         FORWARD_2.PoseAnimationToPlay = AnimSet.RunAnimation; // 2 Forward
 

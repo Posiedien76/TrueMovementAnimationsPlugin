@@ -43,7 +43,7 @@ public class TrueMovementOverlay extends OverlayPanel
     public boolean bTeleportInterrupted = false;
 
     // HP Bar
-    public boolean bShowHPBar = true;
+    public boolean bShowHPBar = false;
     private static final Color BAR_FILL_COLOR = Color.green;
     private static final Color BAR_BG_COLOR = Color.red;
     private static final Dimension HP_BAR_SIZE = new Dimension(30, 5);
@@ -118,7 +118,7 @@ public class TrueMovementOverlay extends OverlayPanel
 
         Player player = client.getLocalPlayer();
         var playerEntry = MovementHandlerCache.get(player.getId());
-        if (playerEntry == null)
+        if (playerEntry == null || playerEntry.bShouldRenderOwner)
         {
             return;
         }
@@ -225,7 +225,7 @@ public class TrueMovementOverlay extends OverlayPanel
         String OverheadText = player.getOverheadText();
         boolean bIsOverheadTextActive = OverheadText != null;
 
-        if ((!bShowHPBar && headIcon == null && skullIcon == -1 && !bIsOverheadTextActive) || playerEntry == null)
+        if ((!bShowHPBar && headIcon == null && skullIcon == -1 && !bIsOverheadTextActive) || playerEntry == null || playerEntry.bShouldRenderOwner)
         {
             return;
         }

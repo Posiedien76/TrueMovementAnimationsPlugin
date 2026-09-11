@@ -39,7 +39,6 @@ public class CustomMovementHandler
     public boolean bRenderOriginalOwnerDueToProximity = false;
     public boolean bShouldRenderOwner = false;
     public boolean bAttemptToRenderOwner = false;
-    public boolean bTransitioningToBattleMode = false;
 
     // Local caches
     private WorldPoint CurrentWorldPoint;
@@ -505,12 +504,6 @@ public class CustomMovementHandler
         }
 
     }
-
-    private boolean ShouldOnlyEnablePluginInCombat()
-    {
-        return (IsPlayerOwner() && config.OnlyEnabledInCombat());
-    }
-
     private LocalPoint GetOwnerLocalLocation()
     {
         // Only allow players or NPCs
@@ -582,7 +575,7 @@ public class CustomMovementHandler
     private void UpdateLerpDestinations()
     {
         bNewTileMovementStarted = false;
-        if (plugin.bForceEarlyOut || !plugin.bIsPluginSupportedCurrently || (currentTarget == null && ShouldOnlyEnablePluginInCombat()))
+        if (plugin.bForceEarlyOut || !plugin.bIsPluginSupportedCurrently)
         {
             if (!bAttemptToRenderOwner)
             {
@@ -596,22 +589,20 @@ public class CustomMovementHandler
             NextLerpPosition = GetOwnerLocalLocation();
 
             bAttemptToRenderOwner = true;
-            bTransitioningToBattleMode = false;
         }
         else
         {
             // Resume from the last true tile
+            LocalPoint RequestedLerpPoint;
             if (bAttemptToRenderOwner)
             {
-                NextLerpPosition = LastTrueTilePosition;
-                bTransitioningToBattleMode = true;
+                RequestedLerpPoint = LastTrueTilePosition;
             }
             else
             {
-                bTransitioningToBattleMode = false;
+                RequestedLerpPoint = LocalPoint.fromWorld(client, CurrentWorldPoint);
             }
 
-            LocalPoint RequestedLerpPoint = LocalPoint.fromWorld(client, CurrentWorldPoint);
             int RequestedLerpPlane = CurrentWorldPoint.getPlane();
             if (RequestedLerpPoint != null && NextLerpPosition == null)
             {
@@ -802,6 +793,15 @@ public class CustomMovementHandler
 
         // Quick and dirty teleport to location
         boolean bApplyQuickAndDirtyTeleport = LastLerpPosition.equals(NextLerpPosition);
+        int AnimationSetDirectionX = RotatedDirectionX;
+        int AnimationSetDirectionY = RotatedDirectionY;
+
+        // Teleport, animation is idle
+        if (bApplyQuickAndDirtyTeleport)
+        {
+            AnimationSetDirectionX = 0;
+            AnimationSetDirectionY = 0;
+        }
 
 
         // Override all animations
@@ -838,7 +838,7 @@ public class CustomMovementHandler
                     if (CurrentTime - overlay.LastTimeTeleport < 6e+8) // Blend with the first tick
                     {
                         // Handle normal walking
-                        CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromAnimationSet(OldAnimationSet, config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
+                        CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromAnimationSet(OldAnimationSet, config).MovesetArray[2 + AnimationSetDirectionX][2 + AnimationSetDirectionY]);
                         CurrentAnimationRequest.bShouldTeleportToLocation = false;
                     }
                     else
@@ -871,8 +871,8 @@ public class CustomMovementHandler
                     }
                     else
                     {
-                        int TempRotatedDirectionX = Math.max(-2, Math.min(2, Math.toIntExact(Math.round((DirectionX * cos - DirectionY * sin) / 128.0))));
-                        int TempRotatedDirectionY = Math.max(-2, Math.min(2, Math.toIntExact(Math.round((DirectionX * sin + DirectionY * cos) / 128.0))));
+                        int TempRotatedDirectionX = Math.max(-2, Math.min(2, Math.toIntExact(Math.round((AnimationSetDirectionX * cos - AnimationSetDirectionY * sin) / 128.0))));
+                        int TempRotatedDirectionY = Math.max(-2, Math.min(2, Math.toIntExact(Math.round((AnimationSetDirectionX * sin + AnimationSetDirectionY * cos) / 128.0))));
 
                         CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromAnimationSet(OldAnimationSet, config).MovesetArray[2 + TempRotatedDirectionX][2 + TempRotatedDirectionY]);
                     }
@@ -882,7 +882,7 @@ public class CustomMovementHandler
             else if (bCurrentlyWooxWalking && config.AllowWooxWalkDetection() && bIsDefaultHumanAnimationSet)
             {
                 // Handle woox walking
-                CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,SpecialAnimationPreset.WOOX_WALK, config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
+                CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,SpecialAnimationPreset.WOOX_WALK, config).MovesetArray[2 + AnimationSetDirectionX][2 + AnimationSetDirectionY]);
 
                 // No turning if no target
                 if (currentTarget == null)
@@ -898,7 +898,7 @@ public class CustomMovementHandler
             else if ((config.AlwaysHoppingMode() || FramesSinceIdle > config.TickPerfectMovesUntilJumping()) && bIsDefaultHumanAnimationSet)
             {
                 // Handle tick perfect moving
-                CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,SpecialAnimationPreset.TICK_PERFECT_MOVEMENT, config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
+                CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,SpecialAnimationPreset.TICK_PERFECT_MOVEMENT, config).MovesetArray[2 + AnimationSetDirectionX][2 + AnimationSetDirectionY]);
             }
             else
             {
@@ -906,12 +906,12 @@ public class CustomMovementHandler
                 if (bSpecialMoveAnimation && bIsDefaultHumanAnimationSet)
                 {
                     // Handle normal walking
-                    CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,SpecialAnimationPreset.SPECIAL_MOVES, config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
+                    CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromUniqueKey(OldAnimationSet,SpecialAnimationPreset.SPECIAL_MOVES, config).MovesetArray[2 + AnimationSetDirectionX][2 + AnimationSetDirectionY]);
                 }
                 else
                 {
                     // Handle normal walking
-                    CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromAnimationSet(OldAnimationSet, config).MovesetArray[2 + RotatedDirectionX][2 + RotatedDirectionY]);
+                    CurrentAnimationRequest = AnimationRequestDetails.NewObject(AnimationRequestMovesetCache.getMovesetFromAnimationSet(OldAnimationSet, config).MovesetArray[2 + AnimationSetDirectionX][2 + AnimationSetDirectionY]);
                 }
             }
         }
@@ -1079,8 +1079,8 @@ public class CustomMovementHandler
         {
             TargetOrientation = (getOrientationBetweenPoints(NewLocalPointToDraw.getX(), NewLocalPointToDraw.getY(), currentTarget.getLocalLocation().getX(), currentTarget.getLocalLocation().getY(), 90));
         }
-        else if (!bMovingThisAction || // Not walking animation, face towards wherever the client is
-                config.OnlyEnabledInCombat())
+        else if (!bMovingThisAction) // Not walking animation, face towards wherever the client is
+
         {
             // Target is toward the real player now
             TargetOrientation = Owner.getOrientation();

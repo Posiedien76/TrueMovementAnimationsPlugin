@@ -155,7 +155,7 @@ public interface TrueTileMovementConfig extends Config
 	)
 	default double AdaptiveCameraSnapDistance()
 	{
-		return 5;
+		return 3;
 	}
 
 	@ConfigItem(
@@ -166,7 +166,7 @@ public interface TrueTileMovementConfig extends Config
 	)
 	default int PlayerModelSnapDistance()
 	{
-		return 5;
+		return 3;
 	}
 
 	@ConfigItem(
@@ -352,17 +352,6 @@ public interface TrueTileMovementConfig extends Config
 	default int CameraModelHeight()
 	{
 		return 1;
-	}
-
-	@ConfigItem(
-			keyName = "OnlyEnabledInCombat",
-			name = "   Disable Plugin outside Combat",
-			description = "Whether or not to only enable the plugin movement in combat",
-			section = generalSection
-	)
-	default boolean OnlyEnabledInCombat()
-	{
-		return false;
 	}
 
 	@ConfigItem(
