@@ -816,7 +816,7 @@ public class CustomMovementHandler
     // Hacky way to copy a model, mergeModel was recently changed, so it doesn't make a copy. This hacky solution works for now.
     private Model CopyModel(Model OldModel)
     {
-        // Use dwarf head model till we have enough verts
+        // Use unrelated model till we have enough verts
         ModelData modelData = client.loadModelData(61902);
         ModelData merged = client.mergeModels(modelData);
 
