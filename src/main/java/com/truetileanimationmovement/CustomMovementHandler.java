@@ -8,7 +8,9 @@ import net.runelite.api.gameval.AnimationID;
 import net.runelite.client.config.ConfigItem;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class CustomMovementHandler
@@ -29,7 +31,9 @@ public class CustomMovementHandler
     // Runelite object management
     public Actor Owner = null;
     public AnimationController AnimController = null; // Used to blend additional animations
+    public AnimationController PoseAnimController = null; // Used to blend additional animations
     public RuneLiteObject Model = null;
+    public List<Integer> PlayerModelIds = new ArrayList<>();
 
     // Targeting
     public Actor currentTarget = null;
@@ -236,17 +240,103 @@ public class CustomMovementHandler
                 }
                 bTargetWasKilled = false;
             });
+
+            PoseAnimController = new AnimationController(client, NO_ANIMATION);
         }
+
+
+        Player playerModel = (Player)Owner;
+        int TransformedNpcID = playerModel.getPlayerComposition().getTransformedNpcId();
+
+        int[] modelIds = null;
+        if (TransformedNpcID != -1)
+        {
+            modelIds = new int[1];
+            modelIds[0] = TransformedNpcID;
+        }
+        // NPC target fallback
+        else
+        {
+            // See if the ids match the expected
+            NPC npcModel = (NPC)Owner.getInteracting();
+            if (npcModel != null)
+            {
+                // Player OwnerPlayer = (Player)Owner;
+                NPCComposition composition = npcModel.getComposition();
+                modelIds = composition.getModels();
+            }
+        }
+
+
+        // Always need at least one model
+        if (modelIds == null && PlayerModelIds.isEmpty())
+        {
+            modelIds = new int[1];
+            modelIds[0] = config.DebugModelIndex();
+        }
+
+
+
+
+        boolean bDoesNotMatch = false;
+        if (modelIds != null)
+        {
+            if (PlayerModelIds.size() != modelIds.length)
+            {
+                bDoesNotMatch = true;
+            }
+            else
+            {
+                int i = 0;
+                for (int modelId : modelIds)
+                {
+                    if (PlayerModelIds.get(i) != modelId)
+                    {
+                        bDoesNotMatch = true;
+                        break;
+                    }
+                    ++i;
+                }
+            }
+        }
+
+        // Reconstruct
+        if (bDoesNotMatch && config.AllowModelSwap())
+        {
+            PlayerModelIds.clear();
+            for (int modelId : modelIds)
+            {
+                PlayerModelIds.add(modelId);
+            }
+            bRuneliteObjectsStale = true;
+        }
+
 
         if (Model == null || bRuneliteObjectsStale)
         {
+            // New combined model
+            ModelData CurrentModelData = client.loadModelData(PlayerModelIds.get(0));
+            boolean bSkipFirst = true;
+            for (int modelId : PlayerModelIds)
+            {
+                if (bSkipFirst)
+                {
+                    bSkipFirst = false;
+                    continue;
+                }
+                CurrentModelData = client.mergeModels(CurrentModelData, client.loadModelData(modelId));
+            }
+
             RuneLiteObject OldModel = Model;
             Model = client.createRuneLiteObject();
+            Model.setModel(CurrentModelData.light());
+            Model.setAnimationController(AnimController);
+            Model.setPoseAnimationController(PoseAnimController);
+
             if (OldModel != null)
             {
                 Model.setLocation(OldModel.getLocation(), OldModel.getLevel());
                 Model.setOrientation(CurrentOrientation);
-                Model.setAnimationController(OldModel.getAnimationController());
                 client.removeRuneLiteObject(OldModel);
             }
         }
@@ -1158,7 +1248,7 @@ public class CustomMovementHandler
                 }
                 else
                 {
-                    cameraModel.setModel(client.mergeModels(/*cameraModelAnimController.animate*/(client.loadModel(CurrentCameraModelIndex))));
+                    //cameraModel.setModel(client.loadModel(CurrentCameraModelIndex))));
                 }
 
                 // Need to rotate to our target rotation smoothly
@@ -1422,9 +1512,10 @@ public class CustomMovementHandler
                     }
                 }
 
-                if (Owner.getModel() != null)
+                PoseAnimController.setFrame(Owner.getPoseAnimationFrame());
+                if (PoseAnimController.getAnimation() == null || PoseAnimController.getAnimation().getId() != Owner.getPoseAnimation())
                 {
-                    Model.setModel(client.mergeModels(AnimController.animate(Owner.getModel())));
+                    PoseAnimController.setAnimation(client.loadAnimation(Owner.getPoseAnimation()));
                 }
             }
             else
@@ -1455,9 +1546,17 @@ public class CustomMovementHandler
                     CurrentPoseAnimation = NO_ANIMATION;
                     bResetCurrentAnimation = false;
                 }
-                if (Owner.getModel() != null)
+
+                AnimController.setFrame(Owner.getAnimationFrame());
+                if (AnimController.getAnimation() == null || AnimController.getAnimation().getId() != Owner.getAnimation())
                 {
-                    Model.setModel(client.mergeModels(Owner.getModel()));
+                    AnimController.setAnimation(client.loadAnimation(Owner.getAnimation()));
+                }
+
+                PoseAnimController.setFrame(Owner.getPoseAnimationFrame());
+                if (PoseAnimController.getAnimation() == null || PoseAnimController.getAnimation().getId() != Owner.getPoseAnimation())
+                {
+                    PoseAnimController.setAnimation(client.loadAnimation(Owner.getPoseAnimation()));
                 }
             }
 

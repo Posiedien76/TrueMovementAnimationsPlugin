@@ -56,6 +56,28 @@ public interface TrueTileMovementConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "DebugModelIndex",
+			name = "   DebugModelIndex",
+			description = "DebugModelIndex",
+			section = generalSection
+	)
+	default int DebugModelIndex()
+	{
+		return 1;
+	}
+	@ConfigItem(
+			keyName = "AllowModelSwap",
+			name = "  AllowModelSwap",
+			description = "AllowModelSwap",
+			section = generalSection
+	)
+	default boolean AllowModelSwap()
+	{
+		return true;
+	}
+
+
+	@ConfigItem(
 			keyName = "CustomOverheadRendering",
 			name = "   Custom Overhead Rendering",
 			description = "Whether or not for the plugin to handle the overhead, HP bar, and hitsplat rendering",
