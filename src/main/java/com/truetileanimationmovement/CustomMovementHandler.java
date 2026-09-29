@@ -8,6 +8,7 @@ import net.runelite.api.gameval.AnimationID;
 import net.runelite.client.config.ConfigItem;
 
 import javax.inject.Inject;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -811,6 +812,61 @@ public class CustomMovementHandler
         }
 
     }
+
+    // Hacky way to copy a model, mergeModel was recently changed, so it doesn't make a copy. This hacky solution works for now.
+    private Model CopyModel(Model OldModel)
+    {
+        // Use dwarf head model till we have enough verts
+        ModelData modelData = client.loadModelData(61902);
+        ModelData merged = client.mergeModels(modelData);
+
+        int OldVertexCount = OldModel.getVerticesCount();
+        int OldFaceCount = OldModel.getFaceCount();
+
+        int CurrentVertexCount = merged.getVerticesCount();
+        int CurrentTriangleCount = merged.getFaceCount();
+        int i = 0;
+        while(CurrentVertexCount < OldVertexCount || CurrentTriangleCount < OldFaceCount)
+        {
+            ModelData modelCopy = client.mergeModels(modelData);
+            merged = client.mergeModels(merged, modelCopy.translate(i, 0, 0));
+            CurrentVertexCount = merged.getVerticesCount();
+            CurrentTriangleCount = merged.getFaceCount();
+            ++i;
+
+            // in case something goes wrong
+            if (i > 30)
+            {
+                break;
+            }
+        }
+        Model mergedel = merged.light();
+
+        // apply player model to donor
+        System.arraycopy(OldModel.getVerticesX(), 0, mergedel.getVerticesX(), 0, OldModel.getVerticesCount());
+        System.arraycopy(OldModel.getVerticesY(), 0, mergedel.getVerticesY(), 0, OldModel.getVerticesCount());
+        System.arraycopy(OldModel.getVerticesZ(), 0, mergedel.getVerticesZ(), 0, OldModel.getVerticesCount());
+        Arrays.fill(mergedel.getVerticesX(), OldModel.getVerticesCount(), mergedel.getVerticesCount(), OldModel.getVerticesX()[0]);
+        Arrays.fill(mergedel.getVerticesY(), OldModel.getVerticesCount(), mergedel.getVerticesCount(), OldModel.getVerticesY()[0]);
+        Arrays.fill(mergedel.getVerticesZ(), OldModel.getVerticesCount(), mergedel.getVerticesCount(), OldModel.getVerticesZ()[0]);
+
+        System.arraycopy(OldModel.getFaceIndices1(), 0, mergedel.getFaceIndices1(), 0, OldModel.getFaceCount());
+        System.arraycopy(OldModel.getFaceIndices2(), 0, mergedel.getFaceIndices2(), 0, OldModel.getFaceCount());
+        System.arraycopy(OldModel.getFaceIndices3(), 0, mergedel.getFaceIndices3(), 0, OldModel.getFaceCount());
+        Arrays.fill(mergedel.getFaceIndices1(), OldModel.getFaceCount(), mergedel.getFaceCount(), OldModel.getFaceIndices1()[0]);
+        Arrays.fill(mergedel.getFaceIndices2(), OldModel.getFaceCount(), mergedel.getFaceCount(), OldModel.getFaceIndices2()[0]);
+        Arrays.fill(mergedel.getFaceIndices3(), OldModel.getFaceCount(), mergedel.getFaceCount(), OldModel.getFaceIndices3()[0]);
+
+        System.arraycopy(OldModel.getFaceColors1(), 0, mergedel.getFaceColors1(), 0, OldModel.getFaceCount());
+        System.arraycopy(OldModel.getFaceColors2(), 0, mergedel.getFaceColors2(), 0, OldModel.getFaceCount());
+        System.arraycopy(OldModel.getFaceColors3(), 0, mergedel.getFaceColors3(), 0, OldModel.getFaceCount());
+        Arrays.fill(mergedel.getFaceColors1(), OldModel.getFaceCount(), mergedel.getFaceCount(), OldModel.getFaceColors1()[0]);
+        Arrays.fill(mergedel.getFaceColors2(), OldModel.getFaceCount(), mergedel.getFaceCount(), OldModel.getFaceColors2()[0]);
+        Arrays.fill(mergedel.getFaceColors3(), OldModel.getFaceCount(), mergedel.getFaceCount(), OldModel.getFaceColors3()[0]);
+
+        return mergedel;
+    }
+
     private boolean bShouldUseTrueLocationOrientation = false;
     private void UpdateAnimationSelection()
     {
@@ -1158,7 +1214,7 @@ public class CustomMovementHandler
                 }
                 else
                 {
-                    cameraModel.setModel(client.mergeModels(/*cameraModelAnimController.animate*/(client.loadModel(CurrentCameraModelIndex))));
+                    cameraModel.setModel(client.loadModel(CurrentCameraModelIndex));
                 }
 
                 // Need to rotate to our target rotation smoothly
@@ -1424,7 +1480,7 @@ public class CustomMovementHandler
 
                 if (Owner.getModel() != null)
                 {
-                    Model.setModel(client.mergeModels(AnimController.animate(Owner.getModel())));
+                    Model.setModel(CopyModel(AnimController.animate(Owner.getModel())));
                 }
             }
             else
@@ -1457,7 +1513,7 @@ public class CustomMovementHandler
                 }
                 if (Owner.getModel() != null)
                 {
-                    Model.setModel(client.mergeModels(Owner.getModel()));
+                    Model.setModel(CopyModel(Owner.getModel()));
                 }
             }
 
