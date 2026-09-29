@@ -602,7 +602,8 @@ public class TrueTileMovementPlugin extends Plugin
 				client.getLocalPlayer().getAnimation() == AnimationID.POH_ABSORB_TABLET_TELEPORT || // 4071
 				client.getLocalPlayer().getAnimation() == AnimationID.TELEPORT_CABBAGE_HUMAN || // 3869
 				client.getLocalPlayer().getAnimation() == AnimationID.ARCEUUS_NECROMANCY_ANIM || // 3865
-				client.getLocalPlayer().getAnimation() == AnimationID.NTK_HUMAN_TELE // 2881
+				client.getLocalPlayer().getAnimation() == AnimationID.NTK_HUMAN_TELE || // 2881
+				client.getLocalPlayer().getAnimation() == 3864 // Teleport. 3864
 		)
 		{
 			OverlayRenderer.LastTimeTeleport = System.nanoTime();

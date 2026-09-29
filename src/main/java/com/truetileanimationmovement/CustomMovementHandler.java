@@ -102,9 +102,6 @@ public class CustomMovementHandler
         this.Owner = Owner;
 
         // Initialize all animations we do want to lerp
-        UniqueAnimationExceptionList.add(AnimationID.AGILITY_SHORTCUT_WALL_JUMPDOWN2); // Agility. 2588
-        UniqueAnimationExceptionList.add(AnimationID.AGILITY_SHORTCUT_WALL_JUMPDOWN); // Agility. 2586
-        UniqueAnimationExceptionList.add(AnimationID.AGILITY_SHORTCUT_WALL_JUMP); // Agility. 2583
         UniqueAnimationExceptionList.add(AnimationID.HUMAN_CASTTELEPORT); // Teleport. 714
         UniqueAnimationExceptionList.add(AnimationID.AHOY_ECTO_TELEPORT); // Teleport. 878
         UniqueAnimationExceptionList.add(AnimationID.HUMAN_TELEPORT_OTHER_IMPACT); // Teleport. 1816
@@ -116,7 +113,15 @@ public class CustomMovementHandler
         UniqueAnimationExceptionList.add(AnimationID.TELEPORT_CABBAGE_HUMAN); // Teleport. 3869
         UniqueAnimationExceptionList.add(AnimationID.ARCEUUS_NECROMANCY_ANIM); // Teleport. 3865
         UniqueAnimationExceptionList.add(AnimationID.NTK_HUMAN_TELE); // Teleport. 2881
+        UniqueAnimationExceptionList.add(3864); // Teleport. 3864
+        UniqueAnimationExceptionList.add(830); // Bind. 830
+        UniqueAnimationExceptionList.add(1161); // Bind. 1161
+        UniqueAnimationExceptionList.add(4177); // Bind. 4177
+        UniqueAnimationExceptionList.add(791); // Runecrafting. 791
 
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.AGILITY_SHORTCUT_WALL_JUMPDOWN2); // Agility. 2588
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.AGILITY_SHORTCUT_WALL_JUMPDOWN); // Agility. 2586
+        UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.AGILITY_SHORTCUT_WALL_JUMP); // Agility. 2583
         UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.HUMAN_DOUBLEPIPESQUEEZE); // crawl pipe. 749
         UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.HUMAN_ROPESWING_LONG); // rope swing. 751
         UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.HUMAN_WALK_CRUMBLEDWALL); // climb over. 840
@@ -136,6 +141,21 @@ public class CustomMovementHandler
         UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.PENG_JUMP_B); // penguin. 5709
         UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.RAILING_SQUEEZE); // fence shuffle. 3844
         UniqueAnimationLocationAndOrientationExceptionList.add(AnimationID.REGICIDE_TIGHTFIT); // tir obstacles. 1237
+        UniqueAnimationLocationAndOrientationExceptionList.add(4728); // Agility. 4728
+        UniqueAnimationLocationAndOrientationExceptionList.add(4727); // Agility. 4727
+        UniqueAnimationLocationAndOrientationExceptionList.add(4721);// Agility. 4721
+        UniqueAnimationLocationAndOrientationExceptionList.add(4723);// Agility. 4723
+        UniqueAnimationLocationAndOrientationExceptionList.add(4724); // Agility. 4724
+        UniqueAnimationLocationAndOrientationExceptionList.add(3276); // Agility. 3276
+        UniqueAnimationLocationAndOrientationExceptionList.add(3277); // Agility. 3277
+        UniqueAnimationLocationAndOrientationExceptionList.add(1148); // Agility. 1148
+        UniqueAnimationLocationAndOrientationExceptionList.add(6723); // Agility. 6723
+        UniqueAnimationLocationAndOrientationExceptionList.add(4435); // Agility. 4435
+        UniqueAnimationLocationAndOrientationExceptionList.add(819); // Agility. 819
+        UniqueAnimationLocationAndOrientationExceptionList.add(820); // Agility. 820
+        UniqueAnimationLocationAndOrientationExceptionList.add(4230); // Agility. 4230
+        UniqueAnimationLocationAndOrientationExceptionList.add(4468); // Agility. 4468
+        UniqueAnimationLocationAndOrientationExceptionList.add(4464); // Agility. 4464
     }
 
     double quadraticTween(long startTime, long endTime, long currentTime)

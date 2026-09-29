@@ -445,6 +445,7 @@ public class AnimationRequestMoveset
                 MovesetArray[i][j] = GetDefaultIdleMoveAnimationRequest(config);
             }
         }
+
         Initialize();
 
         SOUTHEAST_2.PoseAnimationToPlay = AnimSet.WalkRotate180; SOUTHEAST_2.AnimationSpeed = 2; // Backwards 2, side step 2
