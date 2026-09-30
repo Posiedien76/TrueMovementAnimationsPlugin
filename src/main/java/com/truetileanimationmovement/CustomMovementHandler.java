@@ -819,7 +819,7 @@ public class CustomMovementHandler
         int OldVertexCount = OldModel.getVerticesCount();
         int OldFaceCount = OldModel.getFaceCount();
 
-        if (CurrentModel == null || (CurrentModel.getVerticesCount() < OldVertexCount && CurrentModel.getFaceCount() < OldFaceCount))
+        if (CurrentModel == null || (CurrentModel.getVerticesCount() < OldVertexCount || CurrentModel.getFaceCount() < OldFaceCount))
         {
             // Use unrelated model till we have enough verts
             ModelData modelData = client.loadModelData(20740);
