@@ -1586,81 +1586,78 @@ public class CustomMovementHandler
 
             // Custom handler
             boolean bUsedCustomAnimation = false;
-            ////////////////////////////////////////////////////////////////////////////////////
-            // Disable the unique animation exception list feature for now, its causing crashes
-            ////////////////////////////////////////////////////////////////////////////////////
-            //if ((UniqueAnimationExceptionList.contains(Owner.getAnimation()) && bMovingThisAction) ||
-            //        CurrentAnimationRequest.AnimationToPlay != -1)
-            //{
-            //    bUsedCustomAnimation = true;
-            //    // Anim controller takes control over the pose animation or custom anim
-            //    Animation CustomAnim = null;
-//
-            //    boolean bUsingPoseAnim = false;
-            //    if (CurrentAnimationRequest.PoseAnimationToPlay != -1)
-            //    {
-            //        bUsingPoseAnim = true;
-            //        CustomAnim = client.loadAnimation(CurrentAnimationRequest.PoseAnimationToPlay);
-            //    }
-            //    else
-            //    {
-            //        CustomAnim = client.loadAnimation(CurrentAnimationRequest.AnimationToPlay);
-            //    }
-//
-            //    if (AnimController.getAnimation() != CustomAnim || bResetCurrentAnimation)
-            //    {
-            //        AnimController.setAnimation(CustomAnim);
-//
-            //        if (bUsingPoseAnim &&
-            //                Owner.getPoseAnimationFrame() < CustomAnim.getNumFrames() &&
-            //                !bResetCurrentAnimation)
-            //        {
-            //            AnimController.setFrame(Owner.getPoseAnimationFrame());
-            //        }
-            //        else
-            //        {
-            //            AnimController.setFrame(CurrentAnimationRequest.StartingFrame);
-            //        }
-            //        bResetCurrentAnimation = false;
-            //    }
-            //    SetAllIdlePosesNoAnimation();
-            //    Owner.setPoseAnimation(NO_ANIMATION);
-            //    Owner.setPoseAnimationFrame(0);
-//
-            //    if (CurrentTime - LastAnimationTickTime >= 16666666) // 16.6667ms per frame->60FPS
-            //    {
-            //        LastAnimationTickTime = CurrentTime;
-            //        if (AnimController.getFrame() < CurrentAnimationRequest.StartingFrame)
-            //        {
-            //            AnimController.setFrame(CurrentAnimationRequest.StartingFrame);
-            //        }
-            //        else if (AnimController.getFrame() >= CurrentAnimationRequest.EndingFrame)
-            //        {
-            //            AnimController.setFrame(CurrentAnimationRequest.EndingFrame);
-            //        }
-            //        else
-            //        {
-            //            AnimController.tick(CurrentAnimationRequest.AnimationSpeed);
-            //        }
-            //    }
-//
-            //    if (Owner.getModel() != null)
-            //    {
-            //        // Can't animate and replace the model in the same frame, this can cause an assert
-            //        Model OldModel = Model.getModel();
-            //        Model AnimatedNewModel = AnimController.animate(Owner.getModel());
-            //        Model NewModel = UpdateOldModelIfStale(Model.getModel(), AnimatedNewModel);
-            //        if (OldModel != NewModel)
-            //        {
-            //            Model.setModel(CopyModel(Model.getModel(), Owner.getModel()));
-            //        }
-            //        else
-            //        {
-            //            Model.setModel(CopyModel(Model.getModel(), AnimatedNewModel));
-            //        }
-            //    }
-            //}
-            //else
+            if ((UniqueAnimationExceptionList.contains(Owner.getAnimation()) && bMovingThisAction) ||
+                    CurrentAnimationRequest.AnimationToPlay != -1)
+            {
+                bUsedCustomAnimation = true;
+                // Anim controller takes control over the pose animation or custom anim
+                Animation CustomAnim = null;
+
+                boolean bUsingPoseAnim = false;
+                if (CurrentAnimationRequest.PoseAnimationToPlay != -1)
+                {
+                    bUsingPoseAnim = true;
+                    CustomAnim = client.loadAnimation(CurrentAnimationRequest.PoseAnimationToPlay);
+                }
+                else
+                {
+                    CustomAnim = client.loadAnimation(CurrentAnimationRequest.AnimationToPlay);
+                }
+
+                if (AnimController.getAnimation() != CustomAnim || bResetCurrentAnimation)
+                {
+                    AnimController.setAnimation(CustomAnim);
+
+                    if (bUsingPoseAnim &&
+                            Owner.getPoseAnimationFrame() < CustomAnim.getNumFrames() &&
+                            !bResetCurrentAnimation)
+                    {
+                        AnimController.setFrame(Owner.getPoseAnimationFrame());
+                    }
+                    else
+                    {
+                        AnimController.setFrame(CurrentAnimationRequest.StartingFrame);
+                    }
+                    bResetCurrentAnimation = false;
+                }
+                SetAllIdlePosesNoAnimation();
+                Owner.setPoseAnimation(NO_ANIMATION);
+                Owner.setPoseAnimationFrame(0);
+
+                if (CurrentTime - LastAnimationTickTime >= 16666666) // 16.6667ms per frame->60FPS
+                {
+                    LastAnimationTickTime = CurrentTime;
+                    if (AnimController.getFrame() < CurrentAnimationRequest.StartingFrame)
+                    {
+                        AnimController.setFrame(CurrentAnimationRequest.StartingFrame);
+                    }
+                    else if (AnimController.getFrame() >= CurrentAnimationRequest.EndingFrame)
+                    {
+                        AnimController.setFrame(CurrentAnimationRequest.EndingFrame);
+                    }
+                    else
+                    {
+                        AnimController.tick(CurrentAnimationRequest.AnimationSpeed);
+                    }
+                }
+
+                if (Owner.getModel() != null)
+                {
+                    // Can't animate and replace the model in the same frame, this can cause an assert
+                    Model OldModel = Model.getModel();
+                    Model AnimatedNewModel = AnimController.animate(Owner.getModel());
+                    Model NewModel = UpdateOldModelIfStale(Model.getModel(), AnimatedNewModel);
+                    if (OldModel != NewModel)
+                    {
+                        Model.setModel(CopyModel(Model.getModel(), Owner.getModel()));
+                    }
+                    else
+                    {
+                        Model.setModel(CopyModel(Model.getModel(), AnimatedNewModel));
+                    }
+                }
+            }
+            else
             {
                 // Normal controller takes back over
                 bTargetWasKilled = false; // If normal controller is taking it, cancel target killed animation
