@@ -821,8 +821,8 @@ public class CustomMovementHandler
 
         if (CurrentModel == null || (CurrentModel.getVerticesCount() < OldVertexCount || CurrentModel.getFaceCount() < OldFaceCount))
         {
-            // Use unrelated model till we have enough verts
-            ModelData modelData = client.loadModelData(20740);
+            // Use unrelated model till we have enough verts (and transparency)
+            ModelData modelData = client.loadModelData(148);
             ModelData merged = client.mergeModels(modelData);
 
 
@@ -838,7 +838,7 @@ public class CustomMovementHandler
                 ++i;
 
                 // in case something goes wrong
-                if (i > 30)
+                if (i > 100)
                 {
                     break;
                 }
@@ -868,22 +868,63 @@ public class CustomMovementHandler
         Arrays.fill(CurrentModel.getFaceColors2(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getFaceColors2()[0]);
         Arrays.fill(CurrentModel.getFaceColors3(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getFaceColors3()[0]);
 
+        if (OldModel.getUnlitFaceColors() != null && CurrentModel.getUnlitFaceColors() != null)
+        {
+            System.arraycopy(OldModel.getUnlitFaceColors(), 0, CurrentModel.getUnlitFaceColors(), 0, OldModel.getUnlitFaceColors().length);
+            Arrays.fill(CurrentModel.getUnlitFaceColors(), OldModel.getUnlitFaceColors().length, CurrentModel.getUnlitFaceColors().length, OldModel.getUnlitFaceColors()[0]);
+        }
+        if (OldModel.getTextureFaces() != null && CurrentModel.getTextureFaces() != null)
+        {
+            System.arraycopy(OldModel.getTextureFaces(), 0, CurrentModel.getTextureFaces(), 0, OldModel.getTextureFaces().length);
+            Arrays.fill(CurrentModel.getTextureFaces(), OldModel.getTextureFaces().length, CurrentModel.getTextureFaces().length, OldModel.getTextureFaces()[0]);
+        }
+
+        if (OldModel.getFaceTransparencies() != null && CurrentModel.getFaceTransparencies() != null)
+        {
+            System.arraycopy(OldModel.getFaceTransparencies(), 0, CurrentModel.getFaceTransparencies(), 0, OldModel.getFaceTransparencies().length);
+            Arrays.fill(CurrentModel.getFaceTransparencies(), OldModel.getFaceTransparencies().length, CurrentModel.getFaceTransparencies().length, OldModel.getFaceTransparencies()[0]);
+        }
+
+        if (OldModel.getFaceTextures() != null && CurrentModel.getFaceTextures() != null)
+        {
+            System.arraycopy(OldModel.getFaceTextures(), 0, CurrentModel.getFaceTextures(), 0, OldModel.getFaceTextures().length);
+            Arrays.fill(CurrentModel.getFaceTextures(), OldModel.getFaceTextures().length, CurrentModel.getFaceTextures().length, OldModel.getFaceTextures()[0]);
+        }
+
+        if (OldModel.getVertexNormalsX() != null && CurrentModel.getVertexNormalsX() != null)
+        {
+            System.arraycopy(OldModel.getVertexNormalsX(), 0, CurrentModel.getVertexNormalsX(), 0, OldModel.getVertexNormalsX().length);
+            Arrays.fill(CurrentModel.getVertexNormalsX(), OldModel.getVertexNormalsX().length, CurrentModel.getVertexNormalsX().length, OldModel.getVertexNormalsX()[0]);
+        }
+
+        if (OldModel.getVertexNormalsY() != null && CurrentModel.getVertexNormalsY() != null)
+        {
+            System.arraycopy(OldModel.getVertexNormalsY(), 0, CurrentModel.getVertexNormalsY(), 0, OldModel.getVertexNormalsY().length);
+            Arrays.fill(CurrentModel.getVertexNormalsY(), OldModel.getVertexNormalsY().length, CurrentModel.getVertexNormalsY().length, OldModel.getVertexNormalsY()[0]);
+        }
+
+        if (OldModel.getVertexNormalsZ() != null && CurrentModel.getVertexNormalsZ() != null)
+        {
+            System.arraycopy(OldModel.getVertexNormalsZ(), 0, CurrentModel.getVertexNormalsZ(), 0, OldModel.getVertexNormalsZ().length);
+            Arrays.fill(CurrentModel.getVertexNormalsZ(), OldModel.getVertexNormalsZ().length, CurrentModel.getVertexNormalsZ().length, OldModel.getVertexNormalsZ()[0]);
+        }
+
         if (OldModel.getTexIndices1() != null && CurrentModel.getTexIndices1() != null)
         {
-            System.arraycopy(OldModel.getTexIndices1(), 0, CurrentModel.getTexIndices1(), 0, OldModel.getFaceCount());
-            Arrays.fill(CurrentModel.getTexIndices1(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getTexIndices1()[0]);
+            System.arraycopy(OldModel.getTexIndices1(), 0, CurrentModel.getTexIndices1(), 0, OldModel.getTexIndices1().length);
+            Arrays.fill(CurrentModel.getTexIndices1(), OldModel.getTexIndices1().length, CurrentModel.getTexIndices1().length, OldModel.getTexIndices1()[0]);
         }
 
         if (OldModel.getTexIndices2() != null && CurrentModel.getTexIndices2() != null)
         {
-            System.arraycopy(OldModel.getTexIndices2(), 0, CurrentModel.getTexIndices2(), 0, OldModel.getFaceCount());
-            Arrays.fill(CurrentModel.getTexIndices2(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getTexIndices2()[0]);
+            System.arraycopy(OldModel.getTexIndices2(), 0, CurrentModel.getTexIndices2(), 0, OldModel.getTexIndices2().length);
+            Arrays.fill(CurrentModel.getTexIndices2(), OldModel.getTexIndices2().length, CurrentModel.getTexIndices2().length, OldModel.getTexIndices2()[0]);
         }
 
         if (OldModel.getTexIndices3() != null && CurrentModel.getTexIndices3() != null)
         {
-            System.arraycopy(OldModel.getTexIndices3(), 0, CurrentModel.getTexIndices3(), 0, OldModel.getFaceCount());
-            Arrays.fill(CurrentModel.getTexIndices3(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getTexIndices3()[0]);
+            System.arraycopy(OldModel.getTexIndices3(), 0, CurrentModel.getTexIndices3(), 0, OldModel.getTexIndices3().length);
+            Arrays.fill(CurrentModel.getTexIndices3(), OldModel.getTexIndices3().length, CurrentModel.getTexIndices3().length, OldModel.getTexIndices3()[0]);
         }
 
         return CurrentModel;
