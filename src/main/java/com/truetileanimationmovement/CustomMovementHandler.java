@@ -814,57 +814,61 @@ public class CustomMovementHandler
     }
 
     // Hacky way to copy a model, mergeModel was recently changed, so it doesn't make a copy. This hacky solution works for now.
-    private Model CopyModel(Model OldModel)
+    private Model CopyModel(Model CurrentModel, Model OldModel)
     {
-        // Use unrelated model till we have enough verts
-        ModelData modelData = client.loadModelData(61902);
-        ModelData merged = client.mergeModels(modelData);
-
         int OldVertexCount = OldModel.getVerticesCount();
         int OldFaceCount = OldModel.getFaceCount();
 
-        int CurrentVertexCount = merged.getVerticesCount();
-        int CurrentTriangleCount = merged.getFaceCount();
-        int i = 0;
-        while(CurrentVertexCount < OldVertexCount || CurrentTriangleCount < OldFaceCount)
+        if (CurrentModel == null || (CurrentModel.getVerticesCount() < OldVertexCount && CurrentModel.getFaceCount() < OldFaceCount))
         {
-            ModelData modelCopy = client.mergeModels(modelData);
-            merged = client.mergeModels(merged, modelCopy.translate(i, 0, 0));
-            CurrentVertexCount = merged.getVerticesCount();
-            CurrentTriangleCount = merged.getFaceCount();
-            ++i;
+            // Use unrelated model till we have enough verts
+            ModelData modelData = client.loadModelData(61902);
+            ModelData merged = client.mergeModels(modelData);
 
-            // in case something goes wrong
-            if (i > 30)
+
+            int CurrentVertexCount = merged.getVerticesCount();
+            int CurrentTriangleCount = merged.getFaceCount();
+            int i = 0;
+            while(CurrentVertexCount < OldVertexCount || CurrentTriangleCount < OldFaceCount)
             {
-                break;
+                ModelData modelCopy = client.mergeModels(modelData);
+                merged = client.mergeModels(merged, modelCopy.translate(i, 0, 0));
+                CurrentVertexCount = merged.getVerticesCount();
+                CurrentTriangleCount = merged.getFaceCount();
+                ++i;
+
+                // in case something goes wrong
+                if (i > 30)
+                {
+                    break;
+                }
             }
+            CurrentModel = merged.light();
         }
-        Model mergedel = merged.light();
 
         // apply player model to donor
-        System.arraycopy(OldModel.getVerticesX(), 0, mergedel.getVerticesX(), 0, OldModel.getVerticesCount());
-        System.arraycopy(OldModel.getVerticesY(), 0, mergedel.getVerticesY(), 0, OldModel.getVerticesCount());
-        System.arraycopy(OldModel.getVerticesZ(), 0, mergedel.getVerticesZ(), 0, OldModel.getVerticesCount());
-        Arrays.fill(mergedel.getVerticesX(), OldModel.getVerticesCount(), mergedel.getVerticesCount(), OldModel.getVerticesX()[0]);
-        Arrays.fill(mergedel.getVerticesY(), OldModel.getVerticesCount(), mergedel.getVerticesCount(), OldModel.getVerticesY()[0]);
-        Arrays.fill(mergedel.getVerticesZ(), OldModel.getVerticesCount(), mergedel.getVerticesCount(), OldModel.getVerticesZ()[0]);
+        System.arraycopy(OldModel.getVerticesX(), 0, CurrentModel.getVerticesX(), 0, OldModel.getVerticesCount());
+        System.arraycopy(OldModel.getVerticesY(), 0, CurrentModel.getVerticesY(), 0, OldModel.getVerticesCount());
+        System.arraycopy(OldModel.getVerticesZ(), 0, CurrentModel.getVerticesZ(), 0, OldModel.getVerticesCount());
+        Arrays.fill(CurrentModel.getVerticesX(), OldModel.getVerticesCount(), CurrentModel.getVerticesCount(), OldModel.getVerticesX()[0]);
+        Arrays.fill(CurrentModel.getVerticesY(), OldModel.getVerticesCount(), CurrentModel.getVerticesCount(), OldModel.getVerticesY()[0]);
+        Arrays.fill(CurrentModel.getVerticesZ(), OldModel.getVerticesCount(), CurrentModel.getVerticesCount(), OldModel.getVerticesZ()[0]);
 
-        System.arraycopy(OldModel.getFaceIndices1(), 0, mergedel.getFaceIndices1(), 0, OldModel.getFaceCount());
-        System.arraycopy(OldModel.getFaceIndices2(), 0, mergedel.getFaceIndices2(), 0, OldModel.getFaceCount());
-        System.arraycopy(OldModel.getFaceIndices3(), 0, mergedel.getFaceIndices3(), 0, OldModel.getFaceCount());
-        Arrays.fill(mergedel.getFaceIndices1(), OldModel.getFaceCount(), mergedel.getFaceCount(), OldModel.getFaceIndices1()[0]);
-        Arrays.fill(mergedel.getFaceIndices2(), OldModel.getFaceCount(), mergedel.getFaceCount(), OldModel.getFaceIndices2()[0]);
-        Arrays.fill(mergedel.getFaceIndices3(), OldModel.getFaceCount(), mergedel.getFaceCount(), OldModel.getFaceIndices3()[0]);
+        System.arraycopy(OldModel.getFaceIndices1(), 0, CurrentModel.getFaceIndices1(), 0, OldModel.getFaceCount());
+        System.arraycopy(OldModel.getFaceIndices2(), 0, CurrentModel.getFaceIndices2(), 0, OldModel.getFaceCount());
+        System.arraycopy(OldModel.getFaceIndices3(), 0, CurrentModel.getFaceIndices3(), 0, OldModel.getFaceCount());
+        Arrays.fill(CurrentModel.getFaceIndices1(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getFaceIndices1()[0]);
+        Arrays.fill(CurrentModel.getFaceIndices2(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getFaceIndices2()[0]);
+        Arrays.fill(CurrentModel.getFaceIndices3(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getFaceIndices3()[0]);
 
-        System.arraycopy(OldModel.getFaceColors1(), 0, mergedel.getFaceColors1(), 0, OldModel.getFaceCount());
-        System.arraycopy(OldModel.getFaceColors2(), 0, mergedel.getFaceColors2(), 0, OldModel.getFaceCount());
-        System.arraycopy(OldModel.getFaceColors3(), 0, mergedel.getFaceColors3(), 0, OldModel.getFaceCount());
-        Arrays.fill(mergedel.getFaceColors1(), OldModel.getFaceCount(), mergedel.getFaceCount(), OldModel.getFaceColors1()[0]);
-        Arrays.fill(mergedel.getFaceColors2(), OldModel.getFaceCount(), mergedel.getFaceCount(), OldModel.getFaceColors2()[0]);
-        Arrays.fill(mergedel.getFaceColors3(), OldModel.getFaceCount(), mergedel.getFaceCount(), OldModel.getFaceColors3()[0]);
+        System.arraycopy(OldModel.getFaceColors1(), 0, CurrentModel.getFaceColors1(), 0, OldModel.getFaceCount());
+        System.arraycopy(OldModel.getFaceColors2(), 0, CurrentModel.getFaceColors2(), 0, OldModel.getFaceCount());
+        System.arraycopy(OldModel.getFaceColors3(), 0, CurrentModel.getFaceColors3(), 0, OldModel.getFaceCount());
+        Arrays.fill(CurrentModel.getFaceColors1(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getFaceColors1()[0]);
+        Arrays.fill(CurrentModel.getFaceColors2(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getFaceColors2()[0]);
+        Arrays.fill(CurrentModel.getFaceColors3(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getFaceColors3()[0]);
 
-        return mergedel;
+        return CurrentModel;
     }
 
     private boolean bShouldUseTrueLocationOrientation = false;
@@ -1480,7 +1484,7 @@ public class CustomMovementHandler
 
                 if (Owner.getModel() != null)
                 {
-                    Model.setModel(CopyModel(AnimController.animate(Owner.getModel())));
+                    Model.setModel(CopyModel(Model.getModel(), AnimController.animate(Owner.getModel())));
                 }
             }
             else
@@ -1513,7 +1517,7 @@ public class CustomMovementHandler
                 }
                 if (Owner.getModel() != null)
                 {
-                    Model.setModel(CopyModel(Owner.getModel()));
+                    Model.setModel(CopyModel(Model.getModel(), Owner.getModel()));
                 }
             }
 
