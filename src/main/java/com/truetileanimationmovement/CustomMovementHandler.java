@@ -816,7 +816,6 @@ public class CustomMovementHandler
 
     private HashMap<Integer, Integer> ModelTypeToTestModelMap = new HashMap<>();
     private HashMap<Integer, Integer> ModelTypeToTestDiameterMap = new HashMap<>();
-    private HashMap<Integer, Integer> ModelTypeToTestRadiusMap = new HashMap<>();
 
     private Integer GetModelTypeKey(Model TestModel)
     {
@@ -843,25 +842,6 @@ public class CustomMovementHandler
                 | (bProperty7 ? 64 : 0)
                 | (bProperty8 ? 128 : 0);
     }
-    private int getRadius(ModelData model)
-    {
-        float[] x = model.getVerticesX();
-        float[] z = model.getVerticesZ();
-
-        double maxDistanceSquared = 0;
-
-        for (int i = 0; i < x.length; i++)
-        {
-            double distanceSquared =
-                    (double) x[i] * x[i] +
-                            (double) z[i] * z[i];
-
-            maxDistanceSquared = Math.max(maxDistanceSquared, distanceSquared);
-        }
-
-        return (int) Math.ceil(Math.sqrt(maxDistanceSquared));
-    }
-
     private int getDiameter(ModelData model)
     {
         float[] x = model.getVerticesX();
@@ -891,12 +871,10 @@ public class CustomMovementHandler
     {
         ModelTypeToTestModelMap.remove(UniqueModelKey);
         ModelTypeToTestDiameterMap.remove(UniqueModelKey);
-        ModelTypeToTestRadiusMap.remove(UniqueModelKey);
 
 
         // Find a match
         int FoundModel = 0;
-        int CachedRadius = 0;
         int CachedDiameter = 0;
         for (int i = 0; i < 10000; ++i)
         {
@@ -912,14 +890,9 @@ public class CustomMovementHandler
                     int NewTestModelDiameter = getDiameter(modelData);
                     if (NewModelDiameter < NewTestModelDiameter)
                     {
-                        int NewModelRadius = NewModel.getRadius();
-                        int NewTestModelRadius = getRadius(modelData);
-                        if (NewModelRadius < NewTestModelRadius)
-                        {
-                            CachedDiameter = NewTestModelDiameter;
-                            CachedRadius = NewTestModelRadius;
-                            FoundModel = i;
-                        }
+                        CachedDiameter = NewTestModelDiameter;
+                        FoundModel = i;
+                        break;
                     }
                 }
             }
@@ -928,19 +901,21 @@ public class CustomMovementHandler
         bNewTestModelSetRecently = true;
         ModelTypeToTestModelMap.put(UniqueModelKey, FoundModel);
         ModelTypeToTestDiameterMap.put(UniqueModelKey, CachedDiameter);
-        ModelTypeToTestRadiusMap.put(UniqueModelKey, CachedRadius);
     }
 
     private Integer GetTestModelIndex(Model NewModel)
     {
+        if (NewModel == null)
+        {
+            return 0;
+        }
+
         Integer UniqueModelKey = GetModelTypeKey(NewModel);
 
         int NewModelDiameter = NewModel.getDiameter();
-        int NewModelRadius = NewModel.getRadius();
 
         if (!ModelTypeToTestModelMap.containsKey(UniqueModelKey) ||
-                ModelTypeToTestDiameterMap.get(UniqueModelKey) < NewModelDiameter ||
-                ModelTypeToTestRadiusMap.get(UniqueModelKey) < NewModelRadius
+                ModelTypeToTestDiameterMap.get(UniqueModelKey) < NewModelDiameter
             )
         {
             SetNewTestModel(UniqueModelKey, NewModel);
@@ -955,10 +930,9 @@ public class CustomMovementHandler
         int OldFaceCount = OldModel.getFaceCount();
 
         boolean bModelIndexMismatch = !GetModelTypeKey(CurrentModel).equals(GetModelTypeKey(OldModel));
+        int ModelIndex = GetTestModelIndex(OldModel);
         if (bNewTestModelSetRecently || CurrentModel == null || bModelIndexMismatch || (CurrentModel.getVerticesCount() < OldVertexCount || CurrentModel.getFaceCount() < OldFaceCount))
         {
-            int ModelIndex = GetTestModelIndex(OldModel);
-
             ModelData modelData = client.loadModelData(ModelIndex);
             ModelData merged = client.mergeModels(modelData);
 
@@ -1007,8 +981,8 @@ public class CustomMovementHandler
         System.arraycopy(OldModel.getFaceIndices2(), 0, CurrentModel.getFaceIndices2(), 0, OldFaceCount);
         System.arraycopy(OldModel.getFaceIndices3(), 0, CurrentModel.getFaceIndices3(), 0, OldFaceCount);
         Arrays.fill(CurrentModel.getFaceIndices1(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices1()[0]);
-        Arrays.fill(CurrentModel.getFaceIndices2(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices2()[0]);
-        Arrays.fill(CurrentModel.getFaceIndices3(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices3()[0]);
+        Arrays.fill(CurrentModel.getFaceIndices2(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices1()[0]);
+        Arrays.fill(CurrentModel.getFaceIndices3(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices1()[0]);
 
         System.arraycopy(OldModel.getFaceColors1(), 0, CurrentModel.getFaceColors1(), 0, OldFaceCount);
         System.arraycopy(OldModel.getFaceColors2(), 0, CurrentModel.getFaceColors2(), 0, OldFaceCount);
@@ -1016,6 +990,12 @@ public class CustomMovementHandler
         Arrays.fill(CurrentModel.getFaceColors1(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceColors1()[0]);
         Arrays.fill(CurrentModel.getFaceColors2(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceColors2()[0]);
         Arrays.fill(CurrentModel.getFaceColors3(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceColors3()[0]);
+
+        //System.arraycopy(OldModel.getFaceRenderPriorities(), 0, CurrentModel.getFaceRenderPriorities(), 0, OldModel.getFaceRenderPriorities().length);
+        //Arrays.fill(CurrentModel.getFaceRenderPriorities(), OldModel.getFaceRenderPriorities().length, CurrentModel.getFaceRenderPriorities().length, OldModel.getFaceRenderPriorities()[0]);
+
+        //System.arraycopy(OldModel.getFaceBias(), 0, CurrentModel.getFaceBias(), 0, OldModel.getFaceBias().length);
+        //Arrays.fill(CurrentModel.getFaceBias(), OldModel.getFaceBias().length, CurrentModel.getFaceBias().length, OldModel.getFaceBias()[0]);
 
         if (OldModel.getFaceTransparencies() != null && CurrentModel.getFaceTransparencies() != null)
         {
@@ -1663,7 +1643,17 @@ public class CustomMovementHandler
 
                 if (Owner.getModel() != null)
                 {
-                    Model.setModel(CopyModel(Model.getModel(), AnimController.animate(Owner.getModel())));
+                    // Can't animate and replace the model in the same frame, this can cause an assert
+                    Model OldModel = Model.getModel();
+                    Model NewModel = UpdateOldModelIfStale(Model.getModel(), Owner.getModel());
+                    if (OldModel != NewModel)
+                    {
+                        Model.setModel(CopyModel(Model.getModel(), Owner.getModel()));
+                    }
+                    else
+                    {
+                        Model.setModel(CopyModel(Model.getModel(), AnimController.animate(Owner.getModel())));
+                    }
                 }
             }
             else
