@@ -1645,14 +1645,14 @@ public class CustomMovementHandler
                 {
                     // Can't animate and replace the model in the same frame, this can cause an assert
                     Model OldModel = Model.getModel();
-                    Model NewModel = UpdateOldModelIfStale(Model.getModel(), Owner.getModel());
-                    if (OldModel != NewModel)
+                    Model AnimatedNewModel = UpdateOldModelIfStale(Model.getModel(), AnimController.animate(Owner.getModel()));
+                    if (OldModel != AnimatedNewModel)
                     {
                         Model.setModel(CopyModel(Model.getModel(), Owner.getModel()));
                     }
                     else
                     {
-                        Model.setModel(CopyModel(Model.getModel(), AnimController.animate(Owner.getModel())));
+                        Model.setModel(CopyModel(Model.getModel(), AnimatedNewModel));
                     }
                 }
             }
