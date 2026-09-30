@@ -813,6 +813,9 @@ public class CustomMovementHandler
 
     }
 
+    private int FoundTranslucency = -1;
+    private int FoundTexture = -1;
+    private int FoundTextureAndTranslucency = -1;
     // Hacky way to copy a model, mergeModel was recently changed, so it doesn't make a copy. This hacky solution works for now.
     private Model CopyModel(Model CurrentModel, Model OldModel)
     {
@@ -822,10 +825,57 @@ public class CustomMovementHandler
         boolean bNeedFaceTextures = (OldModel.getFaceTextures() != null);
         boolean bHasFaceTextures = CurrentModel != null && (CurrentModel.getFaceTextures() != null);
 
-        if (CurrentModel == null || (bNeedFaceTextures != bHasFaceTextures) || (CurrentModel.getVerticesCount() < OldVertexCount || CurrentModel.getFaceCount() < OldFaceCount))
+        boolean bNeedFaceTranslucency = (OldModel.getFaceTransparencies() != null) ;
+        boolean bHasFaceTranslucency = CurrentModel != null && (CurrentModel.getFaceTransparencies() != null);
+
+        if (CurrentModel == null || (bNeedFaceTextures != bHasFaceTextures) || (bNeedFaceTranslucency != bHasFaceTranslucency) || (CurrentModel.getVerticesCount() < OldVertexCount || CurrentModel.getFaceCount() < OldFaceCount))
         {
             // Use unrelated model till we have enough verts (and transparency)
-            ModelData modelData = client.loadModelData(bNeedFaceTextures ? 148 : 20740);
+            int ModelIndex = 20740; // Base
+
+            // Cache model types
+            if (FoundTranslucency == -1)
+            {
+                for (int i = 0; i < 10000; ++i)
+                {
+                    ModelData modelData = client.loadModelData(i);
+
+                    if (modelData != null)
+                    {
+                        if (modelData.getFaceTextures() != null && modelData.getFaceTransparencies() == null)
+                        {
+                            FoundTexture = i;
+                        }
+
+                        if (modelData.getFaceTextures() == null && modelData.getFaceTransparencies() != null)
+                        {
+                            FoundTranslucency = i;
+                        }
+
+                        if (modelData.getFaceTextures() != null && modelData.getFaceTransparencies() != null)
+                        {
+                            FoundTextureAndTranslucency = i;
+                        }
+                    }
+                }
+            }
+
+            // Translucency + Texture
+            if (bNeedFaceTextures && bNeedFaceTranslucency)
+            {
+                ModelIndex = FoundTextureAndTranslucency;
+            }
+            else if (bNeedFaceTranslucency)
+            {
+                ModelIndex = FoundTranslucency;
+            }
+            else if (bNeedFaceTextures)
+            {
+                ModelIndex = FoundTexture;
+            }
+
+
+            ModelData modelData = client.loadModelData(ModelIndex);
             ModelData merged = client.mergeModels(modelData);
 
 
@@ -861,8 +911,8 @@ public class CustomMovementHandler
         System.arraycopy(OldModel.getFaceIndices2(), 0, CurrentModel.getFaceIndices2(), 0, OldFaceCount);
         System.arraycopy(OldModel.getFaceIndices3(), 0, CurrentModel.getFaceIndices3(), 0, OldFaceCount);
         Arrays.fill(CurrentModel.getFaceIndices1(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices1()[0]);
-        Arrays.fill(CurrentModel.getFaceIndices2(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices1()[0]);
-        Arrays.fill(CurrentModel.getFaceIndices3(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices1()[0]);
+        Arrays.fill(CurrentModel.getFaceIndices2(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices2()[0]);
+        Arrays.fill(CurrentModel.getFaceIndices3(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices3()[0]);
 
         System.arraycopy(OldModel.getFaceColors1(), 0, CurrentModel.getFaceColors1(), 0, OldFaceCount);
         System.arraycopy(OldModel.getFaceColors2(), 0, CurrentModel.getFaceColors2(), 0, OldFaceCount);
