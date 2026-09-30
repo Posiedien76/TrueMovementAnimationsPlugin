@@ -822,7 +822,7 @@ public class CustomMovementHandler
         if (CurrentModel == null || (CurrentModel.getVerticesCount() < OldVertexCount && CurrentModel.getFaceCount() < OldFaceCount))
         {
             // Use unrelated model till we have enough verts
-            ModelData modelData = client.loadModelData(61902);
+            ModelData modelData = client.loadModelData(20740);
             ModelData merged = client.mergeModels(modelData);
 
 
@@ -867,6 +867,24 @@ public class CustomMovementHandler
         Arrays.fill(CurrentModel.getFaceColors1(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getFaceColors1()[0]);
         Arrays.fill(CurrentModel.getFaceColors2(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getFaceColors2()[0]);
         Arrays.fill(CurrentModel.getFaceColors3(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getFaceColors3()[0]);
+
+        if (OldModel.getTexIndices1() != null)
+        {
+            System.arraycopy(OldModel.getTexIndices1(), 0, CurrentModel.getTexIndices1(), 0, OldModel.getFaceCount());
+            Arrays.fill(CurrentModel.getTexIndices1(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getTexIndices1()[0]);
+        }
+
+        if (OldModel.getTexIndices2() != null)
+        {
+            System.arraycopy(OldModel.getTexIndices2(), 0, CurrentModel.getTexIndices2(), 0, OldModel.getFaceCount());
+            Arrays.fill(CurrentModel.getTexIndices2(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getTexIndices2()[0]);
+        }
+
+        if (OldModel.getTexIndices3() != null)
+        {
+            System.arraycopy(OldModel.getTexIndices3(), 0, CurrentModel.getTexIndices3(), 0, OldModel.getFaceCount());
+            Arrays.fill(CurrentModel.getTexIndices3(), OldModel.getFaceCount(), CurrentModel.getFaceCount(), OldModel.getTexIndices3()[0]);
+        }
 
         return CurrentModel;
     }
