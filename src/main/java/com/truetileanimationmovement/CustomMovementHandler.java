@@ -819,10 +819,13 @@ public class CustomMovementHandler
         int OldVertexCount = OldModel.getVerticesCount();
         int OldFaceCount = OldModel.getFaceCount();
 
-        if (CurrentModel == null || (CurrentModel.getVerticesCount() < OldVertexCount || CurrentModel.getFaceCount() < OldFaceCount))
+        boolean bNeedFaceTextures = (OldModel.getFaceTextures() != null);
+        boolean bHasFaceTextures = CurrentModel != null && (CurrentModel.getFaceTextures() != null);
+
+        if (CurrentModel == null || (bNeedFaceTextures != bHasFaceTextures) || (CurrentModel.getVerticesCount() < OldVertexCount || CurrentModel.getFaceCount() < OldFaceCount))
         {
             // Use unrelated model till we have enough verts (and transparency)
-            ModelData modelData = client.loadModelData(148);
+            ModelData modelData = client.loadModelData(bNeedFaceTextures ? 148 : 20740);
             ModelData merged = client.mergeModels(modelData);
 
 
@@ -858,8 +861,8 @@ public class CustomMovementHandler
         System.arraycopy(OldModel.getFaceIndices2(), 0, CurrentModel.getFaceIndices2(), 0, OldFaceCount);
         System.arraycopy(OldModel.getFaceIndices3(), 0, CurrentModel.getFaceIndices3(), 0, OldFaceCount);
         Arrays.fill(CurrentModel.getFaceIndices1(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices1()[0]);
-        Arrays.fill(CurrentModel.getFaceIndices2(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices2()[0]);
-        Arrays.fill(CurrentModel.getFaceIndices3(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices3()[0]);
+        Arrays.fill(CurrentModel.getFaceIndices2(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices1()[0]);
+        Arrays.fill(CurrentModel.getFaceIndices3(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices1()[0]);
 
         System.arraycopy(OldModel.getFaceColors1(), 0, CurrentModel.getFaceColors1(), 0, OldFaceCount);
         System.arraycopy(OldModel.getFaceColors2(), 0, CurrentModel.getFaceColors2(), 0, OldFaceCount);
@@ -878,24 +881,6 @@ public class CustomMovementHandler
         {
             System.arraycopy(OldModel.getFaceTextures(), 0, CurrentModel.getFaceTextures(), 0, OldModel.getFaceTextures().length);
             Arrays.fill(CurrentModel.getFaceTextures(), OldModel.getFaceTextures().length, CurrentModel.getFaceTextures().length, OldModel.getFaceTextures()[0]);
-        }
-
-        if (OldModel.getVertexNormalsX() != null && CurrentModel.getVertexNormalsX() != null)
-        {
-            System.arraycopy(OldModel.getVertexNormalsX(), 0, CurrentModel.getVertexNormalsX(), 0, OldVertexCount);
-            Arrays.fill(CurrentModel.getVertexNormalsX(), OldVertexCount, CurrentModel.getVertexNormalsX().length, OldModel.getVertexNormalsX()[0]);
-        }
-
-        if (OldModel.getVertexNormalsY() != null && CurrentModel.getVertexNormalsY() != null)
-        {
-            System.arraycopy(OldModel.getVertexNormalsY(), 0, CurrentModel.getVertexNormalsY(), 0, OldVertexCount);
-            Arrays.fill(CurrentModel.getVertexNormalsY(), OldVertexCount, CurrentModel.getVertexNormalsY().length, OldModel.getVertexNormalsY()[0]);
-        }
-
-        if (OldModel.getVertexNormalsZ() != null && CurrentModel.getVertexNormalsZ() != null)
-        {
-            System.arraycopy(OldModel.getVertexNormalsZ(), 0, CurrentModel.getVertexNormalsZ(), 0, OldVertexCount);
-            Arrays.fill(CurrentModel.getVertexNormalsZ(), OldVertexCount, CurrentModel.getVertexNormalsZ().length, OldModel.getVertexNormalsZ()[0]);
         }
 
         if (OldModel.getTexIndices1() != null && CurrentModel.getTexIndices1() != null)
