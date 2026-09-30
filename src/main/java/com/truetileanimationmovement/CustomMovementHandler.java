@@ -815,6 +815,8 @@ public class CustomMovementHandler
     }
 
     private HashMap<Integer, Integer> ModelTypeToTestModelMap = new HashMap<>();
+    private HashMap<Integer, Integer> ModelTypeToTestDiameterMap = new HashMap<>();
+    private HashMap<Integer, Integer> ModelTypeToTestRadiusMap = new HashMap<>();
 
     private Integer GetModelTypeKey(Model TestModel)
     {
@@ -841,29 +843,107 @@ public class CustomMovementHandler
                 | (bProperty7 ? 64 : 0)
                 | (bProperty8 ? 128 : 0);
     }
+    private int getRadius(ModelData model)
+    {
+        float[] x = model.getVerticesX();
+        float[] z = model.getVerticesZ();
+
+        double maxDistanceSquared = 0;
+
+        for (int i = 0; i < x.length; i++)
+        {
+            double distanceSquared =
+                    (double) x[i] * x[i] +
+                            (double) z[i] * z[i];
+
+            maxDistanceSquared = Math.max(maxDistanceSquared, distanceSquared);
+        }
+
+        return (int) Math.ceil(Math.sqrt(maxDistanceSquared));
+    }
+
+    private int getDiameter(ModelData model)
+    {
+        float[] x = model.getVerticesX();
+        float[] z = model.getVerticesZ();
+
+        float minX = Float.MAX_VALUE;
+        float maxX = -Float.MAX_VALUE;
+        float minZ = Float.MAX_VALUE;
+        float maxZ = -Float.MAX_VALUE;
+
+        for (int i = 0; i < x.length; i++)
+        {
+            minX = Math.min(minX, x[i]);
+            maxX = Math.max(maxX, x[i]);
+            minZ = Math.min(minZ, z[i]);
+            maxZ = Math.max(maxZ, z[i]);
+        }
+
+        double width = maxX - minX;
+        double depth = maxZ - minZ;
+
+        return (int) Math.ceil(Math.sqrt(width * width + depth * depth));
+    }
+
+    private boolean bNewTestModelSetRecently = false;
+    private void SetNewTestModel(Integer UniqueModelKey, Model NewModel)
+    {
+        ModelTypeToTestModelMap.remove(UniqueModelKey);
+        ModelTypeToTestDiameterMap.remove(UniqueModelKey);
+        ModelTypeToTestRadiusMap.remove(UniqueModelKey);
+
+
+        // Find a match
+        int FoundModel = 0;
+        int CachedRadius = 0;
+        int CachedDiameter = 0;
+        for (int i = 0; i < 10000; ++i)
+        {
+            ModelData modelData = client.loadModelData(i);
+
+            if (modelData != null &&
+                    modelData.getVerticesCount() > 100)
+            {
+                // Make sure bounds make sense and the key matches
+                if (GetModelTypeKey(modelData.light()).equals(UniqueModelKey))
+                {
+                    int NewModelDiameter = NewModel.getDiameter();
+                    int NewTestModelDiameter = getDiameter(modelData);
+                    if (NewModelDiameter < NewTestModelDiameter)
+                    {
+                        int NewModelRadius = NewModel.getRadius();
+                        int NewTestModelRadius = getRadius(modelData);
+                        if (NewModelRadius < NewTestModelRadius)
+                        {
+                            CachedDiameter = NewTestModelDiameter;
+                            CachedRadius = NewTestModelRadius;
+                            FoundModel = i;
+                        }
+                    }
+                }
+            }
+        }
+
+        bNewTestModelSetRecently = true;
+        ModelTypeToTestModelMap.put(UniqueModelKey, FoundModel);
+        ModelTypeToTestDiameterMap.put(UniqueModelKey, CachedDiameter);
+        ModelTypeToTestRadiusMap.put(UniqueModelKey, CachedRadius);
+    }
 
     private Integer GetTestModelIndex(Model NewModel)
     {
         Integer UniqueModelKey = GetModelTypeKey(NewModel);
 
-        if (!ModelTypeToTestModelMap.containsKey(UniqueModelKey))
+        int NewModelDiameter = NewModel.getDiameter();
+        int NewModelRadius = NewModel.getRadius();
+
+        if (!ModelTypeToTestModelMap.containsKey(UniqueModelKey) ||
+                ModelTypeToTestDiameterMap.get(UniqueModelKey) < NewModelDiameter ||
+                ModelTypeToTestRadiusMap.get(UniqueModelKey) < NewModelRadius
+            )
         {
-            // Find a match
-            int FoundModel = 0;
-            for (int i = 0; i < 10000; ++i)
-            {
-                ModelData modelData = client.loadModelData(i);
-
-                if (modelData != null && modelData.getVerticesCount() > 100)
-                {
-                    if (GetModelTypeKey(modelData.light()).equals(UniqueModelKey))
-                    {
-                        FoundModel = i;
-                    }
-                }
-            }
-
-            ModelTypeToTestModelMap.put(UniqueModelKey, FoundModel);
+            SetNewTestModel(UniqueModelKey, NewModel);
         }
 
         return ModelTypeToTestModelMap.get(UniqueModelKey);
@@ -875,7 +955,7 @@ public class CustomMovementHandler
         int OldFaceCount = OldModel.getFaceCount();
 
         boolean bModelIndexMismatch = !GetModelTypeKey(CurrentModel).equals(GetModelTypeKey(OldModel));
-        if (CurrentModel == null || bModelIndexMismatch || (CurrentModel.getVerticesCount() < OldVertexCount || CurrentModel.getFaceCount() < OldFaceCount))
+        if (bNewTestModelSetRecently || CurrentModel == null || bModelIndexMismatch || (CurrentModel.getVerticesCount() < OldVertexCount || CurrentModel.getFaceCount() < OldFaceCount))
         {
             int ModelIndex = GetTestModelIndex(OldModel);
 
@@ -901,6 +981,7 @@ public class CustomMovementHandler
                 }
             }
             CurrentModel = merged.light();
+            bNewTestModelSetRecently = false;
         }
 
         return CurrentModel;
