@@ -9,6 +9,7 @@ import net.runelite.client.config.ConfigItem;
 
 import javax.inject.Inject;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -813,67 +814,70 @@ public class CustomMovementHandler
 
     }
 
-    private int FoundTranslucency = -1;
-    private int FoundTexture = -1;
-    private int FoundTextureAndTranslucency = -1;
-    // Hacky way to copy a model, mergeModel was recently changed, so it doesn't make a copy. This hacky solution works for now.
-    private Model CopyModel(Model CurrentModel, Model OldModel)
+    private HashMap<Integer, Integer> ModelTypeToTestModelMap = new HashMap<>();
+
+    private Integer GetModelTypeKey(Model TestModel)
     {
-        int OldVertexCount = OldModel.getVerticesCount();
-        int OldFaceCount = OldModel.getFaceCount();
-
-        boolean bNeedFaceTextures = (OldModel.getFaceTextures() != null);
-        boolean bHasFaceTextures = CurrentModel != null && (CurrentModel.getFaceTextures() != null);
-
-        boolean bNeedFaceTranslucency = (OldModel.getFaceTransparencies() != null) ;
-        boolean bHasFaceTranslucency = CurrentModel != null && (CurrentModel.getFaceTransparencies() != null);
-
-        if (CurrentModel == null || (bNeedFaceTextures != bHasFaceTextures) || (bNeedFaceTranslucency != bHasFaceTranslucency) || (CurrentModel.getVerticesCount() < OldVertexCount || CurrentModel.getFaceCount() < OldFaceCount))
+        if (TestModel == null)
         {
-            // Use unrelated model till we have enough verts (and transparency)
-            int ModelIndex = 20740; // Base
+            return 0;
+        }
 
-            // Cache model types
-            if (FoundTranslucency == -1)
+        boolean bProperty1 = (TestModel.getFaceTextures() != null);
+        boolean bProperty2 = (TestModel.getFaceTransparencies() != null);
+        boolean bProperty3 = (TestModel.getFaceColors1() != null);
+        boolean bProperty4 = (TestModel.getFaceColors2() != null);
+        boolean bProperty5 = (TestModel.getFaceColors3() != null);
+        boolean bProperty6 = (TestModel.getTexIndices1() != null);
+        boolean bProperty7 = (TestModel.getTexIndices2() != null);
+        boolean bProperty8 = (TestModel.getTexIndices3() != null);
+
+        return (bProperty1 ? 1 : 0)
+                | (bProperty2 ? 2 : 0)
+                | (bProperty3 ? 4 : 0)
+                | (bProperty4 ? 8 : 0)
+                | (bProperty5 ? 16 : 0)
+                | (bProperty6 ? 32 : 0)
+                | (bProperty7 ? 64 : 0)
+                | (bProperty8 ? 128 : 0);
+    }
+
+    private Integer GetTestModelIndex(Model NewModel)
+    {
+        Integer UniqueModelKey = GetModelTypeKey(NewModel);
+
+        if (!ModelTypeToTestModelMap.containsKey(UniqueModelKey))
+        {
+            // Find a match
+            int FoundModel = 0;
+            for (int i = 0; i < 10000; ++i)
             {
-                for (int i = 0; i < 10000; ++i)
+                ModelData modelData = client.loadModelData(i);
+
+                if (modelData != null && modelData.getVerticesCount() > 100)
                 {
-                    ModelData modelData = client.loadModelData(i);
-
-                    if (modelData != null)
+                    if (GetModelTypeKey(modelData.light()).equals(UniqueModelKey))
                     {
-                        if (modelData.getFaceTextures() != null && modelData.getFaceTransparencies() == null)
-                        {
-                            FoundTexture = i;
-                        }
-
-                        if (modelData.getFaceTextures() == null && modelData.getFaceTransparencies() != null)
-                        {
-                            FoundTranslucency = i;
-                        }
-
-                        if (modelData.getFaceTextures() != null && modelData.getFaceTransparencies() != null)
-                        {
-                            FoundTextureAndTranslucency = i;
-                        }
+                        FoundModel = i;
                     }
                 }
             }
 
-            // Translucency + Texture
-            if (bNeedFaceTextures && bNeedFaceTranslucency)
-            {
-                ModelIndex = FoundTextureAndTranslucency;
-            }
-            else if (bNeedFaceTranslucency)
-            {
-                ModelIndex = FoundTranslucency;
-            }
-            else if (bNeedFaceTextures)
-            {
-                ModelIndex = FoundTexture;
-            }
+            ModelTypeToTestModelMap.put(UniqueModelKey, FoundModel);
+        }
 
+        return ModelTypeToTestModelMap.get(UniqueModelKey);
+    }
+
+    private Model UpdateOldModelIfStale(Model CurrentModel, Model OldModel)
+    {
+        int OldVertexCount = OldModel.getVerticesCount();
+        int OldFaceCount = OldModel.getFaceCount();
+
+        boolean bModelIndexMismatch = !GetModelTypeKey(CurrentModel).equals(GetModelTypeKey(OldModel));
+        if (CurrentModel == null || bModelIndexMismatch || (CurrentModel.getVerticesCount() < OldVertexCount || CurrentModel.getFaceCount() < OldFaceCount))
+        {
+            int ModelIndex = GetTestModelIndex(OldModel);
 
             ModelData modelData = client.loadModelData(ModelIndex);
             ModelData merged = client.mergeModels(modelData);
@@ -891,13 +895,24 @@ public class CustomMovementHandler
                 ++i;
 
                 // in case something goes wrong
-                if (i > 100)
+                if (i > 1000)
                 {
                     break;
                 }
             }
             CurrentModel = merged.light();
         }
+
+        return CurrentModel;
+    }
+
+    // Hacky way to copy a model, mergeModel was recently changed, so it doesn't make a copy. This hacky solution works for now.
+    private Model CopyModel(Model CurrentModel, Model OldModel)
+    {
+        int OldVertexCount = OldModel.getVerticesCount();
+        int OldFaceCount = OldModel.getFaceCount();
+
+        CurrentModel = UpdateOldModelIfStale(CurrentModel, OldModel);
 
         // apply player model to donor
         System.arraycopy(OldModel.getVerticesX(), 0, CurrentModel.getVerticesX(), 0, OldVertexCount);
