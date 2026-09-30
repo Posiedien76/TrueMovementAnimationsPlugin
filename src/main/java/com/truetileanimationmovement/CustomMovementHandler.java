@@ -815,7 +815,6 @@ public class CustomMovementHandler
     }
 
     private HashMap<Integer, Integer> ModelTypeToTestModelMap = new HashMap<>();
-    private HashMap<Integer, Integer> ModelTypeToTestDiameterMap = new HashMap<>();
 
     private Integer GetModelTypeKey(Model TestModel)
     {
@@ -870,7 +869,6 @@ public class CustomMovementHandler
     private void SetNewTestModel(Integer UniqueModelKey, Model NewModel)
     {
         ModelTypeToTestModelMap.remove(UniqueModelKey);
-        ModelTypeToTestDiameterMap.remove(UniqueModelKey);
 
 
         // Find a match
@@ -886,13 +884,12 @@ public class CustomMovementHandler
                 // Make sure bounds make sense and the key matches
                 if (GetModelTypeKey(modelData.light()).equals(UniqueModelKey))
                 {
-                    int NewModelDiameter = NewModel.getDiameter();
+                    // Get the largest diameter possible
                     int NewTestModelDiameter = getDiameter(modelData);
-                    if (NewModelDiameter < NewTestModelDiameter)
+                    if (CachedDiameter < NewTestModelDiameter)
                     {
                         CachedDiameter = NewTestModelDiameter;
                         FoundModel = i;
-                        break;
                     }
                 }
             }
@@ -900,7 +897,6 @@ public class CustomMovementHandler
 
         bNewTestModelSetRecently = true;
         ModelTypeToTestModelMap.put(UniqueModelKey, FoundModel);
-        ModelTypeToTestDiameterMap.put(UniqueModelKey, CachedDiameter);
     }
 
     private Integer GetTestModelIndex(Model NewModel)
@@ -912,11 +908,7 @@ public class CustomMovementHandler
 
         Integer UniqueModelKey = GetModelTypeKey(NewModel);
 
-        int NewModelDiameter = NewModel.getDiameter();
-
-        if (!ModelTypeToTestModelMap.containsKey(UniqueModelKey) ||
-                ModelTypeToTestDiameterMap.get(UniqueModelKey) < NewModelDiameter
-            )
+        if (!ModelTypeToTestModelMap.containsKey(UniqueModelKey))
         {
             SetNewTestModel(UniqueModelKey, NewModel);
         }
@@ -926,26 +918,37 @@ public class CustomMovementHandler
 
     private Model UpdateOldModelIfStale(Model CurrentModel, Model OldModel)
     {
-        int OldVertexCount = OldModel.getVerticesCount();
-        int OldFaceCount = OldModel.getFaceCount();
+        int OldVertexCount = OldModel.getVerticesX().length;
+        int OldFaceCount = OldModel.getFaceIndices1().length;
+        int OldTransparencyCount = OldModel.getFaceTransparencies() != null ? OldModel.getFaceTransparencies().length : 0;
+        int NewTransparencyCount = CurrentModel != null ? (CurrentModel.getFaceTransparencies() != null ? CurrentModel.getFaceTransparencies().length : 0) : 0;
 
         boolean bModelIndexMismatch = !GetModelTypeKey(CurrentModel).equals(GetModelTypeKey(OldModel));
         int ModelIndex = GetTestModelIndex(OldModel);
-        if (bNewTestModelSetRecently || CurrentModel == null || bModelIndexMismatch || (CurrentModel.getVerticesCount() < OldVertexCount || CurrentModel.getFaceCount() < OldFaceCount))
+        if (bNewTestModelSetRecently ||
+                CurrentModel == null ||
+                bModelIndexMismatch ||
+                CurrentModel.getVerticesX().length < OldVertexCount ||
+                CurrentModel.getFaceIndices1().length < OldFaceCount ||
+                NewTransparencyCount < OldTransparencyCount)
         {
             ModelData modelData = client.loadModelData(ModelIndex);
             ModelData merged = client.mergeModels(modelData);
 
 
-            int CurrentVertexCount = merged.getVerticesCount();
-            int CurrentTriangleCount = merged.getFaceCount();
+            int CurrentVertexCount = merged.getVerticesX().length;
+            int CurrentTriangleCount = merged.getFaceIndices1().length;
+            int CurrentTransparencyCount = merged.getFaceTransparencies() != null ? merged.getFaceTransparencies().length : 0;
             int i = 0;
-            while(CurrentVertexCount < OldVertexCount || CurrentTriangleCount < OldFaceCount)
+            while(CurrentVertexCount < OldVertexCount ||
+                    CurrentTriangleCount < OldFaceCount ||
+                    CurrentTransparencyCount < OldTransparencyCount)
             {
                 ModelData modelCopy = client.mergeModels(modelData);
                 merged = client.mergeModels(merged, modelCopy.translate(i, 0, 0));
-                CurrentVertexCount = merged.getVerticesCount();
-                CurrentTriangleCount = merged.getFaceCount();
+                CurrentVertexCount = merged.getVerticesX().length;
+                CurrentTriangleCount = merged.getFaceIndices1().length;
+                CurrentTransparencyCount = merged.getFaceTransparencies() != null ? merged.getFaceTransparencies().length : 0;
                 ++i;
 
                 // in case something goes wrong
@@ -964,32 +967,29 @@ public class CustomMovementHandler
     // Hacky way to copy a model, mergeModel was recently changed, so it doesn't make a copy. This hacky solution works for now.
     private Model CopyModel(Model CurrentModel, Model OldModel)
     {
-        int OldVertexCount = OldModel.getVerticesCount();
-        int OldFaceCount = OldModel.getFaceCount();
-
         CurrentModel = UpdateOldModelIfStale(CurrentModel, OldModel);
 
         // apply player model to donor
-        System.arraycopy(OldModel.getVerticesX(), 0, CurrentModel.getVerticesX(), 0, OldVertexCount);
-        System.arraycopy(OldModel.getVerticesY(), 0, CurrentModel.getVerticesY(), 0, OldVertexCount);
-        System.arraycopy(OldModel.getVerticesZ(), 0, CurrentModel.getVerticesZ(), 0, OldVertexCount);
-        Arrays.fill(CurrentModel.getVerticesX(), OldVertexCount, CurrentModel.getVerticesCount(), OldModel.getVerticesX()[0]);
-        Arrays.fill(CurrentModel.getVerticesY(), OldVertexCount, CurrentModel.getVerticesCount(), OldModel.getVerticesY()[0]);
-        Arrays.fill(CurrentModel.getVerticesZ(), OldVertexCount, CurrentModel.getVerticesCount(), OldModel.getVerticesZ()[0]);
+        System.arraycopy(OldModel.getVerticesX(), 0, CurrentModel.getVerticesX(), 0, OldModel.getVerticesX().length);
+        System.arraycopy(OldModel.getVerticesY(), 0, CurrentModel.getVerticesY(), 0, OldModel.getVerticesY().length);
+        System.arraycopy(OldModel.getVerticesZ(), 0, CurrentModel.getVerticesZ(), 0, OldModel.getVerticesZ().length);
+        //Arrays.fill(CurrentModel.getVerticesX(), OldModel.getVerticesX().length, CurrentModel.getVerticesX().length, OldModel.getVerticesX()[0]);
+        //Arrays.fill(CurrentModel.getVerticesY(), OldModel.getVerticesY().length, CurrentModel.getVerticesY().length, OldModel.getVerticesY()[0]);
+        //Arrays.fill(CurrentModel.getVerticesZ(), OldModel.getVerticesZ().length, CurrentModel.getVerticesZ().length, OldModel.getVerticesZ()[0]);
 
-        System.arraycopy(OldModel.getFaceIndices1(), 0, CurrentModel.getFaceIndices1(), 0, OldFaceCount);
-        System.arraycopy(OldModel.getFaceIndices2(), 0, CurrentModel.getFaceIndices2(), 0, OldFaceCount);
-        System.arraycopy(OldModel.getFaceIndices3(), 0, CurrentModel.getFaceIndices3(), 0, OldFaceCount);
-        Arrays.fill(CurrentModel.getFaceIndices1(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices1()[0]);
-        Arrays.fill(CurrentModel.getFaceIndices2(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices1()[0]);
-        Arrays.fill(CurrentModel.getFaceIndices3(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceIndices1()[0]);
+        System.arraycopy(OldModel.getFaceIndices1(), 0, CurrentModel.getFaceIndices1(), 0, OldModel.getFaceIndices1().length);
+        System.arraycopy(OldModel.getFaceIndices2(), 0, CurrentModel.getFaceIndices2(), 0, OldModel.getFaceIndices2().length);
+        System.arraycopy(OldModel.getFaceIndices3(), 0, CurrentModel.getFaceIndices3(), 0, OldModel.getFaceIndices3().length);
+        Arrays.fill(CurrentModel.getFaceIndices1(), OldModel.getFaceIndices1().length, CurrentModel.getFaceIndices1().length, OldModel.getFaceIndices1()[0]);
+        Arrays.fill(CurrentModel.getFaceIndices2(), OldModel.getFaceIndices2().length, CurrentModel.getFaceIndices2().length, OldModel.getFaceIndices1()[0]);
+        Arrays.fill(CurrentModel.getFaceIndices3(), OldModel.getFaceIndices3().length, CurrentModel.getFaceIndices3().length, OldModel.getFaceIndices1()[0]);
 
-        System.arraycopy(OldModel.getFaceColors1(), 0, CurrentModel.getFaceColors1(), 0, OldFaceCount);
-        System.arraycopy(OldModel.getFaceColors2(), 0, CurrentModel.getFaceColors2(), 0, OldFaceCount);
-        System.arraycopy(OldModel.getFaceColors3(), 0, CurrentModel.getFaceColors3(), 0, OldFaceCount);
-        Arrays.fill(CurrentModel.getFaceColors1(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceColors1()[0]);
-        Arrays.fill(CurrentModel.getFaceColors2(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceColors2()[0]);
-        Arrays.fill(CurrentModel.getFaceColors3(), OldFaceCount, CurrentModel.getFaceCount(), OldModel.getFaceColors3()[0]);
+        System.arraycopy(OldModel.getFaceColors1(), 0, CurrentModel.getFaceColors1(), 0, OldModel.getFaceColors1().length);
+        System.arraycopy(OldModel.getFaceColors2(), 0, CurrentModel.getFaceColors2(), 0, OldModel.getFaceColors2().length);
+        System.arraycopy(OldModel.getFaceColors3(), 0, CurrentModel.getFaceColors3(), 0, OldModel.getFaceColors3().length);
+        Arrays.fill(CurrentModel.getFaceColors1(), OldModel.getFaceColors1().length, CurrentModel.getFaceColors1().length, OldModel.getFaceColors1()[0]);
+        Arrays.fill(CurrentModel.getFaceColors2(), OldModel.getFaceColors2().length, CurrentModel.getFaceColors2().length, OldModel.getFaceColors2()[0]);
+        Arrays.fill(CurrentModel.getFaceColors3(), OldModel.getFaceColors3().length, CurrentModel.getFaceColors3().length, OldModel.getFaceColors3()[0]);
 
         //System.arraycopy(OldModel.getFaceRenderPriorities(), 0, CurrentModel.getFaceRenderPriorities(), 0, OldModel.getFaceRenderPriorities().length);
         //Arrays.fill(CurrentModel.getFaceRenderPriorities(), OldModel.getFaceRenderPriorities().length, CurrentModel.getFaceRenderPriorities().length, OldModel.getFaceRenderPriorities()[0]);
@@ -999,8 +999,8 @@ public class CustomMovementHandler
 
         if (OldModel.getFaceTransparencies() != null && CurrentModel.getFaceTransparencies() != null)
         {
-            System.arraycopy(OldModel.getFaceTransparencies(), 0, CurrentModel.getFaceTransparencies(), 0, OldFaceCount);
-            Arrays.fill(CurrentModel.getFaceTransparencies(), OldFaceCount, CurrentModel.getFaceTransparencies().length, OldModel.getFaceTransparencies()[0]);
+            System.arraycopy(OldModel.getFaceTransparencies(), 0, CurrentModel.getFaceTransparencies(), 0, OldModel.getFaceTransparencies().length);
+            Arrays.fill(CurrentModel.getFaceTransparencies(), OldModel.getFaceTransparencies().length, CurrentModel.getFaceTransparencies().length, OldModel.getFaceTransparencies()[0]);
         }
 
         if (OldModel.getFaceTextures() != null && CurrentModel.getFaceTextures() != null)
@@ -1643,18 +1643,7 @@ public class CustomMovementHandler
 
                 if (Owner.getModel() != null)
                 {
-                    // Can't animate and replace the model in the same frame, this can cause an assert
-                    Model OldModel = Model.getModel();
-                    Model AnimatedNewModel = AnimController.animate(Owner.getModel());
-                    Model NewModel = UpdateOldModelIfStale(Model.getModel(), AnimatedNewModel);
-                    if (OldModel != NewModel)
-                    {
-                        Model.setModel(CopyModel(Model.getModel(), Owner.getModel()));
-                    }
-                    else
-                    {
-                        Model.setModel(CopyModel(Model.getModel(), AnimatedNewModel));
-                    }
+                    Model.setModel(CopyModel(Model.getModel(), AnimController.animate(Owner.getModel())));
                 }
             }
             else
