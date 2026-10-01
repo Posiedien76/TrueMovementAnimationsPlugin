@@ -1007,6 +1007,13 @@ public class CustomMovementHandler
         Arrays.fill(CurrentModel.getVerticesY(), OldModel.getVerticesY().length, CurrentModel.getVerticesY().length, OldModel.getVerticesY()[0]);
         Arrays.fill(CurrentModel.getVerticesZ(), OldModel.getVerticesZ().length, CurrentModel.getVerticesZ().length, OldModel.getVerticesZ()[0]);
 
+        System.arraycopy(OldModel.getVertexNormalsX(), 0, CurrentModel.getVertexNormalsX(), 0, OldModel.getVertexNormalsX().length);
+        System.arraycopy(OldModel.getVertexNormalsY(), 0, CurrentModel.getVertexNormalsY(), 0, OldModel.getVertexNormalsY().length);
+        System.arraycopy(OldModel.getVertexNormalsZ(), 0, CurrentModel.getVertexNormalsZ(), 0, OldModel.getVertexNormalsZ().length);
+        Arrays.fill(CurrentModel.getVertexNormalsX(), OldModel.getVertexNormalsX().length, CurrentModel.getVertexNormalsX().length, OldModel.getVertexNormalsX()[0]);
+        Arrays.fill(CurrentModel.getVertexNormalsY(), OldModel.getVertexNormalsY().length, CurrentModel.getVertexNormalsY().length, OldModel.getVertexNormalsY()[0]);
+        Arrays.fill(CurrentModel.getVertexNormalsZ(), OldModel.getVertexNormalsZ().length, CurrentModel.getVertexNormalsZ().length, OldModel.getVertexNormalsZ()[0]);
+
         System.arraycopy(OldModel.getFaceIndices1(), 0, CurrentModel.getFaceIndices1(), 0, OldModel.getFaceIndices1().length);
         System.arraycopy(OldModel.getFaceIndices2(), 0, CurrentModel.getFaceIndices2(), 0, OldModel.getFaceIndices2().length);
         System.arraycopy(OldModel.getFaceIndices3(), 0, CurrentModel.getFaceIndices3(), 0, OldModel.getFaceIndices3().length);
