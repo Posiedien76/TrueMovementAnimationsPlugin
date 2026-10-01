@@ -815,6 +815,7 @@ public class CustomMovementHandler
     }
 
     private HashMap<Integer, Integer> ModelTypeToTestModelMap = new HashMap<>();
+    private HashMap<Integer, Model> ModelTypeToModelCache = new HashMap<>();
 
     private Integer GetModelTypeKey(Model TestModel)
     {
@@ -865,7 +866,26 @@ public class CustomMovementHandler
         return (int) Math.ceil(Math.sqrt(width * width + depth * depth));
     }
 
-    private boolean bNewTestModelSetRecently = false;
+    private void PopulateModelTypeToTestModelMapIfNeeded()
+    {
+        // Pre-populate with some known good entries
+        if (ModelTypeToTestModelMap.isEmpty())
+        {
+            ModelData modelData = client.loadModelData(522);
+            if (modelData != null && GetModelTypeKey(modelData.light()).equals(30))
+            {
+                ModelTypeToTestModelMap.put(30, 522);
+            }
+
+            ModelData modelData2 = client.loadModelData(4768);
+            if (modelData2 != null && GetModelTypeKey(modelData2.light()).equals(255))
+            {
+                ModelTypeToTestModelMap.put(255, 4768);
+            }
+        }
+
+    }
+
     private void SetNewTestModel(Integer UniqueModelKey, Model NewModel)
     {
         ModelTypeToTestModelMap.remove(UniqueModelKey);
@@ -895,7 +915,6 @@ public class CustomMovementHandler
             }
         }
 
-        bNewTestModelSetRecently = true;
         ModelTypeToTestModelMap.put(UniqueModelKey, FoundModel);
     }
 
@@ -918,23 +937,34 @@ public class CustomMovementHandler
 
     private Model UpdateOldModelIfStale(Model CurrentModel, Model OldModel)
     {
+        PopulateModelTypeToTestModelMapIfNeeded();
+
+        Integer OldModelKey = GetModelTypeKey(OldModel);
+        boolean bModelIndexMismatch = !GetModelTypeKey(CurrentModel).equals(OldModelKey);
+        if (bModelIndexMismatch && ModelTypeToModelCache.containsKey(OldModelKey))
+        {
+            CurrentModel = ModelTypeToModelCache.get(OldModelKey);
+            bModelIndexMismatch = false;
+        }
+
         int OldVertexCount = OldModel.getVerticesX().length;
         int OldFaceCount = OldModel.getFaceIndices1().length;
         int OldTransparencyCount = OldModel.getFaceTransparencies() != null ? OldModel.getFaceTransparencies().length : 0;
         int NewTransparencyCount = CurrentModel != null ? (CurrentModel.getFaceTransparencies() != null ? CurrentModel.getFaceTransparencies().length : 0) : 0;
 
-        boolean bModelIndexMismatch = !GetModelTypeKey(CurrentModel).equals(GetModelTypeKey(OldModel));
-        int ModelIndex = GetTestModelIndex(OldModel);
-        if (bNewTestModelSetRecently ||
-                CurrentModel == null ||
-                bModelIndexMismatch ||
+        boolean bCreateNewModel = CurrentModel == null ||
                 CurrentModel.getVerticesX().length < OldVertexCount ||
                 CurrentModel.getFaceIndices1().length < OldFaceCount ||
-                NewTransparencyCount < OldTransparencyCount)
+                NewTransparencyCount < OldTransparencyCount ||
+                bModelIndexMismatch;
+
+        if (bCreateNewModel)
         {
+            ModelTypeToModelCache.remove(OldModelKey);
+
+            int ModelIndex = GetTestModelIndex(OldModel);
             ModelData modelData = client.loadModelData(ModelIndex);
             ModelData merged = client.mergeModels(modelData);
-
 
             int CurrentVertexCount = merged.getVerticesX().length;
             int CurrentTriangleCount = merged.getFaceIndices1().length;
@@ -958,7 +988,7 @@ public class CustomMovementHandler
                 }
             }
             CurrentModel = merged.light();
-            bNewTestModelSetRecently = false;
+            ModelTypeToModelCache.put(OldModelKey, CurrentModel);
         }
 
         return CurrentModel;
