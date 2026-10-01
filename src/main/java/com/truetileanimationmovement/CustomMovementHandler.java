@@ -1039,11 +1039,17 @@ public class CustomMovementHandler
         Arrays.fill(CurrentModel.getFaceColors2(), OldModel.getFaceColors2().length, CurrentModel.getFaceColors2().length, OldModel.getFaceColors2()[0]);
         Arrays.fill(CurrentModel.getFaceColors3(), OldModel.getFaceColors3().length, CurrentModel.getFaceColors3().length, OldModel.getFaceColors3()[0]);
 
-        //System.arraycopy(OldModel.getFaceRenderPriorities(), 0, CurrentModel.getFaceRenderPriorities(), 0, OldModel.getFaceRenderPriorities().length);
-        //Arrays.fill(CurrentModel.getFaceRenderPriorities(), OldModel.getFaceRenderPriorities().length, CurrentModel.getFaceRenderPriorities().length, OldModel.getFaceRenderPriorities()[0]);
+        if (OldModel.getFaceRenderPriorities() != null && CurrentModel.getFaceRenderPriorities() != null)
+        {
+            System.arraycopy(OldModel.getFaceRenderPriorities(), 0, CurrentModel.getFaceRenderPriorities(), 0, OldModel.getFaceRenderPriorities().length);
+            Arrays.fill(CurrentModel.getFaceRenderPriorities(), OldModel.getFaceRenderPriorities().length, CurrentModel.getFaceRenderPriorities().length, OldModel.getFaceRenderPriorities()[0]);
+        }
 
-        //System.arraycopy(OldModel.getFaceBias(), 0, CurrentModel.getFaceBias(), 0, OldModel.getFaceBias().length);
-        //Arrays.fill(CurrentModel.getFaceBias(), OldModel.getFaceBias().length, CurrentModel.getFaceBias().length, OldModel.getFaceBias()[0]);
+        if (OldModel.getFaceBias() != null && CurrentModel.getFaceBias() != null)
+        {
+            System.arraycopy(OldModel.getFaceBias(), 0, CurrentModel.getFaceBias(), 0, OldModel.getFaceBias().length);
+            Arrays.fill(CurrentModel.getFaceBias(), OldModel.getFaceBias().length, CurrentModel.getFaceBias().length, OldModel.getFaceBias()[0]);
+        }
 
         if (OldModel.getFaceTransparencies() != null && CurrentModel.getFaceTransparencies() != null)
         {
