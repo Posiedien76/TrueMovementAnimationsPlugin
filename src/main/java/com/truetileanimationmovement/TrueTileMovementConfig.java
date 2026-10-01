@@ -66,6 +66,29 @@ public interface TrueTileMovementConfig extends Config
 		return true;
 	}
 
+
+	@ConfigItem(
+			keyName = "Transmog Model Index",
+			name = "   TransmogModelIndex",
+			description = "TransmogModelIndex",
+			section = generalSection
+	)
+	default int TransmogModelIndex()
+	{
+		return 0;
+	}
+
+	@ConfigItem(
+			keyName = "AllowModelSwap",
+			name = "  AllowModelSwap",
+			description = "AllowModelSwap",
+			section = generalSection
+	)
+	default boolean AllowModelSwap()
+	{
+		return true;
+	}
+
 	@ConfigItem(
 			keyName = "OverheadObjectOffset",
 			name = "Overhead Object Height Offset",
