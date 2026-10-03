@@ -21,6 +21,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.text.AttributedString;
 import java.util.*;
 import java.util.List;
@@ -365,7 +366,11 @@ public class TrueMovementOverlay extends OverlayPanel
         playerEntry.Initialize(bRuneliteObjectsStale);
 
         // True update
-        playerEntry.Update();
+        try {
+            playerEntry.Update();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         bRuneliteObjectsStale = false;
 

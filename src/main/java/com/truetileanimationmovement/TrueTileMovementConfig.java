@@ -79,12 +79,44 @@ public interface TrueTileMovementConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "Transmog Size",
+			name = "   TransmogSize",
+			description = "TransmogSize",
+			section = generalSection
+	)
+	default double TransmogSize()
+	{
+		return 0.7f;
+	}
+	@ConfigItem(
+			keyName = "Override Model Index",
+			name = "   OverrideModelIndex",
+			description = "OverrideModelIndex",
+			section = generalSection
+	)
+	default int OverrideModelIndex()
+	{
+		return 100;
+	}
+
+	@ConfigItem(
 			keyName = "AllowModelSwap",
 			name = "  AllowModelSwap",
 			description = "AllowModelSwap",
 			section = generalSection
 	)
 	default boolean AllowModelSwap()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "RenderCustomModel",
+			name = "  RenderCustomModel",
+			description = "RenderCustomModel",
+			section = generalSection
+	)
+	default boolean RenderCustomModel()
 	{
 		return true;
 	}
