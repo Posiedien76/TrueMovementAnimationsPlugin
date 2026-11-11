@@ -60,9 +60,12 @@ public class TrueMovementOverlay extends OverlayPanel
 
     private boolean bLastPublishedActive = false;
     private LocalPoint LastPublishedLocation = null;
+    private RuneLiteObject LastPublishedObject = null;
     private int LastPublishedTick = -1;
 
-    // Data: "active" (Boolean), and while active "x", "y" (local coordinates) and "worldView" (Integer).
+    // Data: "active" (Boolean), and while active "x", "y" (local coordinates), "worldView" (Integer) and
+    // "runeLiteObject" (the RuneLiteObject of the movement model, for plugins that need its pose/orientation;
+    // it is only the model on screen while isActive() is true, otherwise the real player is being drawn).
     // Sent whenever the model moves and at least once per game tick while the model is being drawn,
     // then once with active=false when the game goes back to drawing the real player.
     private void PublishModelLocation(CustomMovementHandler playerEntry)
@@ -80,13 +83,16 @@ public class TrueMovementOverlay extends OverlayPanel
         }
 
         int tick = client.getTickCount();
-        if (bActive && bLastPublishedActive && tick == LastPublishedTick && location.equals(LastPublishedLocation))
+        RuneLiteObject object = bActive ? playerEntry.Model : null;
+        if (bActive && bLastPublishedActive && tick == LastPublishedTick && object == LastPublishedObject
+                && location.equals(LastPublishedLocation))
         {
             return;
         }
 
         bLastPublishedActive = bActive;
         LastPublishedLocation = location;
+        LastPublishedObject = object;
         LastPublishedTick = tick;
 
         Map<String, Object> data = new HashMap<>();
@@ -96,6 +102,7 @@ public class TrueMovementOverlay extends OverlayPanel
             data.put("x", location.getX());
             data.put("y", location.getY());
             data.put("worldView", location.getWorldView());
+            data.put("runeLiteObject", object);
         }
         eventBus.post(new PluginMessage(PLUGIN_MESSAGE_NAMESPACE, PLUGIN_MESSAGE_MODEL_LOCATION, data));
     }
