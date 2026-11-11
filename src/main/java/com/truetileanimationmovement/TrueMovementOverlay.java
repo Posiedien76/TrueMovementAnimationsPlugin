@@ -6,7 +6,9 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.kit.KitType;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.PluginMessage;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.*;
@@ -48,8 +50,67 @@ public class TrueMovementOverlay extends OverlayPanel
     private static final Color BAR_BG_COLOR = Color.red;
     private static final Dimension HP_BAR_SIZE = new Dimension(30, 5);
 
+    // Published on the event bus so other plugins can attach their own overhead overlays
+    // (tick counters, attack bars, ...) to the movement model instead of the hidden player.
+    public static final String PLUGIN_MESSAGE_NAMESPACE = "true-tile-movement-animation";
+    public static final String PLUGIN_MESSAGE_MODEL_LOCATION = "local-player-model-location";
+
+    @Inject
+    private EventBus eventBus;
+
+    private boolean bLastPublishedActive = false;
+    private LocalPoint LastPublishedLocation = null;
+    private RuneLiteObject LastPublishedObject = null;
+    private int LastPublishedTick = -1;
+
+    // Data: "active" (Boolean), and while active "x", "y" (local coordinates), "worldView" (Integer) and
+    // "runeLiteObject" (the RuneLiteObject of the movement model, for plugins that need its pose/orientation;
+    // it is only the model on screen while isActive() is true, otherwise the real player is being drawn).
+    // Sent whenever the model moves and at least once per game tick while the model is being drawn,
+    // then once with active=false when the game goes back to drawing the real player.
+    private void PublishModelLocation(CustomMovementHandler playerEntry)
+    {
+        LocalPoint location = null;
+        if (playerEntry != null && playerEntry.Model != null && !playerEntry.bShouldRenderOwner)
+        {
+            location = playerEntry.Model.getLocation();
+        }
+
+        boolean bActive = location != null;
+        if (!bActive && !bLastPublishedActive)
+        {
+            return;
+        }
+
+        int tick = client.getTickCount();
+        RuneLiteObject object = bActive ? playerEntry.Model : null;
+        if (bActive && bLastPublishedActive && tick == LastPublishedTick && object == LastPublishedObject
+                && location.equals(LastPublishedLocation))
+        {
+            return;
+        }
+
+        bLastPublishedActive = bActive;
+        LastPublishedLocation = location;
+        LastPublishedObject = object;
+        LastPublishedTick = tick;
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("active", bActive);
+        if (bActive)
+        {
+            data.put("x", location.getX());
+            data.put("y", location.getY());
+            data.put("worldView", location.getWorldView());
+            data.put("runeLiteObject", object);
+        }
+        eventBus.post(new PluginMessage(PLUGIN_MESSAGE_NAMESPACE, PLUGIN_MESSAGE_MODEL_LOCATION, data));
+    }
+
     public void Cleanup()
     {
+        PublishModelLocation(null);
+
         for (Map.Entry<Integer, CustomMovementHandler> entry : MovementHandlerCache.entrySet())
         {
             var value = entry.getValue();
@@ -366,6 +427,9 @@ public class TrueMovementOverlay extends OverlayPanel
 
         // True update
         playerEntry.Update();
+
+        // Let other plugins follow the movement model
+        PublishModelLocation(playerEntry);
 
         bRuneliteObjectsStale = false;
 
